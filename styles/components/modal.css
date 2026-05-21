@@ -1,0 +1,79 @@
+/* ============ styles/components/modal.css — Modal overlays, KPI detail, Car detail ============ */
+
+.modal-overlay      { position:fixed; inset:0; background:rgba(0,0,0,.72); backdrop-filter:blur(4px); z-index:99999; display:none; align-items:center; justify-content:center; padding:24px; animation:mfadein .15s ease-out; }
+.modal-overlay.show { display:flex; }
+.modal         { background:#0a1628; border:1px solid rgba(56,189,248,.28); border-radius:12px; width:100%; max-width:1100px; max-height:88vh; display:flex; flex-direction:column; box-shadow:0 24px 70px rgba(0,0,0,.7); animation:mslideup .18s ease-out; overflow:hidden; }
+.modal-hdr     { display:flex; align-items:center; justify-content:space-between; padding:12px 18px; background:linear-gradient(135deg,rgba(56,189,248,.13),rgba(56,189,248,.04)); border-bottom:1px solid rgba(56,189,248,.15); }
+.modal-title   { display:flex; align-items:center; gap:10px; font-size:15px; font-weight:700; color:#7dd3fc; }
+.modal-sub     { font-size:11px; color:var(--muted); margin-top:2px; font-weight:500; }
+.modal-close   { width:30px; height:30px; border-radius:50%; border:none; background:rgba(255,255,255,.05); color:#fff; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .15s; }
+.modal-close:hover { background:rgba(239,68,68,.25); color:#fca5a5; }
+.modal-tabs    { display:flex; padding:0 18px; background:#071422; border-bottom:1px solid rgba(56,189,248,.08); }
+.mtab          { padding:9px 18px; background:transparent; border:none; border-bottom:3px solid transparent; color:rgba(255,255,255,.4); font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; letter-spacing:.2px; display:flex; align-items:center; gap:6px; transition:color .15s; }
+.mtab:hover    { color:rgba(255,255,255,.8); }
+.mtab.act      { color:#93c5fd; border-bottom-color:#38bdf8; }
+.mtab-cnt      { display:inline-block; padding:1px 7px; border-radius:999px; font-size:10px; background:rgba(56,189,248,.18); color:#7dd3fc; font-weight:700; }
+.mtab.act .mtab-cnt { background:rgba(56,189,248,.28); }
+.modal-body    { flex:1; overflow:auto; padding:13px 18px; }
+.modal-section     { display:none; }
+.modal-section.act { display:block; }
+
+/* Modal table */
+.mtbl             { width:100%; border-collapse:collapse; font-size:12px; }
+.mtbl thead th    { background:#071422; color:#7dd3fc; font-weight:700; font-size:11.5px; padding:7px 10px; position:sticky; top:0; z-index:1; white-space:nowrap; border-bottom:1px solid rgba(56,189,248,.2); text-align:left; }
+.mtbl tbody td    { padding:6px 10px; border-bottom:1px solid rgba(255,255,255,.04); color:#f1f5f9; vertical-align:middle; }
+.mtbl tbody tr:hover td { background:rgba(56,189,248,.06); }
+.mtbl tbody tr:nth-child(even) td { background:rgba(255,255,255,.02); }
+.mtbl tbody tr:nth-child(even):hover td { background:rgba(56,189,248,.06); }
+.mdoc        { font-family:'Consolas',monospace; font-size:11.5px; color:#93c5fd; font-weight:600; white-space:nowrap; }
+.modal-empty { padding:40px; text-align:center; color:var(--muted); font-size:13px; }
+.modal-empty .em { font-size:34px; display:block; margin-bottom:8px; opacity:.45; }
+.modal-sum      { display:flex; gap:12px; margin-bottom:11px; flex-wrap:wrap; }
+.modal-sum-item { padding:6px 12px; background:rgba(56,189,248,.08); border:1px solid rgba(56,189,248,.18); border-radius:7px; font-size:11px; color:var(--muted); }
+.modal-sum-item b { color:#e0f2fe; font-size:14px; font-weight:800; margin-right:5px; font-variant-numeric:tabular-nums; }
+
+/* Document type tags */
+.dtag     { display:inline-block; padding:2px 8px; border-radius:5px; font-size:10px; font-weight:800; letter-spacing:.3px; white-space:nowrap; }
+.dtag.dom { background:rgba(34,211,238,.18); color:#22d3ee; border:1px solid rgba(34,211,238,.35); }
+.dtag.imp { background:rgba(167,139,250,.18);color:#c4b5fd; border:1px solid rgba(167,139,250,.35); }
+
+/* KPI detail sections */
+.kpi-sec         { margin-bottom:14px; }
+.kpi-sec-hdr     { display:flex; align-items:center; gap:8px; margin-bottom:8px; padding:6px 10px; border-radius:7px; font-size:13px; font-weight:700; }
+.kpi-sec-hdr.today { background:rgba(16,185,129,.13); color:#34d399; border:1px solid rgba(16,185,129,.28); }
+.kpi-sec-hdr.tmr   { background:rgba(245,158,11,.13); color:#fbbf24; border:1px solid rgba(245,158,11,.28); }
+.kpi-sec-hdr.other { background:rgba(100,116,139,.13);color:#94a3b8; border:1px solid rgba(100,116,139,.25); }
+.kpi-sec-total   { margin-left:auto; font-size:11px; padding:2px 9px; border-radius:999px; background:rgba(0,0,0,.2); font-weight:800; }
+.kpi-sec ul      { list-style:none; padding:0; margin:0; }
+.kpi-sec li      { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:7px 12px; border-radius:6px; margin-bottom:4px; background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.04); font-size:12.5px; }
+.kpi-sec li:hover { background:rgba(56,189,248,.07); }
+.kpi-sec li .lbl { color:#e0f2fe; font-weight:600; }
+.kpi-sec li b    { font-size:14px; font-weight:800; font-variant-numeric:tabular-nums; }
+
+/* ── Light mode ── */
+body.light .modal           { background:#fff; border-color:rgba(0,0,0,.1); }
+body.light .modal-hdr       { background:linear-gradient(135deg,#dbeafe,#f1f5f9); border-color:#e2e8f0; }
+body.light .modal-title     { color:#1d4ed8; }
+body.light .modal-close     { background:#f1f5f9; color:#1e293b; }
+body.light .modal-close:hover { background:#fee2e2; color:#dc2626; }
+body.light .modal-tabs      { background:#f8fafc; border-color:#e2e8f0; }
+body.light .mtab            { color:#475569; }
+body.light .mtab:hover      { color:#1e293b; }
+body.light .mtab.act        { color:#1d4ed8; border-bottom-color:#1d4ed8; }
+body.light .mtab-cnt        { background:rgba(37,99,235,.12); color:#1d4ed8; }
+body.light .mtbl thead th   { background:#f1f5f9; color:#1d4ed8; border-color:#cbd5e1; }
+body.light .mtbl tbody td   { color:#1e293b; border-color:rgba(0,0,0,.05); }
+body.light .mtbl tbody tr:hover td { background:#eff6ff; }
+body.light .mtbl tbody tr:nth-child(even) td { background:#f8fafc; }
+body.light .mdoc            { color:#2563eb; }
+body.light .modal-sum-item  { background:#eff6ff; border-color:#cbd5e1; color:#475569; }
+body.light .modal-sum-item b { color:#1e293b; }
+body.light .dtag.dom { background:rgba(8,145,178,.13); color:#0891b2; border-color:rgba(8,145,178,.35); }
+body.light .dtag.imp { background:rgba(124,58,237,.13);color:#7c3aed; border-color:rgba(124,58,237,.35); }
+body.light .kpi-sec-hdr.today { background:rgba(5,150,105,.1);   color:#059669; border-color:rgba(5,150,105,.3); }
+body.light .kpi-sec-hdr.tmr   { background:rgba(217,119,6,.1);   color:#d97706; border-color:rgba(217,119,6,.3); }
+body.light .kpi-sec-hdr.other { background:rgba(100,116,139,.1); color:#64748b; border-color:rgba(100,116,139,.25); }
+body.light .kpi-sec-total { background:rgba(0,0,0,.06); color:inherit; }
+body.light .kpi-sec li    { background:#f8fafc; border-color:#e2e8f0; }
+body.light .kpi-sec li:hover { background:#eff6ff; }
+body.light .kpi-sec li .lbl  { color:#1e293b; }

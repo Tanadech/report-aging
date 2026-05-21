@@ -1,4 +1,5 @@
-// ============ Config — แก้ที่นี่เพื่อเปลี่ยน Google Sheet ============
+// ============ config/constants.js — ค่าคงที่ทั้งหมดของแอป ============
+
 const SHEET_ID       = '1QtPntiJjvozzsfgsX3o2GSeOH5Gp223ZnHBcC6cKzRg';
 const SHEET_IN_NAME  = 'POI IN';
 const SHEET_UOT_NAME = 'POI OUT';
@@ -17,5 +18,4 @@ const STATUS_MAP = {
   'ประมวลผลผิดพลาด':    { cls:'s4', col:'#c4b5fd' }
 };
 
-// Snapshot ว่าง — ใส่ข้อมูล fallback ได้ที่นี่
 const SNAPSHOT = { POI_IN: [], POI_UOT: [] };

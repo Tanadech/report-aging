@@ -13,8 +13,16 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridjs@6/dist/theme/mermaid.min.css">
 
 <!-- App Styles -->
-<link rel="stylesheet" href="styles/main.css">
-<link rel="stylesheet" href="styles/components.css">
+<link rel="stylesheet" href="styles/base/variables.css">
+<link rel="stylesheet" href="styles/base/layout.css">
+<link rel="stylesheet" href="styles/components/header.css">
+<link rel="stylesheet" href="styles/components/filter.css">
+<link rel="stylesheet" href="styles/components/filter-tags.css">
+<link rel="stylesheet" href="styles/components/card.css">
+<link rel="stylesheet" href="styles/components/table.css">
+<link rel="stylesheet" href="styles/components/badge.css">
+<link rel="stylesheet" href="styles/components/modal.css">
+<link rel="stylesheet" href="styles/tabs/car.css">
 </head>
 <body>
 
@@ -359,37 +367,48 @@
 </div>
 
 <!-- ============================================================ -->
-<!-- Scripts — โหลดเรียงลำดับ: config → state → lib → components → tabs → modals → app -->
+<!-- Scripts — โหลดเรียงลำดับ: config → state → lib → loaders → components → tabs → modals → app -->
 <!-- ============================================================ -->
 
-<!-- 1. Config & constants -->
-<script src="data/config.js"></script>
-<script src="data/branch-map.js"></script>
+<!-- 1. Config & data maps -->
+<script src="config/constants.js"></script>
+<script src="data/branches.js"></script>
 
 <!-- 2. Global state -->
 <script src="state.js"></script>
 
 <!-- 3. Libraries -->
-<script src="lib/csv-parser.js"></script>
-<script src="lib/helpers.js"></script>
-<script src="lib/data-loader.js"></script>
+<script src="lib/csv.js"></script>
+<script src="lib/format.js"></script>
+<script src="lib/dom.js"></script>
+<script src="lib/array.js"></script>
+<script src="lib/filter-ui.js"></script>
 
-<!-- 4. Web Components -->
+<!-- 4. Loaders -->
+<script src="loaders/status.js"></script>
+<script src="loaders/excel.js"></script>
+<script src="loaders/folder.js"></script>
+
+<!-- 5. Web Components -->
 <script src="components/app-header.js"></script>
 <script src="components/stat-card.js"></script>
 <script src="components/data-table.js"></script>
 <script src="components/filter-tags.js"></script>
 
-<!-- 5. Tab renderers -->
+<!-- 6. Tab renderers -->
 <script src="tabs/uot.js"></script>
 <script src="tabs/in.js"></script>
-<script src="tabs/car.js"></script>
+<script src="tabs/car/date-helpers.js"></script>
+<script src="tabs/car/aging.js"></script>
+<script src="tabs/car/filter.js"></script>
+<script src="tabs/car/views.js"></script>
+<script src="tabs/car/index.js"></script>
 
-<!-- 6. Modals -->
+<!-- 7. Modals -->
 <script src="modals/kpi-modal.js"></script>
 <script src="modals/car-modal.js"></script>
 
-<!-- 7. Main app bootstrap -->
+<!-- 8. Main app bootstrap -->
 <script src="app.js"></script>
 
 </body>

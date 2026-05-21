@@ -1,0 +1,21 @@
+/* ============ styles/base/layout.css — Layout containers + grid rows ============ */
+
+/* Tab containers */
+.tc     { display:none; flex:1; min-height:0; overflow:hidden; flex-direction:column; }
+.tc.act { display:flex; }
+
+/* Scrollable content area */
+.main       { flex:1; min-width:0; overflow-y:auto; overflow-x:hidden; background:var(--bg); }
+.main-inner { display:flex; flex-direction:column; gap:12px; padding:13px; }
+
+/* Grid layouts */
+.mid-row { display:grid; grid-template-columns:30% 70%; gap:12px; }
+.pie-col { display:flex; flex-direction:column; gap:12px; }
+.bar-col { display:flex; flex-direction:column; gap:12px; }
+.bot-row { display:grid; grid-template-columns:44% 56%; gap:12px; }
+
+/* Horizontally scrollable chart wrapper */
+.zone-scroll        { overflow-x:auto; overflow-y:hidden; }
+.zone-scroll canvas { min-width:100%; }
+body.light .zone-scroll::-webkit-scrollbar-track { background:#f1f5f9; }
+body.light .zone-scroll::-webkit-scrollbar-thumb { background:#cbd5e1; }

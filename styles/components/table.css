@@ -1,0 +1,67 @@
+/* ============ styles/components/table.css — Data tables + GridJS styles ============ */
+
+/* Grouped table */
+.tbl-wrap  { overflow:auto; max-height:340px; border-radius:6px; border:1px solid rgba(56,189,248,.1); }
+table.gtbl { width:100%; border-collapse:collapse; font-size:13px; }
+table.gtbl thead th  { background:rgba(8,20,40,.9); color:#7dd3fc; font-weight:700; font-size:12.5px; padding:6px 8px; position:sticky; top:0; z-index:1; white-space:nowrap; border-bottom:1px solid rgba(56,189,248,.15); }
+table.gtbl tbody td  { padding:4px 8px; border-bottom:1px solid rgba(255,255,255,.04); vertical-align:middle; color:#f1f5f9; }
+table.gtbl tbody tr:hover td { background:rgba(56,189,248,.05); }
+
+/* Special cells in grouped table */
+.zone-cell { font-weight:700; font-size:14px; color:#38bdf8; text-align:center; border-right:1px solid rgba(56,189,248,.12); vertical-align:top; padding-top:7px; }
+.doc-cell  { font-size:12px; color:#93c5fd; font-weight:600; border-right:1px solid rgba(255,255,255,.04); vertical-align:top; padding-top:7px; max-width:155px; word-break:break-all; }
+.dt-cell   { font-size:12px; color:var(--muted); vertical-align:top; padding-top:7px; white-space:nowrap; }
+.num-cell  { text-align:right; font-weight:600; font-size:13px; color:#f1f5f9; }
+
+/* Table header + pagination */
+.tbl-hdr              { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:4px; }
+.tbl-cnt              { font-size:11px; color:var(--muted); font-weight:400; }
+.tbl-pg               { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--muted); }
+.tbl-pg button        { padding:3px 8px; border:1px solid rgba(56,189,248,.15); border-radius:4px; background:rgba(255,255,255,.04); cursor:pointer; font-size:11px; font-family:inherit; color:#93c5fd; }
+.tbl-pg button:hover:not(:disabled) { background:rgba(56,189,248,.1); }
+.tbl-pg button:disabled { opacity:.3; cursor:default; }
+
+/* GridJS — dark mode */
+.gridjs-container,.gridjs-wrapper,.gridjs-head,.gridjs-body,.gridjs-footer { background:#0a1628!important; border:1px solid rgba(56,189,248,.12)!important; color:#dde6f0!important; }
+.gridjs-table         { font-size:13px!important; background:transparent!important; width:100%!important; }
+.gridjs-th,.gridjs-th-content { background:#071422!important; font-weight:700!important; color:#7dd3fc!important; font-size:13px!important; border-bottom:2px solid rgba(56,189,248,.2)!important; border-right:1px solid rgba(56,189,248,.07)!important; white-space:nowrap!important; }
+.gridjs-td            { padding:5px 8px!important; color:#f1f5f9!important; background:transparent!important; border-bottom:1px solid rgba(255,255,255,.05)!important; border-right:1px solid rgba(255,255,255,.03)!important; }
+.gridjs-tr:hover .gridjs-td { background:rgba(56,189,248,.06)!important; }
+.gridjs-tr:nth-child(even) .gridjs-td { background:rgba(255,255,255,.02)!important; }
+.gridjs-tr:nth-child(even):hover .gridjs-td { background:rgba(56,189,248,.06)!important; }
+.gridjs-search        { padding:6px 0!important; }
+.gridjs-search-input  { background:rgba(255,255,255,.06)!important; border:1px solid rgba(56,189,248,.18)!important; color:#e2e8f0!important; border-radius:6px!important; padding:5px 10px!important; font-size:12px!important; width:100%!important; outline:none!important; }
+.gridjs-search-input::placeholder { color:#4d6580!important; }
+.gridjs-pagination    { color:#7b93b0!important; background:#0a1628!important; padding:6px 0!important; border-top:1px solid rgba(56,189,248,.1)!important; }
+.gridjs-pagination .gridjs-summary { color:#7b93b0!important; font-size:11px!important; }
+.gridjs-pagination button { background:rgba(255,255,255,.05)!important; border:1px solid rgba(56,189,248,.15)!important; color:#93c5fd!important; border-radius:5px!important; padding:3px 9px!important; }
+.gridjs-pagination button:hover { background:rgba(56,189,248,.15)!important; }
+.gridjs-pages button.gridjs-currentPage { background:rgba(56,189,248,.3)!important; color:#fff!important; border-color:rgba(56,189,248,.5)!important; }
+.gridjs-resizable-handle { background:rgba(56,189,248,.25)!important; width:3px!important; }
+
+/* ── Light mode ── */
+body.light .tbl-wrap  { border-color:#e2e8f0; }
+body.light .tbl-cnt, body.light .tbl-pg { color:#475569; }
+body.light .tbl-pg button { background:#f8fafc; border-color:#e2e8f0; color:#1d4ed8; }
+body.light table.gtbl thead th     { background:#f1f5f9; color:#1d4ed8; border-color:#e2e8f0; }
+body.light table.gtbl tbody td     { color:#1e293b; border-color:rgba(0,0,0,.05); }
+body.light table.gtbl tbody tr:hover td { background:rgba(29,78,216,.05); }
+body.light .zone-cell { color:#2563eb; }
+body.light .doc-cell  { color:#3b82f6; }
+body.light .dt-cell   { color:#475569; }
+body.light .num-cell  { color:#1e293b; }
+body.light .gridjs-container,.gridjs-wrapper,.gridjs-head,.gridjs-body,.gridjs-footer { background:#fff!important; border:1px solid #e2e8f0!important; color:#1e293b!important; }
+body.light .gridjs-table  { background:#fff!important; }
+body.light .gridjs-th, body.light .gridjs-th-content { background:#f1f5f9!important; color:#1e293b!important; border-bottom:2px solid #cbd5e1!important; border-right:1px solid #e2e8f0!important; }
+body.light .gridjs-td     { color:#1e293b!important; background:#fff!important; border-bottom:1px solid #e2e8f0!important; border-right:1px solid #f1f5f9!important; }
+body.light .gridjs-tr:hover .gridjs-td { background:#eff6ff!important; }
+body.light .gridjs-tr:nth-child(even) .gridjs-td { background:#f8fafc!important; }
+body.light .gridjs-tr:nth-child(even):hover .gridjs-td { background:#eff6ff!important; }
+body.light .gridjs-search-input { background:#f8fafc!important; border:1px solid #cbd5e1!important; color:#1e293b!important; }
+body.light .gridjs-search-input::placeholder { color:#94a3b8!important; }
+body.light .gridjs-pagination { color:#475569!important; background:#fff!important; border-top:1px solid #e2e8f0!important; }
+body.light .gridjs-pagination .gridjs-summary { color:#475569!important; }
+body.light .gridjs-pagination button { background:#f1f5f9!important; border:1px solid #cbd5e1!important; color:#1e293b!important; }
+body.light .gridjs-pagination button:hover { background:#e2e8f0!important; }
+body.light .gridjs-pages button.gridjs-currentPage { background:#2563eb!important; color:#fff!important; border-color:#2563eb!important; }
+body.light .gridjs-resizable-handle { background:#cbd5e1!important; }

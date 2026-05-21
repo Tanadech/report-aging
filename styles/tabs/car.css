@@ -1,0 +1,88 @@
+/* ============ styles/tabs/car.css — CAR tab: toolbar, time slots, car cards, table ============ */
+
+/* Toolbar + view toggle */
+.car-toolbar      { display:flex; align-items:center; gap:10px; padding:7px 14px; background:rgba(56,189,248,.04); border-bottom:1px solid rgba(56,189,248,.08); border-radius:8px 8px 0 0; flex-wrap:wrap; }
+.view-toggle      { display:inline-flex; background:rgba(255,255,255,.04); border:1px solid rgba(56,189,248,.18); border-radius:7px; overflow:hidden; }
+.view-toggle button { padding:5px 14px; background:transparent; border:none; color:rgba(255,255,255,.5); font-size:11.5px; font-weight:700; cursor:pointer; font-family:inherit; transition:all .15s; letter-spacing:.2px; }
+.view-toggle button.act { background:rgba(56,189,248,.22); color:#7dd3fc; }
+.view-toggle button:hover:not(.act) { color:#dde6f0; background:rgba(255,255,255,.05); }
+.car-toolbar-hint { font-size:11px; color:var(--muted); }
+
+/* KPI row override for CAR tab */
+#tc-car .kpi-row { grid-template-columns:repeat(auto-fit,minmax(118px,1fr)); }
+#tc-car .kpi     { cursor:pointer; transition:transform .12s,border-color .15s,box-shadow .15s; }
+#tc-car .kpi:hover { transform:translateY(-2px); border-color:rgba(56,189,248,.4); box-shadow:0 4px 14px rgba(0,0,0,.4); }
+
+/* Time slot grouping */
+.tslot          { margin-bottom:14px; }
+.tslot-hdr      { display:flex; align-items:center; gap:10px; padding:8px 12px; background:linear-gradient(90deg,rgba(56,189,248,.16),rgba(56,189,248,.04)); border-left:3px solid #38bdf8; border-radius:6px 6px 0 0; margin-bottom:8px; }
+.tslot-time     { font-size:15px; font-weight:800; color:#7dd3fc; letter-spacing:.3px; font-variant-numeric:tabular-nums; }
+.tslot-count    { font-size:11px; color:#7dd3fc; padding:2px 10px; background:rgba(56,189,248,.15); border:1px solid rgba(56,189,248,.25); border-radius:999px; font-weight:700; }
+.tslot-whs      { display:inline-flex; align-items:center; gap:5px; flex-wrap:wrap; font-size:10.5px; color:var(--muted); }
+.tslot-whs-lbl  { font-size:9.5px; font-weight:700; letter-spacing:.4px; color:rgba(255,255,255,.4); text-transform:uppercase; }
+.tslot-wh       { display:inline-flex; align-items:center; gap:4px; padding:2px 9px; border-radius:999px; font-size:11px; font-weight:700; background:rgba(34,211,238,.13); border:1px solid rgba(34,211,238,.28); color:#22d3ee; }
+.tslot-wh-cnt   { display:inline-block; padding:0 5px; border-radius:3px; background:rgba(0,0,0,.22); color:#e0f2fe; font-weight:800; font-size:10px; font-variant-numeric:tabular-nums; }
+.tslot-body     { display:grid; grid-template-columns:repeat(auto-fill,minmax(310px,1fr)); gap:9px; }
+
+/* Car card */
+.ccard          { background:rgba(255,255,255,.035); border:1px solid rgba(56,189,248,.13); border-left:3px solid rgba(56,189,248,.4); border-radius:8px; padding:10px 12px; display:flex; flex-direction:column; gap:6px; font-size:12px; transition:transform .12s,border-color .15s,box-shadow .15s; box-shadow:0 2px 8px rgba(0,0,0,.25); cursor:pointer; }
+.ccard:hover    { transform:translateY(-2px); border-color:rgba(56,189,248,.4); box-shadow:0 4px 14px rgba(0,0,0,.4); }
+.ccard.has-aging      { border-left-color:#f59e0b; }
+.ccard.urgent         { border-left-color:#ef4444; }
+.ccard.urgent-stuck   { border-left-color:#ef4444; background:rgba(239,68,68,.06); }
+.ccard-r1       { display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+.ccard-wh       { display:inline-block; padding:2px 9px; border-radius:4px; font-size:10px; font-weight:800; background:rgba(34,211,238,.18); color:#22d3ee; letter-spacing:.5px; }
+.ccard-br       { font-size:13px; font-weight:700; color:#e0f2fe; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ccard-br-abr   { display:inline-block; padding:1px 6px; border-radius:3px; font-size:9.5px; font-weight:700; background:rgba(167,139,250,.18); color:#c4b5fd; margin-left:4px; }
+.ccard-day      { display:inline-block; padding:2px 9px; border-radius:999px; font-size:10px; font-weight:800; letter-spacing:.3px; line-height:1.2; }
+.ccard-day.today { background:rgba(16,185,129,.18); color:#34d399; border:1px solid rgba(16,185,129,.35); }
+.ccard-day.tmr   { background:rgba(245,158,11,.18); color:#fbbf24; border:1px solid rgba(245,158,11,.35); }
+.ccard-day.other { background:rgba(100,116,139,.18);color:#94a3b8; border:1px solid rgba(100,116,139,.3); }
+.ccard-r2       { display:flex; align-items:center; gap:6px; flex-wrap:wrap; font-size:11px; color:var(--muted); line-height:1.3; }
+.ccard-r2 .sep  { color:rgba(255,255,255,.18); }
+.ccard-aging    { display:flex; align-items:center; gap:7px; padding:6px 9px; border-radius:5px; font-size:11px; font-weight:600; background:rgba(245,158,11,.1); border:1px solid rgba(245,158,11,.22); color:#fbbf24; }
+.ccard-aging.urg  { background:rgba(239,68,68,.13);   border-color:rgba(239,68,68,.3);  color:#fca5a5; }
+.ccard-aging.ok   { background:rgba(16,185,129,.1);   border-color:rgba(16,185,129,.22);color:#34d399; }
+.ccard-aging.none { background:rgba(100,116,139,.07); border-color:rgba(100,116,139,.18);color:rgba(255,255,255,.35); font-weight:500; }
+.ccard-aging-max  { margin-left:auto; font-weight:800; font-size:12px; }
+.ccard-r3       { display:flex; align-items:center; justify-content:space-between; gap:6px; font-size:10.5px; color:rgba(255,255,255,.45); margin-top:1px; }
+.ccard-driver   { display:inline-flex; align-items:center; gap:3px; color:rgba(255,255,255,.55); font-size:11px; }
+.ccard-empty    { padding:40px; text-align:center; color:var(--muted); font-size:13px; }
+.ccard-empty .emoji { font-size:30px; display:block; margin-bottom:8px; opacity:.5; }
+
+/* Car table row */
+.cstat          { display:inline-block; padding:2px 7px; border-radius:4px; font-size:9.5px; font-weight:700; letter-spacing:.3px; }
+.cstat.pending  { background:rgba(245,158,11,.18); color:#fbbf24; }
+.cstat.done     { background:rgba(16,185,129,.18); color:#34d399; }
+.cstat.late     { background:rgba(239,68,68,.2);   color:#f87171; }
+.cstat.unknown  { background:rgba(100,116,139,.18);color:#94a3b8; }
+.ctbl-row       { cursor:pointer; }
+.ctbl-row:hover td { background:rgba(56,189,248,.08)!important; }
+
+/* ── Light mode ── */
+body.light #tc-car .kpi:hover { box-shadow:0 4px 14px rgba(0,0,0,.12); border-color:rgba(37,99,235,.4); }
+body.light .car-toolbar       { background:#f1f5f9; border-color:#e2e8f0; }
+body.light .view-toggle       { background:#fff; border-color:#cbd5e1; }
+body.light .view-toggle button { color:#475569; }
+body.light .view-toggle button.act { background:#dbeafe; color:#1d4ed8; }
+body.light .view-toggle button:hover:not(.act) { color:#1e293b; background:#f1f5f9; }
+body.light .tslot-hdr   { background:linear-gradient(90deg,rgba(37,99,235,.13),rgba(37,99,235,.02)); border-left-color:#2563eb; }
+body.light .tslot-time  { color:#1d4ed8; }
+body.light .tslot-count { background:rgba(37,99,235,.1); color:#1d4ed8; border-color:rgba(37,99,235,.2); }
+body.light .tslot-whs   { color:#475569; }
+body.light .tslot-whs-lbl { color:#64748b; }
+body.light .tslot-wh    { background:rgba(34,211,238,.12); border-color:rgba(8,145,178,.3); color:#0891b2; }
+body.light .tslot-wh-cnt { background:rgba(8,145,178,.15); color:#0e7490; }
+body.light .ccard       { background:#fff; border-color:rgba(0,0,0,.08); border-left-color:rgba(37,99,235,.4); }
+body.light .ccard:hover { box-shadow:0 4px 16px rgba(0,0,0,.08); }
+body.light .ccard-br    { color:#1e293b; }
+body.light .ccard-wh    { background:rgba(34,211,238,.15); color:#0891b2; }
+body.light .ccard-br-abr { background:rgba(167,139,250,.15); color:#7c3aed; }
+body.light .ccard-day.today { background:rgba(5,150,105,.13); color:#059669; border-color:rgba(5,150,105,.35); }
+body.light .ccard-day.tmr   { background:rgba(217,119,6,.13); color:#d97706; border-color:rgba(217,119,6,.35); }
+body.light .ccard-day.other { background:rgba(100,116,139,.13);color:#475569; border-color:rgba(100,116,139,.3); }
+body.light .ccard-r2    { color:#64748b; }
+body.light .ccard-r2 .sep { color:#cbd5e1; }
+body.light .ccard-driver { color:#475569; }
+body.light .ccard-r3    { color:#64748b; }
+body.light .ccard-empty { color:#64748b; }

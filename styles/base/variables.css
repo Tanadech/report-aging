@@ -1,0 +1,22 @@
+/* ============ styles/base/variables.css — CSS variables + base reset ============ */
+
+:root {
+  --primary:#0b1f3a; --primary2:#0e2545; --accent:#38bdf8;
+  --bg:#0d1a2e; --card:rgba(255,255,255,.055); --border:rgba(96,165,250,.12);
+  --text:#f1f5f9; --muted:#9db5cc; --subtle:#5d7a96;
+  --ok:#10b981; --warn:#f59e0b; --danger:#ef4444; --info:#38bdf8;
+  color-scheme:dark;
+}
+body.light {
+  --bg:#f1f5f9; --card:rgba(255,255,255,.95); --border:rgba(0,0,0,.08);
+  --text:#1e293b; --muted:#475569; --subtle:#94a3b8;
+  color-scheme:light;
+}
+
+*    { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:"Sarabun","Prompt",-apple-system,sans-serif; background:var(--bg); color:var(--text); font-size:15px; line-height:1.5; display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+@keyframes spin   { to{transform:rotate(360deg)} }
+@keyframes mfadein  { from{opacity:0} to{opacity:1} }
+@keyframes mslideup { from{transform:translateY(10px);opacity:0} to{transform:translateY(0);opacity:1} }

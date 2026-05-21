@@ -1,0 +1,37 @@
+/* ============ styles/components/card.css — KPI cards + Chart cards ============ */
+
+/* KPI row */
+.kpi-row { display:grid; grid-template-columns:repeat(9,1fr); gap:8px; }
+
+/* KPI card */
+.kpi        { background:rgba(255,255,255,.03); border:1px solid rgba(56,189,248,.1); border-radius:8px; padding:10px 12px; position:relative; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,.4); }
+.kpi::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:var(--kc,#38bdf8); border-radius:8px 8px 0 0; }
+.kpi.ok   { --kc:#10b981; }
+.kpi.warn { --kc:#f59e0b; }
+.kpi.alr  { --kc:#ef4444; }
+.kpi.inf  { --kc:#38bdf8; }
+.kpi-lbl  { font-size:10px; color:var(--muted); font-weight:600; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.kpi-val  { font-size:22px; font-weight:700; color:#e2e8f0; letter-spacing:-.5px; line-height:1.15; }
+.kpi.ok   .kpi-val { color:#34d399; }
+.kpi.warn .kpi-val { color:#fbbf24; }
+.kpi.alr  .kpi-val { color:#f87171; }
+.kpi.inf  .kpi-val { color:#7dd3fc; }
+.kpi-unit { font-size:10px; color:var(--subtle); margin-top:2px; }
+
+/* Chart card */
+.card        { background:rgba(255,255,255,.03); border:1px solid rgba(56,189,248,.1); border-radius:9px; padding:13px; display:flex; flex-direction:column; gap:7px; box-shadow:0 4px 20px rgba(0,0,0,.4); }
+.card-title  { font-size:13px; font-weight:700; color:#7dd3fc; display:flex; align-items:center; gap:6px; letter-spacing:.1px; }
+.card-title .dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+.cw { position:relative; }
+
+/* ── Light mode ── */
+body.light .kpi          { background:rgba(255,255,255,.9); border-color:rgba(0,0,0,.08); }
+body.light .kpi-val      { color:#1e293b; }
+body.light .kpi-lbl      { color:#475569; }
+body.light .kpi-unit     { color:#64748b; }
+body.light .kpi.ok   .kpi-val { color:#059669; }
+body.light .kpi.warn .kpi-val { color:#d97706; }
+body.light .kpi.alr  .kpi-val { color:#dc2626; }
+body.light .kpi.inf  .kpi-val { color:#2563eb; }
+body.light .card       { background:#fff; border-color:rgba(0,0,0,.08); box-shadow:0 2px 8px rgba(0,0,0,.06); }
+body.light .card-title { color:#1d4ed8; }

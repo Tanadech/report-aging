@@ -1,0 +1,32 @@
+/* ============ styles/components/filter-tags.css — Active filter tag pills ============ */
+
+.fb-tags        { background:#050c18; border-bottom:1px solid rgba(56,189,248,.08); padding:6px 14px 8px; display:flex; flex-wrap:wrap; align-items:center; gap:6px; transition:padding .2s; }
+.fb-tags.hidden { display:none; }
+
+.ftag       { display:inline-flex; align-items:center; gap:5px; padding:0 10px 0 9px; border-radius:999px; height:28px; font-size:11.5px; font-weight:600; background:rgba(56,189,248,.1); border:1px solid rgba(56,189,248,.22); color:#7dd3fc; cursor:default; user-select:none; transition:background .15s,border-color .15s,transform .1s; white-space:nowrap; flex-shrink:0; }
+.ftag:hover { background:rgba(56,189,248,.2); border-color:rgba(56,189,248,.45); transform:translateY(-1px); }
+.ftag-lbl   { font-size:9.5px; color:rgba(125,211,252,.55); font-weight:700; letter-spacing:.4px; text-transform:uppercase; }
+.ftag-sep   { color:rgba(125,211,252,.3); font-size:10px; margin:0 1px; }
+.ftag-val   { color:#e0f2fe; max-width:180px; overflow:hidden; text-overflow:ellipsis; }
+.ftag-x     { width:16px; height:16px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:9px; font-weight:900; line-height:1; background:rgba(56,189,248,.18); color:rgba(125,211,252,.8); cursor:pointer; margin-left:2px; flex-shrink:0; transition:background .15s,color .15s,transform .1s; }
+.ftag-x:hover { background:#ef4444; color:#fff; transform:scale(1.15); }
+.ftag-clrall  { display:inline-flex; align-items:center; gap:4px; padding:0 11px; border-radius:999px; height:26px; font-size:11px; font-weight:700; font-family:inherit; background:rgba(239,68,68,.08); border:1px solid rgba(239,68,68,.22); color:rgba(252,165,165,.75); cursor:pointer; flex-shrink:0; transition:background .15s,border-color .15s; }
+.ftag-clrall:hover { background:rgba(239,68,68,.2); border-color:rgba(239,68,68,.4); color:#fca5a5; }
+
+@media(max-width:600px) {
+  .fb-tags { padding:5px 10px 7px; gap:5px; }
+  .ftag    { height:26px; font-size:11px; }
+  .ftag-val { max-width:110px; }
+}
+
+/* ── Light mode ── */
+body.light .fb-tags     { background:#f8fafc; border-color:#e2e8f0; }
+body.light .ftag        { background:rgba(37,99,235,.08); border-color:rgba(37,99,235,.25); color:#1d4ed8; }
+body.light .ftag:hover  { background:rgba(37,99,235,.18); border-color:rgba(37,99,235,.5); }
+body.light .ftag-lbl    { color:rgba(29,78,216,.5); }
+body.light .ftag-sep    { color:rgba(29,78,216,.25); }
+body.light .ftag-val    { color:#1e40af; }
+body.light .ftag-x      { background:rgba(37,99,235,.12); color:#3b82f6; }
+body.light .ftag-x:hover { background:#dc2626; color:#fff; }
+body.light .ftag-clrall { background:rgba(220,38,38,.07); border-color:rgba(220,38,38,.22); color:#dc2626; }
+body.light .ftag-clrall:hover { background:rgba(220,38,38,.16); border-color:rgba(220,38,38,.4); }

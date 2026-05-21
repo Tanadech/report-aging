@@ -1,4 +1,0 @@
-/* ============ styles/components.css ============ */
-/* Placeholder สำหรับ Shadow DOM component styles ในอนาคต */
-/* ปัจจุบัน components ใช้ Light DOM — ไม่ต้องการ shadow styles */
-/* เพิ่ม :host, ::slotted() styles ที่นี่หากเปลี่ยนไปใช้ Shadow DOM */
