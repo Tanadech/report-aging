@@ -142,8 +142,8 @@ document.getElementById('file-pallet').addEventListener('change', e => {
 document.getElementById('btn-folder').addEventListener('click', reloadFolder);
 
 // ============ Init ============
-initChartDefaults();   // ← Chart.register(ChartDataLabels) + ตั้ง defaults ก่อนวาด chart ใดๆ
-initUotPagination();   // ← ผูกปุ่ม ◀ ▶ ของตาราง IMPORTED
+initChartDefaults();
+initUotPagination();
 dataIn   = [];
 dataUot  = [];
 dataCar  = [];
@@ -151,3 +151,4 @@ setStatus('nodata');
 rebuild();
 rebuildCar();
 renderCar();
+autoLoadFromData();
