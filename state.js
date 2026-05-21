@@ -1,15 +1,13 @@
-// ============ state.js — Global mutable state ============
-// Import object นี้ในทุกไฟล์ แล้วใช้ state.dataIn, state.CR ฯลฯ
-// อย่า destructure ออกมาตรงๆ เพราะจะได้ snapshot ไม่ใช่ live reference
+// ============ Global State — ตัวแปรข้อมูลหลักของแอป ============
+// อ่านได้จากทุกไฟล์ เพราะเป็น global scope
 
-export const state = {
-  dataIn:          [],    // POI IN (DOMESTIC)
-  dataUot:         [],    // POI OUT (IMPORTED)
-  dataCar:         [],    // คิวรถ (OUTBOUND)
-  dataPallet:      [],    // พาเลท (IN P)
-  palletByOnetime: {},    // { onetime_str: จำนวนบาร์โค้ด }
+let dataIn      = [];   // ข้อมูล POI IN (DOMESTIC)
+let dataUot     = [];   // ข้อมูล POI OUT (IMPORTED)
+let dataCar     = [];   // ข้อมูลคิวรถ (OUTBOUND)
+let dataPallet  = [];   // ข้อมูลพาเลท (IN P)
+let palletByOnetime = {}; // { onetime_str: จำนวนบาร์โค้ด }
 
-  inGrid:  null,          // gridjs instance (DOMESTIC tab)
-  carView: 'card',        // 'card' | 'table'
-  CR:      {},            // Chart registry { chartId: Chart instance }
-};
+let inGrid  = null;      // gridjs instance สำหรับ DOMESTIC tab
+let carView = 'card';    // 'card' | 'table' — view ของ CAR tab
+
+const CR = {};           // Chart registry: { chartId: Chart instance }
