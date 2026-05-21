@@ -151,4 +151,3 @@ setStatus('nodata');
 rebuild();
 rebuildCar();
 renderCar();
-autoLoadFromData();
