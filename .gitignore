@@ -1,0 +1,4 @@
+# Data files — do not commit to git
+data/*.xlsx
+data/*.xls
+data/*.csv
