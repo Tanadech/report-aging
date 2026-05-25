@@ -186,19 +186,6 @@ function renderPay() {
     scales: { y: { beginAtZero: true, ticks: { font: { size: 9 } }, grid: { color: 'rgba(255,255,255,.05)' } }, x: { ticks: { font: { size: 9 }, maxRotation: 30 } } }
   });
 
-  // ── Chart 4: By Category ──
-  const catData = Object.entries(groupBy(payFiltered, 'Category Name'))
-    .map(([k, v]) => ({ name: (k || 'ไม่ระบุ'), box: v.reduce((s, r) => s + num(r['จำนวน(กล่อง)']), 0) }))
-    .sort((a, b) => b.box - a.box).slice(0, 12);
-  const catEl = document.getElementById('p-c2');
-  catEl.style.width = Math.max(600, catData.length * 65) + 'px';
-  mkChart('p-c2', 'bar', {
-    labels: catData.map(d => d.name),
-    datasets: [{ label: 'จำนวนกล่อง', data: catData.map(d => d.box), backgroundColor: catData.map((_, i) => PALETTE[i % PALETTE.length]), borderRadius: 3, borderWidth: 0 }]
-  }, {
-    plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'top', font: { size: 9, weight: 'bold' }, formatter: v => v > 0 ? fmtN(v) : '', color: '#e2e8f0' } },
-    scales: { y: { beginAtZero: true, ticks: { font: { size: 9 } }, grid: { color: 'rgba(255,255,255,.05)' } }, x: { ticks: { font: { size: 9 }, maxRotation: 55 } } }
-  });
 
   renderPayCarTable();
   renderPayTags();
@@ -237,7 +224,8 @@ function renderPayCarTable() {
   departed.sort((a, b) => (a['ช่วงเวลา'] || '').localeCompare(b['ช่วงเวลา'] || '')).forEach(r => {
     const docNo  = String(r['เลขที่เอกสาร'] || '').trim();
     const agRows = agingByDoc[docNo] || [];
-    _payCarRows.push({ ...r, _docNo: docNo, _agRows: agRows });
+    const aging  = getAgingForBranch(r['ชื่อย่อสาขา'] || '', r['ชื่อสาขา'] || '', r['คลังสินค้า'] || '');
+    _payCarRows.push({ ...r, _docNo: docNo, _agRows: agRows, _aging: aging });
   });
 
   let html = `<div style="font-size:10.5px;color:var(--muted);padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.05);">
@@ -245,8 +233,9 @@ function renderPayCarTable() {
     ${dcCnt > 0 ? ` &nbsp;·&nbsp; <span style="color:#fb923c;">🚧 ยังไม่ออก DC: ${dcCnt} คัน</span>` : ''}
   </div>`;
   html += `<table class="gtbl"><thead><tr>
-    <th>ช่วงเวลา</th><th>คลัง</th><th>สาขา</th><th>ทะเบียน</th><th>คนขับ</th>
-    <th style="text-align:center;">เอกสาร Aging Out</th>
+    <th>ช่วงเวลา</th><th>คลัง</th><th>สาขา</th><th>ประเภทรถ</th><th>ประเภทงาน</th><th>ทะเบียน</th><th>คนขับ</th>
+    <th style="text-align:center;">DOMESTIC</th><th style="text-align:center;">IMPORTED</th>
+    <th style="text-align:center;">เอกสาร Aging Out รวม</th>
     <th style="text-align:right;">กล่อง</th><th style="text-align:right;">ชิ้น</th>
     <th>สถานะ</th>
   </tr></thead><tbody>`;
@@ -258,15 +247,20 @@ function renderPayCarTable() {
     if (stuck)                                                              { statCls = 'late';    statTxt = '⚠ ตกค้าง'; }
     else if (statTxt.includes('ยังไม่'))                                    statCls = 'pending';
     else if (statTxt.includes('สำเร็จ') || statTxt.includes('เรียบร้อย')) statCls = 'done';
+    const ag       = r._aging;
     const totalBox = r._agRows.reduce((s, x) => s + num(x['จำนวน(กล่อง)']), 0);
     const totalPcs = r._agRows.reduce((s, x) => s + num(x['จำนวนโอน(ชิ้น)']), 0);
     html += `<tr class="ctbl-row" onclick="openPayCarModal(${i})" title="คลิกเพื่อดูรายการเอกสาร Aging Out">
       <td style="font-weight:700;color:#7dd3fc;white-space:nowrap;">${esc(r['ช่วงเวลา'] || '')}</td>
       <td style="text-align:center;font-weight:700;">${esc(r['คลังสินค้า'] || '')}</td>
       <td><span style="font-weight:600;">${esc(brDisp)}</span>${r['ชื่อย่อสาขา'] ? ` <span style="font-size:10px;color:#c4b5fd;">${esc(r['ชื่อย่อสาขา'])}</span>` : ''}</td>
+      <td style="font-size:11px;">${esc(r['ประเภทรถ'] || '')}</td>
+      <td style="font-size:11px;">${esc(r['ประเภทงาน'] || '')}</td>
       <td style="font-family:monospace;font-size:11px;">${esc(r['ป้ายทะเบียน'] || '')}</td>
       <td style="font-size:11px;">${esc(r['ชื่อคนขับ'] || '')}${r['เบอร์โทร'] ? ` <span style="color:var(--muted);font-size:10px;">(${esc(r['เบอร์โทร'])})</span>` : ''}</td>
-      <td style="text-align:center;">${r._agRows.length ? `<b style="color:#7dd3fc;">📑 ${r._agRows.length} รายการ</b>` : '<span style="color:var(--muted)">—</span>'}</td>
+      <td style="text-align:center;">${ag.inDocs  ? `<b style="color:#7dd3fc;">${ag.inDocs}</b>`  : '—'}</td>
+      <td style="text-align:center;">${ag.outDocs ? `<b style="color:#fbbf24;">${ag.outDocs}</b>` : '—'}</td>
+      <td style="text-align:center;">${r._agRows.length ? `<b style="color:#a5b4fc;">📑 ${r._agRows.length}</b>` : '<span style="color:var(--muted)">—</span>'}</td>
       <td style="text-align:right;">${totalBox ? fmtN(totalBox) : '—'}</td>
       <td style="text-align:right;">${totalPcs ? fmtN(totalPcs) : '—'}</td>
       <td><span class="cstat ${statCls}">${esc(statTxt)}</span></td>
