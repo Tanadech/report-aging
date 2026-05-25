@@ -200,167 +200,124 @@ function renderPay() {
     scales: { y: { beginAtZero: true, ticks: { font: { size: 9 } }, grid: { color: 'rgba(255,255,255,.05)' } }, x: { ticks: { font: { size: 9 }, maxRotation: 55 } } }
   });
 
-  renderPayTable();
+  renderPayCarTable();
   renderPayTags();
-  renderPayComparison();
 }
 
-// ── Top 5 สาขา aging เปรียบเทียบกับ Aging Out วันนี้ ──
-function renderPayComparison() {
-  const wrap = document.getElementById('p-comparison');
-  if (!wrap) return;
+// ── Car OUTBOUND Table (ออก DC แล้ว) ──
+let _payCarRows = [];
 
-  // ต้องมีข้อมูล Car + IMPORTED หรือ DOMESTIC อย่างน้อยหนึ่ง
-  if (!dataCar.length || (!dataUot.length && !dataIn.length)) {
-    wrap.innerHTML = '<div style="padding:18px;text-align:center;color:var(--muted);font-size:12px;">📊 ต้องการข้อมูล <strong>Car.xlsx</strong> + <strong>IMPORTED/DOMESTIC</strong> เพื่อแสดงเปรียบเทียบ</div>';
-    if (CR['p-c3']) { CR['p-c3'].destroy(); delete CR['p-c3']; }
+function renderPayCarTable() {
+  const el = document.getElementById('p-car-tbl');
+  if (!el) return;
+  _payCarRows = [];
+
+  if (!dataCar.length) {
+    el.innerHTML = '<div style="padding:30px;text-align:center;color:var(--muted);font-size:13px;">📂 กรุณาโหลดไฟล์ <strong>Car.xlsx</strong> เพื่อแสดงคิวรถ OUTBOUND</div>';
     return;
   }
 
-  // 1. เอกสารจ่ายวันนี้จาก Aging Out
-  const todayStr  = _getTodayDdMmYyyy();
-  const todayPaid = dataAgingOut.filter(r => r['วันที่'] === todayStr);
-  const paidDocSet = new Set(todayPaid.map(r => r['เลขที่เอกสาร']).filter(Boolean));
-  const paidBoxByDoc = {};
-  todayPaid.forEach(r => {
-    const d = r['เลขที่เอกสาร'] || '';
-    if (d) paidBoxByDoc[d] = (paidBoxByDoc[d] || 0) + num(r['จำนวน(กล่อง)']);
+  // Build Aging Out lookup: docNo → rows
+  const agingByDoc = {};
+  dataAgingOut.forEach(r => {
+    const d = String(r['เลขที่เอกสาร'] || '').trim();
+    if (d) { if (!agingByDoc[d]) agingByDoc[d] = []; agingByDoc[d].push(r); }
   });
 
-  // 2. รวม branch จาก Car — brAbr → brFullName
-  const branchMap = {};
-  dataCar.forEach(r => {
-    const abr  = String(r['ชื่อย่อสาขา'] || '').trim();
-    const full = String(r['ชื่อสาขา']    || '').trim();
-    if (abr && !branchMap[abr]) branchMap[abr] = full || BR_ABR_MAP[abr] || abr;
-  });
+  // รถที่ออก DC แล้ว = isChecked('รถยังไม่ออกจาก DC') === false
+  const departed = dataCar.filter(r => !isChecked(r['รถยังไม่ออกจาก DC']));
 
-  // 3. Car docs by branch (เชื่อม เลขที่เอกสาร Car → Aging Out)
-  const carDocsByBranch = {};
-  dataCar.forEach(r => {
-    const abr = String(r['ชื่อย่อสาขา'] || '').trim();
-    const doc = String(r['เลขที่เอกสาร'] || '').trim();
-    if (abr && doc) {
-      if (!carDocsByBranch[abr]) carDocsByBranch[abr] = [];
-      carDocsByBranch[abr].push(doc);
-    }
-  });
-
-  // 4. คำนวณ aging ต่อสาขาจาก IMPORTED + DOMESTIC → top 5
-  const brStats = Object.entries(branchMap).map(([abr, full]) => {
-    const ag = getAgingForBranch(abr, full, '');
-    return { abr, full, ...ag };
-  }).filter(b => b.maxDays > 0 || b.totalDocs > 0)
-    .sort((a, b) => b.maxDays - a.maxDays)
-    .slice(0, 5);
-
-  if (!brStats.length) {
-    wrap.innerHTML = '<div style="padding:18px;text-align:center;color:var(--muted);font-size:12px;">ไม่พบข้อมูล aging สำหรับสาขาในรายการรถ</div>';
+  if (!departed.length) {
+    el.innerHTML = '<div style="padding:30px;text-align:center;color:var(--muted);font-size:13px;">ไม่มีรถที่ออก DC แล้ว หรือยังไม่โหลดข้อมูล</div>';
     return;
   }
 
-  // 5. เพิ่มข้อมูล paid/pending จาก Car→AgingOut
-  brStats.forEach(b => {
-    const carDocs = carDocsByBranch[b.abr] || [];
-    let paidCnt = 0, pendingCnt = 0, paidBoxes = 0;
-    carDocs.forEach(docNo => {
-      if (paidDocSet.has(docNo)) { paidCnt++; paidBoxes += paidBoxByDoc[docNo] || 0; }
-      else pendingCnt++;
-    });
-    b.paidCnt    = paidCnt;
-    b.pendingCnt = pendingCnt;
-    b.paidBoxes  = paidBoxes;
+  const allCnt = dataCar.length;
+  const dcCnt  = allCnt - departed.length;
+  departed.sort((a, b) => (a['ช่วงเวลา'] || '').localeCompare(b['ช่วงเวลา'] || '')).forEach(r => {
+    const docNo  = String(r['เลขที่เอกสาร'] || '').trim();
+    const agRows = agingByDoc[docNo] || [];
+    _payCarRows.push({ ...r, _docNo: docNo, _agRows: agRows });
   });
 
-  // 6. Grouped bar chart
-  const labels = brStats.map(b => (b.full || b.abr).replace(/^สาขา\s*/, ''));
-  mkChart('p-c3', 'bar', {
-    labels,
-    datasets: [
-      { label: 'วันค้างสูงสุด (วัน)',     data: brStats.map(b => b.maxDays),   backgroundColor: '#ef4444', borderRadius: 3 },
-      { label: 'เอกสารคงค้าง (IN+OUT)', data: brStats.map(b => b.totalDocs), backgroundColor: '#f59e0b', borderRadius: 3 },
-      { label: 'เอกสารจ่ายวันนี้',       data: brStats.map(b => b.paidCnt),  backgroundColor: '#10b981', borderRadius: 3 },
-      { label: 'กล่องที่จ่ายวันนี้',      data: brStats.map(b => b.paidBoxes),backgroundColor: '#22d3ee', borderRadius: 3 }
-    ]
-  }, {
-    plugins: {
-      legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 10, padding: 6 } },
-      datalabels: { anchor: 'end', align: 'top', font: { size: 9, weight: 'bold' }, formatter: v => v > 0 ? fmtN(v) : '', color: '#e2e8f0' }
-    },
-    scales: {
-      y: { beginAtZero: true, ticks: { font: { size: 9 } }, grid: { color: 'rgba(255,255,255,.05)' } },
-      x: { ticks: { font: { size: 9 }, maxRotation: 30 } }
-    }
-  });
-
-  // 7. ตาราง summary
-  const todayDisp = _fmtPayDate(todayStr);
-  let tbl = `<div style="font-size:10.5px;color:var(--muted);margin-bottom:6px;padding:0 2px;">📅 เปรียบเทียบวันที่ ${todayDisp} — เชื่อมผ่าน <b>เลขที่เอกสาร</b> (Car ↔ Aging Out)</div>`;
-  tbl += `<table class="gtbl" style="font-size:11px;"><thead><tr>
-    <th style="text-align:center;">#</th>
-    <th>สาขา</th>
-    <th style="text-align:center;color:#fca5a5;">วันค้างสูงสุด</th>
-    <th style="text-align:center;color:#fcd34d;">เอกสารคงค้าง</th>
-    <th style="text-align:center;color:#34d399;">เอกสารจ่ายวันนี้</th>
-    <th style="text-align:center;color:#67e8f9;">กล่องที่จ่าย</th>
-  </tr></thead><tbody>`;
-  brStats.forEach((b, i) => {
-    const brLabel = (b.full || b.abr).replace(/^สาขา\s*/, '');
-    tbl += `<tr>
-      <td style="text-align:center;font-weight:700;color:#94a3b8;">${i + 1}</td>
-      <td><span style="font-weight:600;">${esc(brLabel)}</span>&nbsp;<span style="font-size:9.5px;color:#c4b5fd;">${esc(b.abr)}</span></td>
-      <td style="text-align:center;font-weight:700;color:#fca5a5;">${b.maxDays > 0 ? b.maxDays + ' วัน' : '—'}</td>
-      <td style="text-align:center;">${fmtN(b.totalDocs)}</td>
-      <td style="text-align:center;font-weight:700;color:#34d399;">${b.paidCnt > 0 ? fmtN(b.paidCnt) : '—'}</td>
-      <td style="text-align:center;color:#67e8f9;">${b.paidBoxes > 0 ? fmtN(b.paidBoxes) : '—'}</td>
-    </tr>`;
-  });
-  tbl += '</tbody></table>';
-  wrap.innerHTML = tbl;
-}
-
-// ── Table ──
-function renderPayTable() {
-  const pg = payPage;
-  const sorted = [...payFiltered].sort((a, b) => {
-    const da = parseFloat(a['วันที่']) || 0, db = parseFloat(b['วันที่']) || 0;
-    if (db !== da) return db - da;
-    return (a['เลขที่เอกสาร'] || '').localeCompare(b['เลขที่เอกสาร'] || '');
-  });
-
-  const total = sorted.length, pages = Math.ceil(total / PAY_PAGE_SIZE) || 1;
-  const slice = sorted.slice(pg * PAY_PAGE_SIZE, (pg + 1) * PAY_PAGE_SIZE);
-
-  document.getElementById('p-cnt').textContent      = `(${fmtN(total)} รายการ)`;
-  document.getElementById('p-pg-info').textContent  = `หน้า ${pg + 1}/${pages}`;
-  document.getElementById('p-prev').disabled        = pg === 0;
-  document.getElementById('p-next').disabled        = pg >= pages - 1;
-
-  let html = `<table class="gtbl"><thead><tr>
-    <th>วันที่</th><th>เลขที่เอกสาร</th><th>สาขา</th>
-    <th>เลขที่ขอโอน</th><th>เลขที่โอนออก</th>
-    <th>รหัสสินค้า</th><th>ชื่อสินค้า</th>
-    <th>กล่อง</th><th>ชิ้น</th><th>Category</th><th>ประเภท</th>
+  let html = `<div style="font-size:10.5px;color:var(--muted);padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.05);">
+    รวม ${_payCarRows.length} คัน (จากทั้งหมด ${allCnt} คัน)
+    ${dcCnt > 0 ? ` &nbsp;·&nbsp; <span style="color:#fb923c;">🚧 ยังไม่ออก DC: ${dcCnt} คัน</span>` : ''}
+  </div>`;
+  html += `<table class="gtbl"><thead><tr>
+    <th>ช่วงเวลา</th><th>คลัง</th><th>สาขา</th><th>ทะเบียน</th><th>คนขับ</th>
+    <th style="text-align:center;">เอกสาร Aging Out</th>
+    <th style="text-align:right;">กล่อง</th><th style="text-align:right;">ชิ้น</th>
+    <th>สถานะ</th>
   </tr></thead><tbody>`;
 
-  slice.forEach(r => {
-    const brName = (r['ชื่อสาขา'] || '').replace(/^สาขา\s*/, '');
-    html += `<tr>
-      <td style="white-space:nowrap;font-size:11px;font-variant-numeric:tabular-nums;">${esc(_fmtPayDate(r['วันที่']))}</td>
-      <td><span class="mdoc">${esc(r['เลขที่เอกสาร'] || '')}</span></td>
-      <td style="font-size:11px;">${esc(brName)}</td>
-      <td style="font-size:10.5px;color:#a5b4fc;">${esc(r['เลขที่ขอโอน'] || '')}</td>
-      <td style="font-size:10.5px;color:#6ee7b7;">${esc(r['เลขที่โอนออก'] || '')}</td>
-      <td style="font-size:10.5px;">${esc(r['รหัสสินค้า'] || '')}</td>
-      <td style="font-size:10.5px;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${esc(r['ชื่อสินค้า'] || '')}">${esc(r['ชื่อสินค้า'] || '')}</td>
-      <td style="text-align:right;">${fmtN(num(r['จำนวน(กล่อง)']))}</td>
-      <td style="text-align:right;">${fmtN(num(r['จำนวนโอน(ชิ้น)']))}</td>
-      <td style="font-size:10px;">${esc(r['Category Name'] || '')}</td>
-      <td><span class="pay-type ${(r['ประเภท'] || '').toLowerCase()}">${esc(r['ประเภท'] || '')}</span></td>
+  _payCarRows.forEach((r, i) => {
+    const brDisp  = (r['ชื่อสาขา'] || BR_ABR_MAP[r['ชื่อย่อสาขา']] || r['ชื่อย่อสาขา'] || '').replace(/^สาขา\s*/, '');
+    const stuck   = isChecked(r['รถตกค้าง']);
+    let statCls   = 'unknown', statTxt = r['สถานะลงคิว'] || '-';
+    if (stuck)                                                              { statCls = 'late';    statTxt = '⚠ ตกค้าง'; }
+    else if (statTxt.includes('ยังไม่'))                                    statCls = 'pending';
+    else if (statTxt.includes('สำเร็จ') || statTxt.includes('เรียบร้อย')) statCls = 'done';
+    const totalBox = r._agRows.reduce((s, x) => s + num(x['จำนวน(กล่อง)']), 0);
+    const totalPcs = r._agRows.reduce((s, x) => s + num(x['จำนวนโอน(ชิ้น)']), 0);
+    html += `<tr class="ctbl-row" onclick="openPayCarModal(${i})" title="คลิกเพื่อดูรายการเอกสาร Aging Out">
+      <td style="font-weight:700;color:#7dd3fc;white-space:nowrap;">${esc(r['ช่วงเวลา'] || '')}</td>
+      <td style="text-align:center;font-weight:700;">${esc(r['คลังสินค้า'] || '')}</td>
+      <td><span style="font-weight:600;">${esc(brDisp)}</span>${r['ชื่อย่อสาขา'] ? ` <span style="font-size:10px;color:#c4b5fd;">${esc(r['ชื่อย่อสาขา'])}</span>` : ''}</td>
+      <td style="font-family:monospace;font-size:11px;">${esc(r['ป้ายทะเบียน'] || '')}</td>
+      <td style="font-size:11px;">${esc(r['ชื่อคนขับ'] || '')}${r['เบอร์โทร'] ? ` <span style="color:var(--muted);font-size:10px;">(${esc(r['เบอร์โทร'])})</span>` : ''}</td>
+      <td style="text-align:center;">${r._agRows.length ? `<b style="color:#7dd3fc;">📑 ${r._agRows.length} รายการ</b>` : '<span style="color:var(--muted)">—</span>'}</td>
+      <td style="text-align:right;">${totalBox ? fmtN(totalBox) : '—'}</td>
+      <td style="text-align:right;">${totalPcs ? fmtN(totalPcs) : '—'}</td>
+      <td><span class="cstat ${statCls}">${esc(statTxt)}</span></td>
     </tr>`;
   });
+
   html += '</tbody></table>';
-  document.getElementById('p-tbl').innerHTML = html;
+  el.innerHTML = html;
+}
+
+// ── Popup: รายละเอียดเอกสารในรถ ──
+function openPayCarModal(idx) {
+  const r = _payCarRows[idx];
+  if (!r) return;
+  const brDisp = (r['ชื่อสาขา'] || BR_ABR_MAP[r['ชื่อย่อสาขา']] || r['ชื่อย่อสาขา'] || '').replace(/^สาขา\s*/, '');
+  document.getElementById('pcm-title').textContent = `${brDisp} — คลัง ${r['คลังสินค้า'] || '-'}`;
+  document.getElementById('pcm-sub').textContent   = `⏰ ${r['ช่วงเวลา'] || '-'}  |  🔖 ${r['ป้ายทะเบียน'] || '-'}${r['ชื่อคนขับ'] ? '  |  👤 ' + r['ชื่อคนขับ'] : ''}`;
+
+  const agRows = r._agRows || [];
+  let body = '';
+  if (!agRows.length) {
+    body = `<div style="padding:30px;text-align:center;color:var(--muted);">ไม่พบรายการเอกสารใน Aging OUTBOUND<br><span style="font-size:10px;">ต้องโหลดไฟล์ Aging Out ก่อน</span></div>`;
+  } else {
+    const totalBox = agRows.reduce((s, x) => s + num(x['จำนวน(กล่อง)']), 0);
+    const totalPcs = agRows.reduce((s, x) => s + num(x['จำนวนโอน(ชิ้น)']), 0);
+    body = `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+      <span style="font-size:11px;padding:3px 10px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);border-radius:4px;color:#7dd3fc;">📄 ${esc(r._docNo)}</span>
+      <span style="font-size:11px;padding:3px 10px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);border-radius:4px;color:#34d399;">📦 ${fmtN(totalBox)} กล่อง</span>
+      <span style="font-size:11px;padding:3px 10px;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.2);border-radius:4px;color:#c4b5fd;">${fmtN(totalPcs)} ชิ้น</span>
+      <span style="font-size:11px;padding:3px 10px;background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.2);border-radius:4px;color:#fb923c;">${agRows.length} รายการสินค้า</span>
+    </div>
+    <table class="gtbl"><thead><tr>
+      <th>เลขที่ขอโอน</th><th>รหัสสินค้า</th><th>ชื่อสินค้า</th>
+      <th style="text-align:right;">กล่อง</th><th style="text-align:right;">ชิ้น</th>
+      <th>Category</th><th>ประเภท</th>
+    </tr></thead><tbody>`;
+    agRows.forEach(x => {
+      body += `<tr>
+        <td style="font-size:10.5px;color:#a5b4fc;white-space:nowrap;">${esc(x['เลขที่ขอโอน'] || '')}</td>
+        <td style="font-size:10.5px;">${esc(x['รหัสสินค้า'] || '')}</td>
+        <td style="font-size:10.5px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(x['ชื่อสินค้า'] || '')}">${esc(x['ชื่อสินค้า'] || '')}</td>
+        <td style="text-align:right;font-weight:600;">${fmtN(num(x['จำนวน(กล่อง)']))}</td>
+        <td style="text-align:right;">${fmtN(num(x['จำนวนโอน(ชิ้น)']))}</td>
+        <td style="font-size:10px;">${esc(x['Category Name'] || '')}</td>
+        <td><span class="pay-type ${(x['ประเภท'] || '').toLowerCase()}">${esc(x['ประเภท'] || '')}</span></td>
+      </tr>`;
+    });
+    body += '</tbody></table>';
+  }
+  document.getElementById('pcm-body').innerHTML = body;
+  document.getElementById('pay-car-modal').classList.add('open');
 }
 
 // ── Filter Tags ──
@@ -409,15 +366,8 @@ function fillPayFilters() {
   document.getElementById('p-fc-list').querySelectorAll('input').forEach(cb => cb.addEventListener('change', renderPay));
 }
 
-// ── Init Pagination & Events ──
+// ── Init Events ──
 function initPayTab() {
-  document.getElementById('p-prev').addEventListener('click', () => {
-    if (payPage > 0) { payPage--; renderPayTable(); }
-  });
-  document.getElementById('p-next').addEventListener('click', () => {
-    const pages = Math.ceil(payFiltered.length / PAY_PAGE_SIZE) || 1;
-    if (payPage < pages - 1) { payPage++; renderPayTable(); }
-  });
   document.getElementById('p-fsearch').addEventListener('input', renderPay);
   document.getElementById('p-clr').addEventListener('click', () => {
     checkAllCB(document.getElementById('p-fb-list'));
@@ -425,5 +375,13 @@ function initPayTab() {
     checkAllCB(document.getElementById('p-fc-list'));
     document.getElementById('p-fsearch').value = '';
     renderPay();
+  });
+  // Pay Car Modal close
+  document.getElementById('pcm-close').addEventListener('click', () => {
+    document.getElementById('pay-car-modal').classList.remove('open');
+  });
+  document.getElementById('pay-car-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('pay-car-modal'))
+      document.getElementById('pay-car-modal').classList.remove('open');
   });
 }
