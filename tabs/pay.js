@@ -350,11 +350,17 @@ function renderPayCarTable() {
     });
 
   // ── 4. Render ──
-  const matchCnt = _payCarRows.filter(r => r._agRows.length > 0).length;
-  let html = `<div style="font-size:10.5px;color:var(--muted);padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.05);">
-    รวม ${_payCarRows.length} คัน ออก DC แล้ว
-    &nbsp;·&nbsp; มีข้อมูล Aging Out: <span style="color:#a5b4fc;">${matchCnt} คัน</span>
-    ${!dataAgingOut.length ? ' &nbsp;·&nbsp; <span style="color:#fb923c;">⚠ ยังไม่โหลด Aging Out</span>' : ''}
+  const matchCnt   = _payCarRows.filter(r => r._agRows.length > 0).length;
+  const agDocCount = uniqCount(dataAgingOut, 'เลขที่เอกสาร');
+  let html = `<div style="font-size:10.5px;color:var(--muted);padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;flex-wrap:wrap;gap:12px;align-items:center;">
+    <span>รวม <b style="color:#e2e8f0;">${_payCarRows.length}</b> คัน ออก DC แล้ว</span>
+    <span>มีข้อมูล Aging Out: <b style="color:#a5b4fc;">${matchCnt} / ${_payCarRows.length}</b> คัน</span>
+    ${dataAgingOut.length
+      ? `<span>Aging Out ที่โหลด: <b style="color:#34d399;">${agDocCount}</b> เลขที่เอกสาร / <b style="color:#34d399;">${dataAgingOut.length}</b> รายการ</span>`
+      : `<span style="color:#fb923c;">⚠ ยังไม่โหลดไฟล์ Aging OUTBOUND</span>`}
+    ${matchCnt < _payCarRows.length && dataAgingOut.length
+      ? `<span style="color:#fb923c;">⚠ ไม่พบ Aging Out อีก ${_payCarRows.length - matchCnt} คัน — ตรวจสอบว่าโหลดไฟล์ครบถ้วน</span>`
+      : ''}
   </div>`;
 
   html += `<table class="gtbl"><thead><tr>
