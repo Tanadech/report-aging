@@ -393,7 +393,7 @@ function renderPayCarTable() {
     else if (statTxt.includes('สำเร็จ') || statTxt.includes('เรียบร้อย')) statCls = 'done';
     const totalBox    = r._agRows.reduce((s, x) => s + num(x['จำนวน(กล่อง)']), 0);
     const totalPcs    = r._agRows.reduce((s, x) => s + num(x['จำนวนโอน(ชิ้น)']), 0);
-    const dateDisp    = r['วันที่'] ? _fmtPayDate(r['วันที่']) : '—';
+    const dateDisp    = _fmtPayDate(r['วันที่คิวงาน'] || r['วันที่'] || '') || '—';
     const loadTime    = r['เวลาขึ้นสินค้า']    || '—';
     const loadStatus  = r['สถานะขึ้นสินค้า']   || '—';
     html += `<tr class="ctbl-row" onclick="openPayCarModal(${i})" title="คลิกเพื่อดูรายการเอกสาร Aging Out">
