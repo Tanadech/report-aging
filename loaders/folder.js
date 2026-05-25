@@ -36,17 +36,18 @@ async function scanAndLoadFolder() {
   btn.disabled = true;
   document.getElementById('btn-folder-txt').textContent = 'กำลังสแกน...';
 
-  const collected = { car:null, pallet:[], in:[], out:[] };
+  const collected = { car:null, pallet:[], in:[], out:[], agingout:null };
   try {
     for await (const [name, h] of dirHandle.entries()) {
       if (h.kind !== 'file') continue;
       if (name.startsWith('~$')) continue;
       const lower = name.toLowerCase();
       if (!lower.endsWith('.xlsx') && !lower.endsWith('.xls')) continue;
-      if (/^car/i.test(name))         collected.car = h;
-      else if (/^in\s*p/i.test(name)) collected.pallet.push({ name, h });
-      else if (/^in\s/i.test(name))   collected.in.push({ name, h });
-      else if (/^out\s/i.test(name))  collected.out.push({ name, h });
+      if (/^car/i.test(name))            collected.car = h;
+      else if (/^in\s*p/i.test(name))   collected.pallet.push({ name, h });
+      else if (/^in\s/i.test(name))     collected.in.push({ name, h });
+      else if (/^out\s/i.test(name))    collected.out.push({ name, h });
+      else if (/aging/i.test(name))     collected.agingout = h;
     }
   } catch (e) {
     alert('สแกนโฟลเดอร์ผิดพลาด: ' + e.message);
@@ -72,6 +73,9 @@ async function scanAndLoadFolder() {
   }
   if (collected.car) {
     tasks.push(collected.car.getFile().then(f => { loadCarFile(f); loadedNames.push('🚛 ' + f.name); }));
+  }
+  if (collected.agingout) {
+    tasks.push(collected.agingout.getFile().then(f => { loadAgingOutFile(f); loadedNames.push('📤 ' + f.name); }));
   }
 
   await Promise.all(tasks);
