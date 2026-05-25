@@ -15,7 +15,7 @@ function _renderCarCards(enriched, slotsOrdered, grouped, today, tomorrow) {
       rows.forEach(r => {
         const ag      = r._aging;
         const stuck   = isChecked(r['รถตกค้าง']);
-        const inDc    = isChecked(r['รถยังไม่ออกจาก DC']);
+        const inDc    = isDcNotLeft(r['รถยังไม่ออกจาก DC']);
         const cardCls = stuck ? 'urgent-stuck' : (ag.maxDays > 30 ? 'urgent' : ag.totalDocs > 0 ? 'has-aging' : '');
         const brDisp  = (r['ชื่อสาขา'] || BR_ABR_MAP[r['ชื่อย่อสาขา']] || r['ชื่อย่อสาขา'] || '(ไม่ระบุสาขา)').replace(/^สาขา\s*/, '');
         const brAbr   = r['ชื่อย่อสาขา'] || '';
@@ -71,7 +71,7 @@ function _renderCarTable(enriched) {
     enriched.forEach(r => {
       const ag      = r._aging;
       const stuck   = isChecked(r['รถตกค้าง']);
-      const inDc    = isChecked(r['รถยังไม่ออกจาก DC']);
+      const inDc    = isDcNotLeft(r['รถยังไม่ออกจาก DC']);
       const brDisp  = (r['ชื่อสาขา'] || BR_ABR_MAP[r['ชื่อย่อสาขา']] || r['ชื่อย่อสาขา'] || '').replace(/^สาขา\s*/, '');
       let statTxt   = r['สถานะลงคิว'] || '-', statCls = 'unknown';
       if (stuck)                                                             { statCls = 'late'; statTxt = '⚠ ตกค้าง'; }

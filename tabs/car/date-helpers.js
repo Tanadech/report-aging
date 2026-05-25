@@ -27,8 +27,23 @@ function timeSlotStart(slot) {
 }
 
 function isChecked(v) {
-  if (v === null || v === undefined) return false;
+  if (v === null || v === undefined || v === '') return false;
   const s = String(v).trim().toLowerCase();
-  if (!s || s === 'false' || s === '0' || s === 'no' || s === 'ไม่' || s === 'n') return false;
-  return true; // ค่าใดๆ ที่ไม่ใช่ค่าเท็จ = ติ๊ก
+  return s === 'true' || s === 'checked' || s === '1' || s === '✓' || s === 'x'
+      || s === 'yes'  || s === 'y'       || s === 'มี' || s === 'ใช่' || s === 'ติ๊ก';
+}
+
+// สำหรับคอลัมน์ "รถยังไม่ออกจาก DC" ซึ่งเก็บ text status (ไม่ใช่ checkbox)
+function isDcNotLeft(v) {
+  if (!v) return false;
+  const s = String(v).trim().toLowerCase();
+  // "ยังไม่ออก" = รถอยู่ที่ DC ยังไม่ออก → แสดง badge
+  return s.includes('ยังไม่ออก') || s === 'true' || s === '1' || s === '✓';
+}
+
+function isDcDeparted(v) {
+  if (!v) return false;
+  const s = String(v).trim().toLowerCase();
+  // "ออกแล้ว" = รถออกจาก DC แล้ว → แสดงในตารางรถออก
+  return s === 'ออกแล้ว' || s === 'ออก';
 }

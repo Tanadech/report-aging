@@ -224,8 +224,8 @@ function renderPayCarTable() {
     if (d) { if (!agingByDoc[d]) agingByDoc[d] = []; agingByDoc[d].push(r); }
   });
 
-  // รถที่ออก DC แล้ว = isChecked('รถยังไม่ออกจาก DC') === false
-  const departed = dataCar.filter(r => !isChecked(r['รถยังไม่ออกจาก DC']));
+  // รถที่ออก DC แล้ว = ค่าในคอลัมน์ = "ออกแล้ว"
+  const departed = dataCar.filter(r => isDcDeparted(r['รถยังไม่ออกจาก DC']));
 
   if (!departed.length) {
     el.innerHTML = '<div style="padding:30px;text-align:center;color:var(--muted);font-size:13px;">ไม่มีรถที่ออก DC แล้ว หรือยังไม่โหลดข้อมูล</div>';
