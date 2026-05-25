@@ -120,16 +120,18 @@ function renderPay() {
   const cntStd    = dataCar.filter(r => String(r['สถานะขึ้นสินค้า'] || '').trim() === 'ได้มาตราฐาน').length;
   const cntNonStd = dataCar.filter(r => String(r['สถานะขึ้นสินค้า'] || '').trim() === 'ไม่ได้มาตราฐาน').length;
 
-  kpiEl.innerHTML = `
-    <stat-card label="เอกสาร OUTBOUND" value="${fmtN(docsDepted)}" unit="รถออกแล้ว"></stat-card>
-    <stat-card label="เลขที่ขอโอน จ่ายแล้ว" value="${fmtN(poisDepted)}" unit="รถออกแล้ว" variant="ok"></stat-card>
-    <stat-card label="จำนวนสินค้า" value="${fmtN(payFiltered.length)}" unit="รายการ"></stat-card>
-    <stat-card label="จำนวนกล่องรวม" value="${fmtN(totalBox)}" unit="กล่อง"></stat-card>
-    <stat-card label="จำนวนชิ้นรวม" value="${fmtN(totalPcs)}" unit="ชิ้น"></stat-card>
-    <stat-card label="จำนวนสาขา" value="${fmtN(branches)}" unit="สาขา" variant="inf"></stat-card>
-    <stat-card label="ได้มาตราฐาน" value="${fmtN(cntStd)}" unit="คัน" variant="ok"></stat-card>
-    <stat-card label="ไม่ได้มาตราฐาน" value="${fmtN(cntNonStd)}" unit="คัน" variant="${cntNonStd > 0 ? 'alr' : 'ok'}"></stat-card>
-  `;
+  const mkK = (lbl, val, unit, cls='') =>
+    `<div class="kpi${cls ? ' '+cls : ''}"><div class="kpi-lbl">${lbl}</div><div class="kpi-val">${val}</div><div class="kpi-unit">${unit}</div></div>`;
+
+  kpiEl.innerHTML =
+    mkK('เอกสาร OUTBOUND',       fmtN(docsDepted),        'รถออกแล้ว') +
+    mkK('เลขที่ขอโอน จ่ายแล้ว', fmtN(poisDepted),        'รถออกแล้ว', 'ok') +
+    mkK('จำนวนสินค้า',           fmtN(payFiltered.length),'รายการ') +
+    mkK('จำนวนกล่องรวม',         fmtN(totalBox),          'กล่อง') +
+    mkK('จำนวนชิ้นรวม',          fmtN(totalPcs),          'ชิ้น') +
+    mkK('จำนวนสาขา',             fmtN(branches),          'สาขา', 'inf') +
+    mkK('ได้มาตราฐาน',           fmtN(cntStd),            'คัน', 'ok') +
+    mkK('ไม่ได้มาตราฐาน',        fmtN(cntNonStd),         'คัน', cntNonStd > 0 ? 'alr' : 'ok');
 
   // ใช้สำหรับ Chart 2 (IMPORTED vs Aging Out)
   const allPaidPOIs = new Set(dataAgingOut.map(r => r['เลขที่ขอโอน']).filter(Boolean));
