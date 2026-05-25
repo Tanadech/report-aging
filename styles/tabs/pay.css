@@ -19,6 +19,11 @@
 .pay-car-kpi-row .kpi    { padding:8px 10px; }
 .pay-car-kpi-row .kpi-val{ font-size:18px; }
 
+/* กลุ่ม 2 — ให้ขนาดเท่ากับ กลุ่ม 1 */
+#pay-kpi                 { grid-template-columns:repeat(auto-fit,minmax(100px,1fr)) !important; }
+#pay-kpi .kpi            { padding:8px 10px; }
+#pay-kpi .kpi-val        { font-size:18px; }
+
 /* ── Light mode ── */
 body.light .pay-car-kpi-lbl::after { background:rgba(0,0,0,.08); }
 body.light .p-search-wrap { background:#fff; border-color:#cbd5e1; }
