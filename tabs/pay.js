@@ -323,20 +323,32 @@ function renderPayCarTable() {
     return;
   }
 
-  // ── 1. Build Aging Out lookup: เลขที่เอกสาร → [rows] ──
+  // ── 1. Build Aging Out lookup จาก payFiltered (ผ่าน filter เดียวกับตารางหลัก) ──
   const agingByDoc = {};
-  dataAgingOut.forEach(r => {
+  const agingSource = dataAgingOut.length ? payFiltered : []; // ถ้าไม่มี Aging Out → ว่าง
+  agingSource.forEach(r => {
     const d = String(r['เลขที่เอกสาร'] || '').trim();
     if (!d) return;
     if (!agingByDoc[d]) agingByDoc[d] = [];
     agingByDoc[d].push(r);
   });
 
-  // ── 2. Primary: รถทุกคันที่ออก DC แล้ว ──
-  const departed = dataCar.filter(r => isDcDeparted(r['รถยังไม่ออกจาก DC']));
+  // ── 2. Primary: รถทุกคันที่ออก DC แล้ว
+  //    ถ้าโหลด Aging Out แล้ว → กรองเฉพาะที่มีเอกสารผ่าน filter
+  //    ถ้ายังไม่โหลด Aging Out → แสดงทุกคัน ──
+  const agDocSet = new Set(Object.keys(agingByDoc));
+  const departed = dataCar.filter(r => {
+    if (!isDcDeparted(r['รถยังไม่ออกจาก DC'])) return false;
+    if (!dataAgingOut.length) return true; // ยังไม่โหลด Aging Out → แสดงหมด
+    const docNo = String(r['เลขที่เอกสาร'] || '').trim();
+    return agDocSet.has(docNo); // มีใน filtered aging out ถึงแสดง
+  });
 
   if (!departed.length) {
-    el.innerHTML = '<div style="padding:30px;text-align:center;color:var(--muted);font-size:13px;">ไม่มีรถที่ออก DC แล้ว</div>';
+    const msg = dataAgingOut.length
+      ? 'ไม่มีรถที่ตรงกับเงื่อนไขการกรอง'
+      : 'ไม่มีรถที่ออก DC แล้ว';
+    el.innerHTML = `<div style="padding:30px;text-align:center;color:var(--muted);font-size:13px;">${msg}</div>`;
     return;
   }
 
