@@ -53,9 +53,9 @@ function loadAgingOutFile(file) {
   const reader = new FileReader();
   reader.onload = e => {
     try {
-      const wb   = XLSX.read(e.target.result, { type:'array', cellDates:false, raw:true });
+      const wb   = XLSX.read(e.target.result, { type:'array', cellDates:true, dateNF:'dd/mm/yyyy' });
       const ws   = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(ws, { defval:'', raw:true });
+      const rows = XLSX.utils.sheet_to_json(ws, { defval:'', raw:false });
       if (!rows.length) { alert('ไม่พบข้อมูลในไฟล์ ' + file.name); return; }
       dataAgingOut = rows;
       const now    = new Date();

@@ -5,16 +5,23 @@ let payFiltered = [], payPage = 0;
 
 // ── Helpers ──
 function _fmtPayDate(v) {
-  if (!v && v !== 0) return '';
-  const n = parseFloat(v);
-  if (!isNaN(n) && n > 40000) {
-    const d = new Date((n - 25569) * 86400000);
-    const dd = d.getUTCDate().toString().padStart(2, '0');
-    const mm = (d.getUTCMonth() + 1).toString().padStart(2, '0');
-    return `${dd}/${mm}/${d.getUTCFullYear() + 543}`;
+  if (!v) return '';
+  const s = String(v);
+  // รูปแบบ dd/mm/yyyy (Gregorian จาก XLSX) → แปลงเป็น พ.ศ.
+  const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) {
+    const y = parseInt(m[3]) > 2400 ? parseInt(m[3]) : parseInt(m[3]) + 543;
+    return `${m[1].padStart(2,'0')}/${m[2].padStart(2,'0')}/${y}`;
   }
-  if (typeof v === 'string' && v.includes('/')) return v;
-  return String(v || '');
+  return s;
+}
+
+function _payDateSort(v) {
+  // แปลง dd/mm/yyyy เป็น yyyymmdd เพื่อ sort
+  const s = String(v || '');
+  const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) return `${m[3]}${m[2].padStart(2,'0')}${m[1].padStart(2,'0')}`;
+  return s;
 }
 
 // ── Filter ──
@@ -85,7 +92,7 @@ function renderPay() {
   }, {
     plugins: {
       legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 10, padding: 8 } },
-      datalabels: { color: '#fff', font: { size: 11, weight: 'bold' }, formatter: (v, ctx) => typeEnt[ctx.dataIndex][0] + '\n' + fmtN(v), anchor: 'center', align: 'center', display: ctx => ctx.dataset.data[ctx.dataIndex] > 0 }
+      datalabels: { color: '#fff', font: { size: 11, weight: 'bold' }, formatter: (v, ctx) => { const e = typeEnt[ctx.dataIndex]; return e ? e[0] + '\n' + fmtN(v) : fmtN(v); }, anchor: 'center', align: 'center', display: ctx => ctx.dataset.data[ctx.dataIndex] > 0 }
     }, cutout: '50%'
   });
 
