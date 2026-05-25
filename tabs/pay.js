@@ -136,6 +136,13 @@ function renderPay() {
     <stat-card label="ไม่ได้มาตราฐาน" value="${fmtN(cntNonStd)}" unit="คัน" variant="${cntNonStd > 0 ? 'alr' : 'ok'}"></stat-card>
   `;
 
+  // ใช้สำหรับ Chart 2 (IMPORTED vs Aging Out)
+  const allPaidPOIs = new Set(dataAgingOut.map(r => r['เลขที่ขอโอน']).filter(Boolean));
+  const hasImported = dataUot.length > 0;
+  const remainPOIs  = hasImported
+    ? [...new Set(dataUot.map(r => r['เลขที่เอกสารขอโอน']).filter(Boolean))].filter(p => !allPaidPOIs.has(p))
+    : [];
+
   // ── Chart 1: สัดส่วนตามคลัง (ผ่าน Car.xlsx) ──
   const byWh = {};
   payFiltered.forEach(r => {
