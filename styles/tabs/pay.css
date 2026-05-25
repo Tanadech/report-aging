@@ -1,0 +1,21 @@
+/* ============ styles/tabs/pay.css — เอกสารจ่าย OUTBOUND tab ============ */
+
+/* Search input in filter bar */
+.p-search-wrap { display:inline-flex; align-items:center; gap:5px; border:1px solid rgba(56,189,248,.2); border-radius:6px; padding:3px 8px; background:rgba(255,255,255,.04); }
+.p-search-wrap input { background:transparent; border:none; outline:none; color:#e0f2fe; font-size:11.5px; font-family:inherit; width:160px; }
+.p-search-wrap input::placeholder { color:rgba(255,255,255,.28); }
+.p-search-ico { font-size:11px; color:rgba(255,255,255,.3); }
+
+/* ประเภท badge */
+.pay-type { display:inline-block; padding:2px 8px; border-radius:4px; font-size:10px; font-weight:800; letter-spacing:.3px; background:rgba(100,116,139,.18); color:#94a3b8; }
+.pay-type.hip { background:rgba(34,211,238,.15); color:#22d3ee; }
+.pay-type.dc  { background:rgba(167,139,250,.15); color:#c4b5fd; }
+
+/* ── Light mode ── */
+body.light .p-search-wrap { background:#fff; border-color:#cbd5e1; }
+body.light .p-search-wrap input { color:#1e293b; }
+body.light .p-search-wrap input::placeholder { color:#94a3b8; }
+body.light .p-search-ico { color:#94a3b8; }
+body.light .pay-type { background:rgba(100,116,139,.12); color:#64748b; }
+body.light .pay-type.hip { background:rgba(8,145,178,.12); color:#0891b2; }
+body.light .pay-type.dc  { background:rgba(124,58,237,.12); color:#7c3aed; }

@@ -23,6 +23,7 @@
 <link rel="stylesheet" href="styles/components/badge.css">
 <link rel="stylesheet" href="styles/components/modal.css">
 <link rel="stylesheet" href="styles/tabs/car.css">
+<link rel="stylesheet" href="styles/tabs/pay.css">
 </head>
 <body>
 
@@ -51,6 +52,9 @@
       <label class="btn-rf btn-file" title="เลือกไฟล์ IN P xxxx.xlsx (พาเลท DOMESTIC)">
         📦 PALLET IN<input type="file" id="file-pallet" accept=".xlsx,.xls" style="display:none">
       </label>
+      <label class="btn-rf btn-file" title="เลือกไฟล์ Aging OUTBOUND.xlsx (เอกสารจ่าย OUTBOUND)">
+        📤 AGING OUT<input type="file" id="file-agingout" accept=".xlsx,.xls" style="display:none">
+      </label>
     </div>
     <div class="hdr-sep"></div>
     <button class="btn-rf" id="btn-folder" title="เลือกโฟลเดอร์ data_dc — ระบบจะโหลดทุกไฟล์อัตโนมัติ">
@@ -70,6 +74,7 @@
   <button class="tb act" data-tab="uot">🌏 IMPORTED (ต่างประเทศ)</button>
   <button class="tb" data-tab="in">📦 DOMESTIC (ภายในประเทศ)</button>
   <button class="tb" data-tab="car">🚛 คิวรถ OUTBOUND</button>
+  <button class="tb" data-tab="pay">🧾 เอกสารจ่าย OUTBOUND</button>
 </div>
 
 <!-- ===== TAB UOT ===== -->
@@ -161,7 +166,11 @@
       <div class="card">
         <div class="tbl-hdr">
           <div class="card-title">📋 รายละเอียดเอกสารคงค้าง</div>
-          <div style="display:flex;align-items:center;gap:10px;">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <div class="p-search-wrap">
+              <span class="p-search-ico">🔍</span>
+              <input type="text" id="u-fsearch" placeholder="ค้นหาเลขที่เอกสาร...">
+            </div>
             <span class="tbl-cnt" id="u-cnt"></span>
             <div class="tbl-pg">
               <button id="u-prev">◀</button>
@@ -366,6 +375,83 @@
   </div>
 </div>
 
+<!-- ===== TAB PAY ===== -->
+<div class="tc" id="tc-pay">
+  <div class="fb">
+    <div class="fb-item">
+      <span class="fb-lbl">สาขา</span>
+      <div class="cb-drop" id="p-fb-list"></div>
+    </div>
+    <div class="fb-sep"></div>
+    <div class="fb-item">
+      <span class="fb-lbl">ประเภท</span>
+      <div class="cb-drop" id="p-ft-list"></div>
+    </div>
+    <div class="fb-sep"></div>
+    <div class="fb-item">
+      <span class="fb-lbl">Category</span>
+      <div class="cb-drop" id="p-fc-list"></div>
+    </div>
+    <div class="fb-sep"></div>
+    <div class="fb-item">
+      <span class="fb-lbl">ค้นหา</span>
+      <div class="p-search-wrap">
+        <span class="p-search-ico">🔍</span>
+        <input type="text" id="p-fsearch" placeholder="เลขที่เอกสาร / เลขขอโอน / สาขา">
+      </div>
+    </div>
+    <div class="fb-sep"></div>
+    <button class="btn-clr" id="p-clr">✕ Clear</button>
+    <div class="fb-upd" id="pay-upd"></div>
+  </div>
+  <div class="fb-tags hidden" id="pay-tags"></div>
+
+  <div class="main">
+  <div class="main-inner">
+    <div class="kpi-row" id="pay-kpi"></div>
+
+    <div class="mid-row">
+      <div class="pie-col">
+        <div class="card" style="flex:1;">
+          <div class="card-title"><span class="dot" style="background:#22d3ee"></span>สัดส่วนตาม ประเภท</div>
+          <div class="cw" style="height:220px;"><canvas id="p-pie1"></canvas></div>
+        </div>
+        <div id="p-pie2-wrap" class="card" style="flex:1;">
+          <div class="card-title"><span class="dot" style="background:#10b981"></span>จ่ายแล้ว vs ยังค้างจ่าย (POI)</div>
+          <div class="cw" style="height:220px;"><canvas id="p-pie2"></canvas></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;flex:1;">
+        <div class="card" style="flex:1;">
+          <div class="card-title"><span class="dot" style="background:#22d3ee"></span>Top 8 สาขา (จำนวนกล่อง / เอกสาร)</div>
+          <div class="cw" style="height:220px;"><canvas id="p-c1"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:#a78bfa"></span>จำนวนกล่องตาม Category</div>
+      <div class="zone-scroll" style="height:260px;"><canvas id="p-c2"></canvas></div>
+    </div>
+
+    <div class="card">
+      <div class="tbl-hdr">
+        <div class="card-title">📋 รายการเอกสารจ่าย OUTBOUND</div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="tbl-cnt" id="p-cnt"></span>
+          <div class="tbl-pg">
+            <button id="p-prev">◀</button>
+            <span id="p-pg-info"></span>
+            <button id="p-next">▶</button>
+          </div>
+        </div>
+      </div>
+      <div class="tbl-wrap"><div id="p-tbl"></div></div>
+    </div>
+  </div>
+  </div>
+</div>
+
 <!-- ============================================================ -->
 <!-- Scripts — โหลดเรียงลำดับ: config → state → lib → loaders → components → tabs → modals → app -->
 <!-- ============================================================ -->
@@ -403,6 +489,7 @@
 <script src="tabs/car/filter.js"></script>
 <script src="tabs/car/views.js"></script>
 <script src="tabs/car/index.js"></script>
+<script src="tabs/pay.js"></script>
 
 <!-- 7. Modals -->
 <script src="modals/kpi-modal.js"></script>

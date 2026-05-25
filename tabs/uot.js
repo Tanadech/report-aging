@@ -196,14 +196,19 @@ function renderUot() {
 
 // ── Table (paginated) ──
 function renderUotTable() {
-  const pg = uotPage;
+  const pg      = uotPage;
+  const fsearch = (document.getElementById('u-fsearch')?.value || '').trim().toLowerCase();
+  const searchFiltered = fsearch
+    ? uotFiltered.filter(r => (r['เลขที่เอกสารขอโอน'] || '').toLowerCase().includes(fsearch))
+    : uotFiltered;
+
   const zMaxDays = {}, dMaxDays = {};
-  uotFiltered.forEach(r => {
+  searchFiltered.forEach(r => {
     const z=r['Zone ID']||'', d=r['เลขที่เอกสารขอโอน']||'', v=num(r['วันค้างส่ง']);
     if (!(z in zMaxDays)||v>zMaxDays[z]) zMaxDays[z]=v;
     if (!(d in dMaxDays)||v>dMaxDays[d]) dMaxDays[d]=v;
   });
-  const sorted = [...uotFiltered].sort((a,b) => {
+  const sorted = [...searchFiltered].sort((a,b) => {
     const az=a['Zone ID']||'', bz=b['Zone ID']||'';
     const ad=a['เลขที่เอกสารขอโอน']||'', bd=b['เลขที่เอกสารขอโอน']||'';
     const zd=(zMaxDays[bz]||0)-(zMaxDays[az]||0); if(zd) return zd;

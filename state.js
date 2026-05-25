@@ -1,10 +1,11 @@
 // ============ Global State — ตัวแปรข้อมูลหลักของแอป ============
 // อ่านได้จากทุกไฟล์ เพราะเป็น global scope
 
-let dataIn      = [];   // ข้อมูล POI IN (DOMESTIC)
-let dataUot     = [];   // ข้อมูล POI OUT (IMPORTED)
-let dataCar     = [];   // ข้อมูลคิวรถ (OUTBOUND)
-let dataPallet  = [];   // ข้อมูลพาเลท (IN P)
+let dataIn        = [];   // ข้อมูล POI IN (DOMESTIC)
+let dataUot       = [];   // ข้อมูล POI OUT (IMPORTED)
+let dataCar       = [];   // ข้อมูลคิวรถ (OUTBOUND)
+let dataPallet    = [];   // ข้อมูลพาเลท (IN P)
+let dataAgingOut  = [];   // ข้อมูลเอกสารจ่าย OUTBOUND (Aging OUTBOUND)
 let palletByOnetime = {}; // { onetime_str: จำนวนบาร์โค้ด }
 
 let inGrid  = null;      // gridjs instance สำหรับ DOMESTIC tab

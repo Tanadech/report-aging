@@ -49,6 +49,36 @@ function loadCarFile(file) {
   reader.readAsArrayBuffer(file);
 }
 
+function loadAgingOutFile(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const wb   = XLSX.read(e.target.result, { type:'array', cellDates:false, raw:true });
+      const ws   = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, { defval:'', raw:true });
+      if (!rows.length) { alert('ไม่พบข้อมูลในไฟล์ ' + file.name); return; }
+      dataAgingOut = rows;
+      const now    = new Date();
+      const b      = document.getElementById('sbadge');
+      b.className  = 'sbadge live';
+      b.innerHTML  = '<span class="dot"></span>📤 AGING OUT';
+      document.getElementById('meta').textContent =
+        'AGING OUTBOUND: ' + file.name + ' | ' + now.toLocaleString('th-TH') +
+        ' (' + rows.length + ' รายการ)';
+      document.getElementById('alertbox').classList.remove('show');
+      fillPayFilters();
+      renderPay();
+      // switch to pay tab
+      document.querySelectorAll('.tb').forEach(b => b.classList.remove('act'));
+      document.querySelectorAll('.tc').forEach(c => c.classList.remove('act'));
+      document.querySelector('.tb[data-tab="pay"]').classList.add('act');
+      document.getElementById('tc-pay').classList.add('act');
+      setTimeout(() => Object.values(CR).forEach(c => c.resize && c.resize()), 80);
+    } catch (err) { alert('โหลดไฟล์ Aging OUTBOUND ไม่สำเร็จ: ' + err.message); }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
 function loadPalletFile(file) {
   const reader = new FileReader();
   reader.onload = e => {

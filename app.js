@@ -88,8 +88,9 @@ document.querySelectorAll('.tb').forEach(btn => {
     document.getElementById('tc-' + btn.dataset.tab).classList.add('act');
     setTimeout(() => {
       Object.values(CR).forEach(c => c.resize && c.resize());
-      if (btn.dataset.tab === 'in'  && dataIn.length)  { renderIn();  }
-      if (btn.dataset.tab === 'car' && dataCar.length) { renderCar(); }
+      if (btn.dataset.tab === 'in'  && dataIn.length)       { renderIn();  }
+      if (btn.dataset.tab === 'car' && dataCar.length)      { renderCar(); }
+      if (btn.dataset.tab === 'pay' && dataAgingOut.length) { renderPay(); }
     }, 80);
   });
 });
@@ -139,14 +140,23 @@ document.getElementById('file-pallet').addEventListener('change', e => {
   if (e.target.files[0]) loadPalletFile(e.target.files[0]);
   e.target.value = '';
 });
+document.getElementById('file-agingout').addEventListener('change', e => {
+  if (e.target.files[0]) loadAgingOutFile(e.target.files[0]);
+  e.target.value = '';
+});
 document.getElementById('btn-folder').addEventListener('click', reloadFolder);
+
+// Search in IMPORTED table
+document.getElementById('u-fsearch').addEventListener('input', renderUotTable);
 
 // ============ Init ============
 initChartDefaults();
 initUotPagination();
-dataIn   = [];
-dataUot  = [];
-dataCar  = [];
+initPayTab();
+dataIn        = [];
+dataUot       = [];
+dataCar       = [];
+dataAgingOut  = [];
 setStatus('nodata');
 rebuild();
 rebuildCar();
