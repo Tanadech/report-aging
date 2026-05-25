@@ -28,6 +28,8 @@ function rebuild() {
   renderIn();
   // re-render CAR เพื่อ refresh aging เมื่อโหลด POI ใหม่
   if (dataCar.length) renderCar();
+  // refresh Pay comparison เมื่อ aging data เปลี่ยน
+  if (dataAgingOut.length) renderPayComparison();
 }
 
 // ============ Filter events — UOT ============
