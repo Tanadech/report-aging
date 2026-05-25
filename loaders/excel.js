@@ -40,6 +40,7 @@ function loadCarFile(file) {
       rebuildCar();
       renderCar();
       _tlWhFilter = null;
+      _fillPayWhFilter();
       _renderPayCarKPIs();
       _renderPayTimeline();
       renderPayCarTable();

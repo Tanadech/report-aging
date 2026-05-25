@@ -2,10 +2,15 @@
 
 const PAY_PAGE_SIZE = 100;
 let payFiltered = [], payPage = 0;
+let _payCarInfo = {}; // doc → { wh, slot } — built before filter runs
 
 // ── Helpers ──
 function _getTodayDdMmYyyy() {
   const d = new Date();
+  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+}
+function _getTomorrowDdMmYyyy() {
+  const d = new Date(); d.setDate(d.getDate() + 1);
   return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
 }
 
@@ -31,15 +36,28 @@ function _payDateSort(v) {
 
 // ── Filter ──
 function getPayFiltered() {
-  const fbCB    = checkedVals(document.getElementById('p-fb-list'));
-  const ftCB    = checkedVals(document.getElementById('p-ft-list'));
-  const fcCB    = checkedVals(document.getElementById('p-fc-list'));
-  const fsearch = (document.getElementById('p-fsearch').value || '').trim().toLowerCase();
+  const fbCB     = checkedVals(document.getElementById('p-fb-list'));
+  const ftCB     = checkedVals(document.getElementById('p-ft-list'));
+  const fcCB     = checkedVals(document.getElementById('p-fc-list'));
+  const fwhCB    = checkedVals(document.getElementById('p-fwh-list'));
+  const fsearch  = (document.getElementById('p-fsearch').value   || '').trim().toLowerCase();
+  const fdateFrom = (document.getElementById('p-fdate-from')?.value || '').replace(/-/g, ''); // yyyymmdd
+  const fdateTo   = (document.getElementById('p-fdate-to')?.value   || '').replace(/-/g, ''); // yyyymmdd
 
   return dataAgingOut.filter(r => {
     if (fbCB.length && !fbCB.includes(r['ชื่อสาขา'])) return false;
     if (ftCB.length && !ftCB.includes(r['ประเภท'])) return false;
     if (fcCB.length && !fcCB.includes(r['Category Name'])) return false;
+    if (fwhCB.length) {
+      const doc = String(r['เลขที่เอกสาร'] || '').trim();
+      const wh  = _payCarInfo[doc]?.wh || r['คลังสินค้า'] || '';
+      if (!fwhCB.includes(wh)) return false;
+    }
+    if (fdateFrom || fdateTo) {
+      const rk = _payDateSort(r['วันที่']);
+      if (fdateFrom && rk < fdateFrom) return false;
+      if (fdateTo   && rk > fdateTo)   return false;
+    }
     if (fsearch) {
       const docNo = (r['เลขที่เอกสาร']     || '').toLowerCase();
       const poiNo = (r['เลขที่ขอโอน']      || '').toLowerCase();
@@ -60,21 +78,19 @@ function renderPay() {
     return;
   }
 
+  // ── Build carInfo first so getPayFiltered() can use it for WH filter ──
+  _payCarInfo = {};
+  dataCar.forEach(r => {
+    const doc = String(r['เลขที่เอกสาร'] || '').trim();
+    if (!doc) return;
+    _payCarInfo[doc] = {
+      wh:   String(r['คลังสินค้า'] || '(ไม่ระบุ)').trim(),
+      slot: String(r['ช่วงเวลา']   || '(ไม่ระบุ)').trim()
+    };
+  });
+
   payFiltered = getPayFiltered();
   payPage = 0;
-
-  // ── Shared: Car doc → { wh, slot } (ใช้ร่วมหลาย chart) ──
-  const carInfo = {};
-  if (dataCar.length) {
-    dataCar.forEach(r => {
-      const doc = String(r['เลขที่เอกสาร'] || '').trim();
-      if (!doc) return;
-      carInfo[doc] = {
-        wh:   String(r['คลังสินค้า'] || '(ไม่ระบุ)').trim(),
-        slot: String(r['ช่วงเวลา']   || '(ไม่ระบุ)').trim()
-      };
-    });
-  }
 
   // ── KPI ──
   const docs      = uniqCount(payFiltered, 'เลขที่เอกสาร');
@@ -106,7 +122,7 @@ function renderPay() {
   const byWh = {};
   payFiltered.forEach(r => {
     const doc = String(r['เลขที่เอกสาร'] || '').trim();
-    const wh  = carInfo[doc]?.wh || (dataCar.length ? '(ไม่พบใน Car)' : '(ไม่มีข้อมูล Car)');
+    const wh  = _payCarInfo[doc]?.wh || (dataCar.length ? '(ไม่พบใน Car)' : '(ไม่มีข้อมูล Car)');
     if (!byWh[wh]) byWh[wh] = new Set();
     byWh[wh].add(doc);
   });
@@ -144,7 +160,7 @@ function renderPay() {
   const allWhs4   = new Set();
   payFiltered.forEach(r => {
     const doc  = String(r['เลขที่เอกสาร'] || '').trim();
-    const info = carInfo[doc] || {};
+    const info = _payCarInfo[doc] || {};
     const slot = info.slot || '(ไม่ระบุ)';
     const wh   = info.wh   || '(ไม่ระบุ)';
     allSlots4.add(slot);
@@ -302,16 +318,23 @@ function renderPayCarTable() {
     if (d) { if (!agingByDoc[d]) agingByDoc[d] = []; agingByDoc[d].push(r); }
   });
 
-  // รถที่ออก DC แล้ว = ค่าในคอลัมน์ = "ออกแล้ว"
-  const departed = dataCar.filter(r => isDcDeparted(r['รถยังไม่ออกจาก DC']));
+  // รถที่ออก DC แล้ว + กรองเฉพาะวันนี้และพรุ้งนี้
+  const _today = _getTodayDdMmYyyy();
+  const _tmr   = _getTomorrowDdMmYyyy();
+  const departed = dataCar.filter(r => {
+    if (!isDcDeparted(r['รถยังไม่ออกจาก DC'])) return false;
+    const d = String(r['วันที่'] || '').trim();
+    if (!d) return true; // ไม่มีคอลัมน์วันที่ → แสดงทั้งหมด
+    return d === _today || d === _tmr;
+  });
 
   if (!departed.length) {
-    el.innerHTML = '<div style="padding:30px;text-align:center;color:var(--muted);font-size:13px;">ไม่มีรถที่ออก DC แล้ว หรือยังไม่โหลดข้อมูล</div>';
+    el.innerHTML = '<div style="padding:30px;text-align:center;color:var(--muted);font-size:13px;">ไม่มีรถที่ออก DC แล้ว (วันนี้ / พรุ้งนี้) หรือยังไม่โหลดข้อมูล</div>';
     return;
   }
 
   const allCnt = dataCar.length;
-  const dcCnt  = allCnt - departed.length;
+  const dcCnt  = dataCar.filter(r => !isDcDeparted(r['รถยังไม่ออกจาก DC'])).length;
   departed.sort((a, b) => (a['ช่วงเวลา'] || '').localeCompare(b['ช่วงเวลา'] || '')).forEach(r => {
     const docNo  = String(r['เลขที่เอกสาร'] || '').trim();
     const agRows = agingByDoc[docNo] || [];
@@ -451,6 +474,16 @@ function renderPayTags() {
     if (chkFc.length === 0) tags.push({ label: 'Category', value: '(ไม่มีที่เลือก)', remove: () => { checkAllCB(fcEl); renderPay(); } });
     else chkFc.forEach(v => tags.push({ label: 'Category', value: v, remove: () => { uncheckCB(fcEl, v); renderPay(); } }));
   }
+  const fwhEl = document.getElementById('p-fwh-list');
+  const { chk: chkWh, isFiltered: whActive } = getCBState(fwhEl);
+  if (whActive) {
+    if (chkWh.length === 0) tags.push({ label: 'คลัง', value: '(ไม่มีที่เลือก)', remove: () => { checkAllCB(fwhEl); renderPay(); } });
+    else chkWh.forEach(v => tags.push({ label: 'คลัง', value: v, remove: () => { uncheckCB(fwhEl, v); renderPay(); } }));
+  }
+  const fdateFrom = document.getElementById('p-fdate-from')?.value;
+  const fdateTo   = document.getElementById('p-fdate-to')?.value;
+  if (fdateFrom) tags.push({ label: 'ตั้งแต่', value: fdateFrom, remove: () => { document.getElementById('p-fdate-from').value = ''; renderPay(); } });
+  if (fdateTo)   tags.push({ label: 'ถึงวันที่', value: fdateTo,   remove: () => { document.getElementById('p-fdate-to').value   = ''; renderPay(); } });
   const fsearch = document.getElementById('p-fsearch').value;
   if (fsearch) tags.push({ label: 'ค้นหา', value: fsearch, remove: () => { document.getElementById('p-fsearch').value = ''; renderPay(); } });
 
@@ -458,7 +491,10 @@ function renderPayTags() {
     checkAllCB(document.getElementById('p-fb-list'));
     checkAllCB(document.getElementById('p-ft-list'));
     checkAllCB(document.getElementById('p-fc-list'));
-    document.getElementById('p-fsearch').value = '';
+    checkAllCB(document.getElementById('p-fwh-list'));
+    document.getElementById('p-fsearch').value   = '';
+    document.getElementById('p-fdate-from').value = '';
+    document.getElementById('p-fdate-to').value   = '';
     renderPay();
   });
 }
@@ -471,16 +507,30 @@ function fillPayFilters() {
   document.getElementById('p-ft-list').querySelectorAll('input').forEach(cb => cb.addEventListener('change', renderPay));
   fillCBList(document.getElementById('p-fc-list'), uniqVals(dataAgingOut, 'Category Name').sort(), 'pfc_');
   document.getElementById('p-fc-list').querySelectorAll('input').forEach(cb => cb.addEventListener('change', renderPay));
+  _fillPayWhFilter();
+}
+
+function _fillPayWhFilter() {
+  const el = document.getElementById('p-fwh-list');
+  if (!el) return;
+  const whs = dataCar.length ? uniqVals(dataCar, 'คลังสินค้า').filter(Boolean).sort() : [];
+  fillCBList(el, whs, 'pfwh_');
+  el.querySelectorAll('input').forEach(cb => cb.addEventListener('change', renderPay));
 }
 
 // ── Init Events ──
 function initPayTab() {
   document.getElementById('p-fsearch').addEventListener('input', renderPay);
+  document.getElementById('p-fdate-from').addEventListener('change', renderPay);
+  document.getElementById('p-fdate-to').addEventListener('change', renderPay);
   document.getElementById('p-clr').addEventListener('click', () => {
     checkAllCB(document.getElementById('p-fb-list'));
     checkAllCB(document.getElementById('p-ft-list'));
     checkAllCB(document.getElementById('p-fc-list'));
-    document.getElementById('p-fsearch').value = '';
+    checkAllCB(document.getElementById('p-fwh-list'));
+    document.getElementById('p-fsearch').value    = '';
+    document.getElementById('p-fdate-from').value = '';
+    document.getElementById('p-fdate-to').value   = '';
     renderPay();
   });
   // Pay Car Modal close

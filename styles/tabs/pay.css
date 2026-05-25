@@ -28,3 +28,7 @@ body.light .p-search-ico { color:#94a3b8; }
 body.light .pay-type { background:rgba(100,116,139,.12); color:#64748b; }
 body.light .pay-type.hip { background:rgba(8,145,178,.12); color:#0891b2; }
 body.light .pay-type.dc  { background:rgba(124,58,237,.12); color:#7c3aed; }
+
+/* Date range inputs — light mode */
+body.light #p-fdate-from,
+body.light #p-fdate-to { background:#fff; border-color:#cbd5e1; color:#1e293b; }
