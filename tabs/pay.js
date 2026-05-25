@@ -299,11 +299,11 @@ function _renderPayTimeline() {
   }, {
     plugins: {
       legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 10, padding: 6 } },
-      datalabels: { anchor: 'center', align: 'center', font: { size: 9, weight: 'bold' }, formatter: v => v > 0 ? fmtN(v) : '', color: '#fff', display: ctx => ctx.dataset.data[ctx.dataIndex] > 0 }
+      datalabels: { anchor: 'end', align: 'top', font: { size: 9, weight: 'bold' }, formatter: v => v > 0 ? fmtN(v) : '', color: '#e2e8f0', display: ctx => ctx.dataset.data[ctx.dataIndex] > 0 }
     },
     scales: {
-      x: { stacked: true, ticks: { font: { size: 9 } }, grid: { color: 'rgba(255,255,255,.05)' } },
-      y: { stacked: true, beginAtZero: true, ticks: { font: { size: 9 } }, grid: { color: 'rgba(255,255,255,.05)' } }
+      x: { ticks: { font: { size: 9 } }, grid: { color: 'rgba(255,255,255,.05)' } },
+      y: { beginAtZero: true, ticks: { font: { size: 9 } }, grid: { color: 'rgba(255,255,255,.05)' } }
     }
   });
 }
