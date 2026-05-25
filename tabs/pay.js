@@ -367,7 +367,7 @@ function renderPayCarTable() {
     แสดง ${_payCarRows.length} เอกสาร (รถออก DC แล้ว วันนี้/พรุ้งนี้) &nbsp;·&nbsp; Aging Out ทั้งหมด ${totalAgDoc} เลขที่เอกสาร
   </div>`;
   html += `<table class="gtbl"><thead><tr>
-    <th>ช่วงเวลา</th><th>คลัง</th><th>สาขา</th><th>ประเภทรถ</th><th>ประเภทงาน</th><th>ทะเบียน</th><th>คนขับ</th>
+    <th>ช่วงเวลา</th><th>คลัง</th><th>สาขา</th><th>เลขที่เอกสาร</th><th>ประเภทรถ</th><th>ประเภทงาน</th><th>ทะเบียน</th><th>คนขับ</th>
     <th style="text-align:center;">เลขที่ขอโอน</th>
     <th style="text-align:right;">กล่อง</th><th style="text-align:right;">ชิ้น</th>
     <th>สถานะ</th>
@@ -386,6 +386,7 @@ function renderPayCarTable() {
       <td style="font-weight:700;color:#7dd3fc;white-space:nowrap;">${esc(r['ช่วงเวลา'] || '')}</td>
       <td style="text-align:center;font-weight:700;">${esc(r['คลังสินค้า'] || '')}</td>
       <td><span style="font-weight:600;">${esc(brDisp)}</span>${r['ชื่อย่อสาขา'] ? ` <span style="font-size:10px;color:#c4b5fd;">${esc(r['ชื่อย่อสาขา'])}</span>` : ''}</td>
+      <td style="font-family:monospace;font-size:10.5px;color:#7dd3fc;white-space:nowrap;">${esc(r._docNo)}</td>
       <td style="font-size:11px;">${esc(r['ประเภทรถ'] || '')}</td>
       <td style="font-size:11px;">${esc(r['ประเภทงาน'] || '')}</td>
       <td style="font-family:monospace;font-size:11px;">${esc(r['ป้ายทะเบียน'] || '')}</td>
@@ -393,7 +394,7 @@ function renderPayCarTable() {
       <td style="text-align:center;">${r._agRows.length ? `<b style="color:#a5b4fc;">📑 ${uniqCount(r._agRows, 'เลขที่ขอโอน')}</b>` : '<span style="color:var(--muted)">—</span>'}</td>
       <td style="text-align:right;">${totalBox ? fmtN(totalBox) : '—'}</td>
       <td style="text-align:right;">${totalPcs ? fmtN(totalPcs) : '—'}</td>
-      <td><span class="cstat ${statCls}">${esc(statTxt)}</span></td>
+      <td style="white-space:nowrap;"><span class="cstat dc-out" style="font-size:9.5px;">✅ ออก DC</span> <span class="cstat ${statCls}">${esc(statTxt)}</span></td>
     </tr>`;
   });
 
