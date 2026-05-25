@@ -30,10 +30,10 @@ function _renderCarCards(enriched, slotsOrdered, grouped, today, tomorrow) {
           agingHtml = `<div class="ccard-aging none">— ไม่มีเอกสารคงค้าง —</div>`;
         }
         let statCls = 'unknown', statTxt = r['สถานะลงคิว'] || '-';
-        if (stuck)                                                         { statCls = 'late';    statTxt = '⚠ ตกค้าง'; }
-        else if (inDc)                                                     { statCls = 'late';    statTxt = '🚧 ยังไม่ออก DC'; }
-        else if (statTxt.includes('ยังไม่'))                                 statCls = 'pending';
+        if (stuck)                                                           { statCls = 'late'; statTxt = '⚠ ตกค้าง'; }
+        else if (statTxt.includes('ยังไม่'))                                   statCls = 'pending';
         else if (statTxt.includes('สำเร็จ') || statTxt.includes('เรียบร้อย')) statCls = 'done';
+        const dcBadge = inDc ? `<span class="cstat in-dc">🚧 ยังไม่ออก DC</span>` : '';
         const _d = parseCarDate(r['วันที่คิวงาน']);
         let dayBadge = '';
         if (_d) {
@@ -52,7 +52,7 @@ function _renderCarCards(enriched, slotsOrdered, grouped, today, tomorrow) {
           <div class="ccard-r2"><span>🚚 ${esc(r['ประเภทรถ']||'-')}</span><span class="sep">•</span><span>${esc(r['ประเภทงาน']||'-')}</span></div>
           <div class="ccard-r2"><span>🔖 ${esc(r['ป้ายทะเบียน']||'-')}</span>${r['ชื่อคนขับ'] ? `<span class="sep">•</span><span class="ccard-driver">👤 ${esc(r['ชื่อคนขับ'])}${r['เบอร์โทร'] ? ` (${esc(r['เบอร์โทร'])})` : ''}</span>` : ''}</div>
           ${agingHtml}
-          <div class="ccard-r3"><span class="cstat ${statCls}">${esc(statTxt)}</span><span style="opacity:.6;">${esc(r['Vendor Name']||'')}</span></div>
+          <div class="ccard-r3"><span class="cstat ${statCls}">${esc(statTxt)}</span>${dcBadge}<span style="opacity:.6;">${esc(r['Vendor Name']||'')}</span></div>
         </div>`;
       });
       html += `</div></div>`;
@@ -74,10 +74,10 @@ function _renderCarTable(enriched) {
       const inDc    = isChecked(r['รถยังไม่ออกจาก DC']);
       const brDisp  = (r['ชื่อสาขา'] || BR_ABR_MAP[r['ชื่อย่อสาขา']] || r['ชื่อย่อสาขา'] || '').replace(/^สาขา\s*/, '');
       let statTxt   = r['สถานะลงคิว'] || '-', statCls = 'unknown';
-      if (stuck)  { statCls = 'late'; statTxt = '⚠ ตกค้าง'; }
-      else if (inDc) { statCls = 'late'; statTxt = '🚧 ยังไม่ออก DC'; }
+      if (stuck)                                                             { statCls = 'late'; statTxt = '⚠ ตกค้าง'; }
       else if (statTxt.includes('ยังไม่'))                                   statCls = 'pending';
       else if (statTxt.includes('สำเร็จ') || statTxt.includes('เรียบร้อย')) statCls = 'done';
+      const dcBadgeTbl = inDc ? `<span class="cstat in-dc">🚧 ยังไม่ออก DC</span>` : '';
       html += `<tr class="ctbl-row" data-brabr="${esc(r['ชื่อย่อสาขา']||'')}" data-brname="${esc(r['ชื่อสาขา']||'')}" data-wh="${esc(r['คลังสินค้า']||'')}">
         <td style="font-weight:700;color:#7dd3fc;white-space:nowrap;">${esc(r['ช่วงเวลา']||'')}</td>
         <td style="text-align:center;font-weight:700;">${esc(r['คลังสินค้า']||'')}</td>
@@ -88,7 +88,7 @@ function _renderCarTable(enriched) {
         <td style="text-align:center;">${ag.inDocs  ? `<b style="color:#7dd3fc;">${ag.inDocs}</b>`  : '-'}</td>
         <td style="text-align:center;">${ag.outDocs ? `<b style="color:#fbbf24;">${ag.outDocs}</b>` : '-'}</td>
         <td style="text-align:center;">${ag.maxDays ? db(ag.maxDays) : '-'}</td>
-        <td><span class="cstat ${statCls}">${esc(statTxt)}</span></td>
+        <td style="white-space:nowrap;"><span class="cstat ${statCls}">${esc(statTxt)}</span>${dcBadgeTbl}</td>
       </tr>`;
     });
     html += '</tbody></table></div>';
