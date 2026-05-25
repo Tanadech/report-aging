@@ -14,6 +14,16 @@ function _getTomorrowDdMmYyyy() {
   return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
 }
 
+// แปลงวันที่ dd/mm/yyyy → yyyymmdd (CE) รองรับทั้ง ค.ศ. และ พ.ศ.
+function _toDateKey(v) {
+  const s = String(v || '').trim();
+  const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!m) return '';
+  let y = parseInt(m[3]);
+  if (y > 2400) y -= 543; // พ.ศ. → ค.ศ.
+  return `${y}${m[2].padStart(2,'0')}${m[1].padStart(2,'0')}`;
+}
+
 function _fmtPayDate(v) {
   if (!v) return '';
   const s = String(v);
@@ -335,15 +345,15 @@ function renderPayCarTable() {
     if (d && !carByDoc[d]) carByDoc[d] = r; // เอาแถวแรกที่เจอ
   });
 
-  // ── 3. Filter: car ต้องออก DC แล้ว + วันนี้/พรุ้งนี้ ──
-  const _today = _getTodayDdMmYyyy();
-  const _tmr   = _getTomorrowDdMmYyyy();
+  // ── 3. Filter: car ต้องออก DC แล้ว + วันนี้/พรุ้งนี้ (รองรับทั้ง ค.ศ. และ พ.ศ.) ──
+  const _todayKey = _toDateKey(_getTodayDdMmYyyy());
+  const _tmrKey   = _toDateKey(_getTomorrowDdMmYyyy());
   const validDocs = docOrder.filter(docNo => {
     const car = carByDoc[docNo];
     if (!car) return false;
     if (!isDcDeparted(car['รถยังไม่ออกจาก DC'])) return false;
-    const d = String(car['วันที่'] || '').trim();
-    if (d && d !== _today && d !== _tmr) return false;
+    const dk = _toDateKey(car['วันที่']);
+    if (dk && dk !== _todayKey && dk !== _tmrKey) return false; // ไม่มีวันที่ → ผ่านเสมอ
     return true;
   });
 
