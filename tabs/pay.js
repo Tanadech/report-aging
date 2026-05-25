@@ -308,10 +308,9 @@ function _renderPayTimeline() {
   });
 }
 
-// ── Car OUTBOUND Table ──
-// Primary source: dataAgingOut (group by เลขที่เอกสาร)
-// Join: dataCar on เลขที่เอกสาร → ดึงคอลัมน์ฝั่งรถ (ช่วงเวลา, คลัง, ทะเบียน ฯลฯ)
-// Filter: รถต้องออก DC แล้ว + วันนี้/พรุ้งนี้
+// ── รายงาน คิวรถ OUTBOUND ออก DC แล้ว ──
+// Primary: dataCar ที่ รถยังไม่ออกจาก DC = "ออกแล้ว" (ทุกคัน ไม่กรองวันที่)
+// Join:    dataAgingOut on เลขที่เอกสาร → ดึงรายการเอกสาร aging
 let _payCarRows = [];
 
 function renderPayCarTable() {
@@ -319,65 +318,49 @@ function renderPayCarTable() {
   if (!el) return;
   _payCarRows = [];
 
-  if (!dataAgingOut.length) {
-    el.innerHTML = '<div style="padding:30px;text-align:center;color:var(--muted);font-size:13px;">📂 กรุณาโหลดไฟล์ <strong>📤 Aging OUTBOUND</strong> ก่อน</div>';
-    return;
-  }
   if (!dataCar.length) {
-    el.innerHTML = '<div style="padding:30px;text-align:center;color:var(--muted);font-size:13px;">📂 กรุณาโหลดไฟล์ <strong>Car.xlsx</strong> เพื่อดูสถานะรถ</div>';
+    el.innerHTML = '<div style="padding:30px;text-align:center;color:var(--muted);font-size:13px;">📂 กรุณาโหลดไฟล์ <strong>Car.xlsx</strong> ก่อน</div>';
     return;
   }
 
-  // ── 1. Group Aging Out by เลขที่เอกสาร (primary) ──
+  // ── 1. Build Aging Out lookup: เลขที่เอกสาร → [rows] ──
   const agingByDoc = {};
-  const docOrder   = [];
   dataAgingOut.forEach(r => {
     const d = String(r['เลขที่เอกสาร'] || '').trim();
     if (!d) return;
-    if (!agingByDoc[d]) { agingByDoc[d] = []; docOrder.push(d); }
+    if (!agingByDoc[d]) agingByDoc[d] = [];
     agingByDoc[d].push(r);
   });
 
-  // ── 2. Build Car lookup: เลขที่เอกสาร → car row ──
-  const carByDoc = {};
-  dataCar.forEach(r => {
-    const d = String(r['เลขที่เอกสาร'] || '').trim();
-    if (d && !carByDoc[d]) carByDoc[d] = r; // เอาแถวแรกที่เจอ
-  });
+  // ── 2. Primary: รถทุกคันที่ออก DC แล้ว ──
+  const departed = dataCar.filter(r => isDcDeparted(r['รถยังไม่ออกจาก DC']));
 
-  // ── 3. Filter: car ต้องออก DC แล้ว + วันนี้/พรุ้งนี้ (รองรับทั้ง ค.ศ. และ พ.ศ.) ──
-  const _todayKey = _toDateKey(_getTodayDdMmYyyy());
-  const _tmrKey   = _toDateKey(_getTomorrowDdMmYyyy());
-  const validDocs = docOrder.filter(docNo => {
-    const car = carByDoc[docNo];
-    if (!car) return false;
-    if (!isDcDeparted(car['รถยังไม่ออกจาก DC'])) return false;
-    const dk = _toDateKey(car['วันที่']);
-    if (dk && dk !== _todayKey && dk !== _tmrKey) return false; // ไม่มีวันที่ → ผ่านเสมอ
-    return true;
-  });
-
-  if (!validDocs.length) {
-    el.innerHTML = '<div style="padding:30px;text-align:center;color:var(--muted);font-size:13px;">ไม่มีเอกสารที่รถออก DC แล้ว (วันนี้ / พรุ้งนี้)</div>';
+  if (!departed.length) {
+    el.innerHTML = '<div style="padding:30px;text-align:center;color:var(--muted);font-size:13px;">ไม่มีรถที่ออก DC แล้ว</div>';
     return;
   }
 
-  // ── 4. Sort by ช่วงเวลา (จาก Car) แล้ว build rows ──
-  validDocs
-    .sort((a, b) => (carByDoc[a]?.['ช่วงเวลา'] || '').localeCompare(carByDoc[b]?.['ช่วงเวลา'] || ''))
-    .forEach(docNo => {
-      const car   = carByDoc[docNo];
-      const aging = getAgingForBranch(car['ชื่อย่อสาขา'] || '', car['ชื่อสาขา'] || '', car['คลังสินค้า'] || '');
-      _payCarRows.push({ ...car, _docNo: docNo, _agRows: agingByDoc[docNo], _aging: aging });
+  // ── 3. Sort by ช่วงเวลา แล้ว build rows ──
+  departed
+    .sort((a, b) => timeSlotStart(a['ช่วงเวลา'] || '') - timeSlotStart(b['ช่วงเวลา'] || ''))
+    .forEach(r => {
+      const docNo = String(r['เลขที่เอกสาร'] || '').trim();
+      const aging = getAgingForBranch(r['ชื่อย่อสาขา'] || '', r['ชื่อสาขา'] || '', r['คลังสินค้า'] || '');
+      _payCarRows.push({ ...r, _docNo: docNo, _agRows: agingByDoc[docNo] || [], _aging: aging });
     });
 
-  // ── 5. Render ──
-  const totalAgDoc = uniqCount(dataAgingOut, 'เลขที่เอกสาร');
+  // ── 4. Render ──
+  const matchCnt = _payCarRows.filter(r => r._agRows.length > 0).length;
   let html = `<div style="font-size:10.5px;color:var(--muted);padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.05);">
-    แสดง ${_payCarRows.length} เอกสาร (รถออก DC แล้ว วันนี้/พรุ้งนี้) &nbsp;·&nbsp; Aging Out ทั้งหมด ${totalAgDoc} เลขที่เอกสาร
+    รวม ${_payCarRows.length} คัน ออก DC แล้ว
+    &nbsp;·&nbsp; มีข้อมูล Aging Out: <span style="color:#a5b4fc;">${matchCnt} คัน</span>
+    ${!dataAgingOut.length ? ' &nbsp;·&nbsp; <span style="color:#fb923c;">⚠ ยังไม่โหลด Aging Out</span>' : ''}
   </div>`;
+
   html += `<table class="gtbl"><thead><tr>
-    <th>ช่วงเวลา</th><th>คลัง</th><th>สาขา</th><th>เลขที่เอกสาร</th><th>ประเภทรถ</th><th>ประเภทงาน</th><th>ทะเบียน</th><th>คนขับ</th>
+    <th>วันที่คิวงาน</th><th>ช่วงเวลา</th><th>คลัง</th><th>สาขา</th><th>เลขที่เอกสาร</th>
+    <th>ประเภทรถ</th><th>ประเภทงาน</th><th>ทะเบียน</th><th>คนขับ</th>
+    <th>เวลาขึ้นสินค้า</th><th>สถานะขึ้นสินค้า</th>
     <th style="text-align:center;">เลขที่ขอโอน</th>
     <th style="text-align:right;">กล่อง</th><th style="text-align:right;">ชิ้น</th>
     <th>สถานะ</th>
@@ -390,9 +373,13 @@ function renderPayCarTable() {
     if (stuck)                                                              { statCls = 'late';    statTxt = '⚠ ตกค้าง'; }
     else if (statTxt.includes('ยังไม่'))                                    statCls = 'pending';
     else if (statTxt.includes('สำเร็จ') || statTxt.includes('เรียบร้อย')) statCls = 'done';
-    const totalBox = r._agRows.reduce((s, x) => s + num(x['จำนวน(กล่อง)']), 0);
-    const totalPcs = r._agRows.reduce((s, x) => s + num(x['จำนวนโอน(ชิ้น)']), 0);
+    const totalBox    = r._agRows.reduce((s, x) => s + num(x['จำนวน(กล่อง)']), 0);
+    const totalPcs    = r._agRows.reduce((s, x) => s + num(x['จำนวนโอน(ชิ้น)']), 0);
+    const dateDisp    = r['วันที่'] ? _fmtPayDate(r['วันที่']) : '—';
+    const loadTime    = r['เวลาขึ้นสินค้า']    || '—';
+    const loadStatus  = r['สถานะขึ้นสินค้า']   || '—';
     html += `<tr class="ctbl-row" onclick="openPayCarModal(${i})" title="คลิกเพื่อดูรายการเอกสาร Aging Out">
+      <td style="font-size:11px;white-space:nowrap;">${esc(dateDisp)}</td>
       <td style="font-weight:700;color:#7dd3fc;white-space:nowrap;">${esc(r['ช่วงเวลา'] || '')}</td>
       <td style="text-align:center;font-weight:700;">${esc(r['คลังสินค้า'] || '')}</td>
       <td><span style="font-weight:600;">${esc(brDisp)}</span>${r['ชื่อย่อสาขา'] ? ` <span style="font-size:10px;color:#c4b5fd;">${esc(r['ชื่อย่อสาขา'])}</span>` : ''}</td>
@@ -401,6 +388,8 @@ function renderPayCarTable() {
       <td style="font-size:11px;">${esc(r['ประเภทงาน'] || '')}</td>
       <td style="font-family:monospace;font-size:11px;">${esc(r['ป้ายทะเบียน'] || '')}</td>
       <td style="font-size:11px;">${esc(r['ชื่อคนขับ'] || '')}${r['เบอร์โทร'] ? ` <span style="color:var(--muted);font-size:10px;">(${esc(r['เบอร์โทร'])})</span>` : ''}</td>
+      <td style="font-size:11px;white-space:nowrap;">${esc(loadTime)}</td>
+      <td style="font-size:11px;">${esc(loadStatus)}</td>
       <td style="text-align:center;">${r._agRows.length ? `<b style="color:#a5b4fc;">📑 ${uniqCount(r._agRows, 'เลขที่ขอโอน')}</b>` : '<span style="color:var(--muted)">—</span>'}</td>
       <td style="text-align:right;">${totalBox ? fmtN(totalBox) : '—'}</td>
       <td style="text-align:right;">${totalPcs ? fmtN(totalPcs) : '—'}</td>
