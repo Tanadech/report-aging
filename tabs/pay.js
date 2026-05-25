@@ -116,14 +116,9 @@ function renderPay() {
   const docsDepted    = uniqCount(payDeparted, 'เลขที่เอกสาร');
   const poisDepted    = uniqCount(payDeparted, 'เลขที่ขอโอน');
 
-  // สถานะขึ้นสินค้า — นับจาก dataCar ที่ doc อยู่ใน payFiltered AND ออกแล้ว
-  const payFilteredDocSet = new Set(payFiltered.map(r => String(r['เลขที่เอกสาร'] || '').trim()).filter(Boolean));
-  const carsInPay     = dataCar.filter(r => {
-    const doc = String(r['เลขที่เอกสาร'] || '').trim();
-    return payFilteredDocSet.has(doc) && isDcDeparted(String(r['รถยังไม่ออกจาก DC'] || '').trim());
-  });
-  const cntStd    = carsInPay.filter(r => String(r['สถานะขึ้นสินค้า'] || '').trim() === 'ได้มาตราฐาน').length;
-  const cntNonStd = carsInPay.filter(r => String(r['สถานะขึ้นสินค้า'] || '').trim() === 'ไม่ได้มาตราฐาน').length;
+  // สถานะขึ้นสินค้า — นับตรงจากคอลัมน์ใน dataCar ทั้งหมด
+  const cntStd    = dataCar.filter(r => String(r['สถานะขึ้นสินค้า'] || '').trim() === 'ได้มาตราฐาน').length;
+  const cntNonStd = dataCar.filter(r => String(r['สถานะขึ้นสินค้า'] || '').trim() === 'ไม่ได้มาตราฐาน').length;
 
   kpiEl.innerHTML = `
     <stat-card label="เอกสาร OUTBOUND" value="${fmtN(docsDepted)}" unit="รถออกแล้ว"></stat-card>
