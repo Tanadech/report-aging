@@ -103,29 +103,37 @@ function renderPay() {
   payPage = 0;
 
   // ── KPI ──
-  const docs      = uniqCount(payFiltered, 'เลขที่เอกสาร');
-  const pois      = uniqCount(payFiltered, 'เลขที่ขอโอน');
   const branches  = uniqCount(payFiltered, 'ชื่อสาขา');
-  const cats      = uniqCount(payFiltered, 'Category Name');
   const totalBox  = payFiltered.reduce((s, r) => s + num(r['จำนวน(กล่อง)']), 0);
   const totalPcs  = payFiltered.reduce((s, r) => s + num(r['จำนวนโอน(ชิ้น)']), 0);
 
-  // เชื่อมกับ IMPORTED หา POI ที่ยังค้าง
-  const allPaidPOIs = new Set(dataAgingOut.map(r => r['เลขที่ขอโอน']).filter(Boolean));
-  const hasImported = dataUot.length > 0;
-  const remainPOIs  = hasImported
-    ? [...new Set(dataUot.map(r => r['เลขที่เอกสารขอโอน']).filter(Boolean))].filter(p => !allPaidPOIs.has(p))
-    : [];
+  // docs ที่รถ "ออกแล้ว" — join dataCar
+  const departedDocSet = new Set(
+    dataCar.filter(r => isDcDeparted(String(r['รถยังไม่ออกจาก DC'] || '').trim()))
+           .map(r => String(r['เลขที่เอกสาร'] || '').trim()).filter(Boolean)
+  );
+  const payDeparted   = payFiltered.filter(r => departedDocSet.has(String(r['เลขที่เอกสาร'] || '').trim()));
+  const docsDepted    = uniqCount(payDeparted, 'เลขที่เอกสาร');
+  const poisDepted    = uniqCount(payDeparted, 'เลขที่ขอโอน');
+
+  // สถานะขึ้นสินค้า — นับจาก dataCar ที่ doc อยู่ใน payFiltered AND ออกแล้ว
+  const payFilteredDocSet = new Set(payFiltered.map(r => String(r['เลขที่เอกสาร'] || '').trim()).filter(Boolean));
+  const carsInPay     = dataCar.filter(r => {
+    const doc = String(r['เลขที่เอกสาร'] || '').trim();
+    return payFilteredDocSet.has(doc) && isDcDeparted(String(r['รถยังไม่ออกจาก DC'] || '').trim());
+  });
+  const cntStd    = carsInPay.filter(r => String(r['สถานะขึ้นสินค้า'] || '').trim() === 'ได้มาตราฐาน').length;
+  const cntNonStd = carsInPay.filter(r => String(r['สถานะขึ้นสินค้า'] || '').trim() === 'ไม่ได้มาตราฐาน').length;
 
   kpiEl.innerHTML = `
-    <stat-card label="เอกสาร OUTBOUND" value="${fmtN(docs)}" unit="เลขที่เอกสาร"></stat-card>
-    <stat-card label="เลขที่ขอโอน จ่ายแล้ว" value="${fmtN(pois)}" unit="เอกสาร POI" variant="ok"></stat-card>
-    <stat-card label="รายการสินค้า" value="${fmtN(payFiltered.length)}" unit="รายการ"></stat-card>
+    <stat-card label="เอกสาร OUTBOUND" value="${fmtN(docsDepted)}" unit="รถออกแล้ว"></stat-card>
+    <stat-card label="เลขที่ขอโอน จ่ายแล้ว" value="${fmtN(poisDepted)}" unit="รถออกแล้ว" variant="ok"></stat-card>
+    <stat-card label="จำนวนสินค้า" value="${fmtN(payFiltered.length)}" unit="รายการ"></stat-card>
     <stat-card label="จำนวนกล่องรวม" value="${fmtN(totalBox)}" unit="กล่อง"></stat-card>
     <stat-card label="จำนวนชิ้นรวม" value="${fmtN(totalPcs)}" unit="ชิ้น"></stat-card>
-    <stat-card label="สาขา" value="${fmtN(branches)}" unit="สาขา" variant="inf"></stat-card>
-    <stat-card label="Category" value="${fmtN(cats)}" unit="หมวด"></stat-card>
-    ${hasImported ? `<stat-card label="POI ยังค้างจ่าย" value="${fmtN(remainPOIs.length)}" unit="เอกสาร POI" variant="${remainPOIs.length > 0 ? 'alr' : 'ok'}"></stat-card>` : ''}
+    <stat-card label="จำนวนสาขา" value="${fmtN(branches)}" unit="สาขา" variant="inf"></stat-card>
+    <stat-card label="ได้มาตราฐาน" value="${fmtN(cntStd)}" unit="คัน" variant="ok"></stat-card>
+    <stat-card label="ไม่ได้มาตราฐาน" value="${fmtN(cntNonStd)}" unit="คัน" variant="${cntNonStd > 0 ? 'alr' : 'ok'}"></stat-card>
   `;
 
   // ── Chart 1: สัดส่วนตามคลัง (ผ่าน Car.xlsx) ──
