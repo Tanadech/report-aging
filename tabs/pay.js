@@ -62,6 +62,19 @@ function renderPay() {
   payFiltered = getPayFiltered();
   payPage = 0;
 
+  // ── Shared: Car doc → { wh, slot } (ใช้ร่วมหลาย chart) ──
+  const carInfo = {};
+  if (dataCar.length) {
+    dataCar.forEach(r => {
+      const doc = String(r['เลขที่เอกสาร'] || '').trim();
+      if (!doc) return;
+      carInfo[doc] = {
+        wh:   String(r['คลังสินค้า'] || '(ไม่ระบุ)').trim(),
+        slot: String(r['ช่วงเวลา']   || '(ไม่ระบุ)').trim()
+      };
+    });
+  }
+
   // ── KPI ──
   const docs      = uniqCount(payFiltered, 'เลขที่เอกสาร');
   const pois      = uniqCount(payFiltered, 'เลขที่ขอโอน');
@@ -88,16 +101,22 @@ function renderPay() {
     ${hasImported ? `<stat-card label="POI ยังค้างจ่าย" value="${fmtN(remainPOIs.length)}" unit="เอกสาร POI" variant="${remainPOIs.length > 0 ? 'alr' : 'ok'}"></stat-card>` : ''}
   `;
 
-  // ── Chart 1: ประเภท doughnut ──
-  const byType  = groupBy(payFiltered, 'ประเภท');
-  const typeEnt = Object.entries(byType).map(([k, v]) => [k || '(ไม่ระบุ)', uniqCount(v, 'เลขที่เอกสาร')]).sort((a, b) => b[1] - a[1]);
+  // ── Chart 1: สัดส่วนตามคลัง (ผ่าน Car.xlsx) ──
+  const byWh = {};
+  payFiltered.forEach(r => {
+    const doc = String(r['เลขที่เอกสาร'] || '').trim();
+    const wh  = carInfo[doc]?.wh || (dataCar.length ? '(ไม่พบใน Car)' : '(ไม่มีข้อมูล Car)');
+    if (!byWh[wh]) byWh[wh] = new Set();
+    byWh[wh].add(doc);
+  });
+  const whEnt = Object.entries(byWh).map(([k, v]) => [k, v.size]).sort((a, b) => b[1] - a[1]);
   mkChart('p-pie1', 'doughnut', {
-    labels: typeEnt.map(e => e[0]),
-    datasets: [{ data: typeEnt.map(e => e[1]), backgroundColor: PALETTE, borderWidth: 2, borderColor: 'rgba(6,16,30,.8)', hoverOffset: 6 }]
+    labels: whEnt.map(e => e[0]),
+    datasets: [{ data: whEnt.map(e => e[1]), backgroundColor: PALETTE, borderWidth: 2, borderColor: 'rgba(6,16,30,.8)', hoverOffset: 6 }]
   }, {
     plugins: {
       legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 10, padding: 8 } },
-      datalabels: { color: '#fff', font: { size: 11, weight: 'bold' }, formatter: (v, ctx) => { const e = typeEnt[ctx.dataIndex]; return e ? e[0] + '\n' + fmtN(v) : fmtN(v); }, anchor: 'center', align: 'center', display: ctx => ctx.dataset.data[ctx.dataIndex] > 0 }
+      datalabels: { color: '#fff', font: { size: 11, weight: 'bold' }, formatter: (v, ctx) => { const e = whEnt[ctx.dataIndex]; return e ? e[0] + '\n' + fmtN(v) : fmtN(v); }, anchor: 'center', align: 'center', display: ctx => ctx.dataset.data[ctx.dataIndex] > 0 }
     }, cutout: '50%'
   });
 
@@ -118,19 +137,53 @@ function renderPay() {
     pie2Card.style.display = 'none';
   }
 
-  // ── Chart 3: Top 8 สาขา (by กล่อง) ──
-  const brData = Object.entries(groupBy(payFiltered, 'ชื่อสาขา'))
-    .map(([k, v]) => ({ name: (k || '').replace(/^สาขา\s*/, ''), box: v.reduce((s, r) => s + num(r['จำนวน(กล่อง)']), 0), docs: uniqCount(v, 'เลขที่เอกสาร') }))
-    .sort((a, b) => b.box - a.box).slice(0, 8);
+  // ── Chart 3: Top 5 สาขาที่มีการจ่ายมากที่สุดวันนี้ ──
+  const todayStr2 = _getTodayDdMmYyyy();
+  const todayRows = payFiltered.filter(r => r['วันที่'] === todayStr2);
+  const baseRows  = todayRows.length ? todayRows : payFiltered;
+  const brData    = Object.entries(groupBy(baseRows, 'ชื่อสาขา'))
+    .map(([k, v]) => ({ name: (k || '').replace(/^สาขา\s*/, ''), docs: uniqCount(v, 'เลขที่เอกสาร'), box: v.reduce((s, r) => s + num(r['จำนวน(กล่อง)']), 0) }))
+    .sort((a, b) => b.docs - a.docs).slice(0, 5);
   mkChart('p-c1', 'bar', {
     labels: brData.map(d => d.name),
     datasets: [
-      { label: 'จำนวนกล่อง', data: brData.map(d => d.box), backgroundColor: '#22d3ee', borderRadius: 3 },
-      { label: 'จำนวนเอกสาร', data: brData.map(d => d.docs), backgroundColor: '#a78bfa', borderRadius: 3 }
+      { label: 'จำนวนเอกสาร', data: brData.map(d => d.docs), backgroundColor: '#10b981', borderRadius: 3 },
+      { label: 'จำนวนกล่อง',   data: brData.map(d => d.box),  backgroundColor: '#22d3ee', borderRadius: 3 }
     ]
   }, {
     plugins: { legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 10, padding: 6 } }, datalabels: { anchor: 'end', align: 'top', font: { size: 9, weight: 'bold' }, formatter: v => v > 0 ? fmtN(v) : '', color: '#e2e8f0' } },
-    scales: { y: { beginAtZero: true, ticks: { font: { size: 9 } }, grid: { color: 'rgba(255,255,255,.05)' } }, x: { ticks: { font: { size: 9 }, maxRotation: 45 } } }
+    scales: { y: { beginAtZero: true, ticks: { font: { size: 9 } }, grid: { color: 'rgba(255,255,255,.05)' } }, x: { ticks: { font: { size: 9 }, maxRotation: 30 } } }
+  });
+
+  // ── Chart p-c4: คลังที่มีการจ่ายเอกสารตามช่วงเวลา Car ──
+  const slotWhCnt = {};
+  const allSlots4 = new Set();
+  const allWhs4   = new Set();
+  payFiltered.forEach(r => {
+    const doc  = String(r['เลขที่เอกสาร'] || '').trim();
+    const info = carInfo[doc] || {};
+    const slot = info.slot || '(ไม่ระบุ)';
+    const wh   = info.wh   || '(ไม่ระบุ)';
+    allSlots4.add(slot);
+    allWhs4.add(wh);
+    if (!slotWhCnt[slot]) slotWhCnt[slot] = {};
+    slotWhCnt[slot][wh] = (slotWhCnt[slot][wh] || 0) + 1;
+  });
+  const slotsArr4 = [...allSlots4].sort();
+  const whsArr4   = [...allWhs4].sort();
+  const c4El = document.getElementById('p-c4');
+  if (c4El) c4El.style.width = Math.max(320, slotsArr4.length * 100) + 'px';
+  mkChart('p-c4', 'bar', {
+    labels: slotsArr4,
+    datasets: whsArr4.map((wh, i) => ({
+      label: wh,
+      data: slotsArr4.map(slot => slotWhCnt[slot]?.[wh] || 0),
+      backgroundColor: PALETTE[i % PALETTE.length],
+      borderRadius: 3
+    }))
+  }, {
+    plugins: { legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 10, padding: 6 } }, datalabels: { anchor: 'end', align: 'top', font: { size: 9, weight: 'bold' }, formatter: v => v > 0 ? fmtN(v) : '', color: '#e2e8f0' } },
+    scales: { y: { beginAtZero: true, ticks: { font: { size: 9 } }, grid: { color: 'rgba(255,255,255,.05)' } }, x: { ticks: { font: { size: 9 }, maxRotation: 30 } } }
   });
 
   // ── Chart 4: By Category ──

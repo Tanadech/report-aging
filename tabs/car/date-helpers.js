@@ -27,6 +27,9 @@ function timeSlotStart(slot) {
 }
 
 function isChecked(v) {
-  const s = String(v || '').toLowerCase();
-  return s === 'checked' || s === 'true' || s === '1' || s === '✓' || s === 'x';
+  if (v === null || v === undefined || v === '') return false;
+  const s = String(v).trim().toLowerCase();
+  if (!s || s === 'false' || s === '0' || s === 'no' || s === 'ไม่') return false;
+  return s === 'true' || s === 'checked' || s === '1' || s === '✓' || s === 'x'
+      || s === 'yes'  || s === 'y'       || s === 'มี' || s === 'ใช่' || s === 'ติ๊ก';
 }
