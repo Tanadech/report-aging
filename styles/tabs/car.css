@@ -57,11 +57,15 @@
 .cstat.late     { background:rgba(239,68,68,.2);   color:#f87171; }
 .cstat.unknown  { background:rgba(100,116,139,.18);color:#94a3b8; }
 .cstat.in-dc    { background:rgba(251,146,60,.2);  color:#fb923c; margin-left:4px; }
+.cstat.dc-out   { background:rgba(16,185,129,.18); color:#34d399; margin-left:4px; }
+.cstat.dc-other { background:rgba(100,116,139,.18);color:#94a3b8; margin-left:4px; }
 .ctbl-row       { cursor:pointer; }
 .ctbl-row:hover td { background:rgba(56,189,248,.08)!important; }
 
 /* ── Light mode ── */
-body.light .cstat.in-dc { background:rgba(234,88,12,.12); color:#ea580c; }
+body.light .cstat.in-dc    { background:rgba(234,88,12,.12);  color:#ea580c; }
+body.light .cstat.dc-out   { background:rgba(5,150,105,.13);  color:#059669; }
+body.light .cstat.dc-other { background:rgba(100,116,139,.13);color:#475569; }
 body.light #tc-car .kpi:hover { box-shadow:0 4px 14px rgba(0,0,0,.12); border-color:rgba(37,99,235,.4); }
 body.light .car-toolbar       { background:#f1f5f9; border-color:#e2e8f0; }
 body.light .view-toggle       { background:#fff; border-color:#cbd5e1; }

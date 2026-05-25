@@ -15,7 +15,7 @@ function _renderCarCards(enriched, slotsOrdered, grouped, today, tomorrow) {
       rows.forEach(r => {
         const ag      = r._aging;
         const stuck   = isChecked(r['รถตกค้าง']);
-        const inDc    = isDcNotLeft(r['รถยังไม่ออกจาก DC']);
+        const _dcv    = String(r['รถยังไม่ออกจาก DC'] || '').trim();
         const cardCls = stuck ? 'urgent-stuck' : (ag.maxDays > 30 ? 'urgent' : ag.totalDocs > 0 ? 'has-aging' : '');
         const brDisp  = (r['ชื่อสาขา'] || BR_ABR_MAP[r['ชื่อย่อสาขา']] || r['ชื่อย่อสาขา'] || '(ไม่ระบุสาขา)').replace(/^สาขา\s*/, '');
         const brAbr   = r['ชื่อย่อสาขา'] || '';
@@ -33,7 +33,7 @@ function _renderCarCards(enriched, slotsOrdered, grouped, today, tomorrow) {
         if (stuck)                                                           { statCls = 'late'; statTxt = '⚠ ตกค้าง'; }
         else if (statTxt.includes('ยังไม่'))                                   statCls = 'pending';
         else if (statTxt.includes('สำเร็จ') || statTxt.includes('เรียบร้อย')) statCls = 'done';
-        const dcBadge = inDc ? `<span class="cstat in-dc">🚧 ยังไม่ออก DC</span>` : '';
+        const dcBadge = _dcv ? `<span class="cstat ${isDcDeparted(_dcv)?'dc-out':isDcNotLeft(_dcv)?'in-dc':'dc-other'}">${isDcDeparted(_dcv)?'✅ ออก DC':'🚧 '+esc(_dcv)}</span>` : '';
         const _d = parseCarDate(r['วันที่คิวงาน']);
         let dayBadge = '';
         if (_d) {
@@ -71,13 +71,13 @@ function _renderCarTable(enriched) {
     enriched.forEach(r => {
       const ag      = r._aging;
       const stuck   = isChecked(r['รถตกค้าง']);
-      const inDc    = isDcNotLeft(r['รถยังไม่ออกจาก DC']);
+      const _dcvT   = String(r['รถยังไม่ออกจาก DC'] || '').trim();
       const brDisp  = (r['ชื่อสาขา'] || BR_ABR_MAP[r['ชื่อย่อสาขา']] || r['ชื่อย่อสาขา'] || '').replace(/^สาขา\s*/, '');
       let statTxt   = r['สถานะลงคิว'] || '-', statCls = 'unknown';
       if (stuck)                                                             { statCls = 'late'; statTxt = '⚠ ตกค้าง'; }
       else if (statTxt.includes('ยังไม่'))                                   statCls = 'pending';
       else if (statTxt.includes('สำเร็จ') || statTxt.includes('เรียบร้อย')) statCls = 'done';
-      const dcBadgeTbl = inDc ? `<span class="cstat in-dc">🚧 ยังไม่ออก DC</span>` : '';
+      const dcBadgeTbl = _dcvT ? `<span class="cstat ${isDcDeparted(_dcvT)?'dc-out':isDcNotLeft(_dcvT)?'in-dc':'dc-other'}">${isDcDeparted(_dcvT)?'✅ ออก DC':'🚧 '+esc(_dcvT)}</span>` : '';
       html += `<tr class="ctbl-row" data-brabr="${esc(r['ชื่อย่อสาขา']||'')}" data-brname="${esc(r['ชื่อสาขา']||'')}" data-wh="${esc(r['คลังสินค้า']||'')}">
         <td style="font-weight:700;color:#7dd3fc;white-space:nowrap;">${esc(r['ช่วงเวลา']||'')}</td>
         <td style="text-align:center;font-weight:700;">${esc(r['คลังสินค้า']||'')}</td>
