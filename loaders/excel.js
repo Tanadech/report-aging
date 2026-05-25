@@ -39,6 +39,9 @@ function loadCarFile(file) {
       if (updEl) { updEl.textContent = '🚛 อัพเดท: ' + now.toLocaleString('th-TH'); updEl.classList.add('show'); }
       rebuildCar();
       renderCar();
+      _tlWhFilter = null;
+      _renderPayCarKPIs();
+      _renderPayTimeline();
       renderPayCarTable();
       document.querySelectorAll('.tb').forEach(b => b.classList.remove('act'));
       document.querySelectorAll('.tc').forEach(c => c.classList.remove('act'));

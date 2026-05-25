@@ -411,7 +411,7 @@
       <span class="fb-lbl">ค้นหา</span>
       <div class="p-search-wrap">
         <span class="p-search-ico">🔍</span>
-        <input type="text" id="p-fsearch" placeholder="เลขที่เอกสาร / เลขขอโอน / สาขา">
+        <input type="text" id="p-fsearch" placeholder="เลขที่ OUTBOUND / เลขที่ขอโอน / เลขที่ POI / สาขา">
       </div>
     </div>
     <div class="fb-sep"></div>
@@ -422,6 +422,7 @@
 
   <div class="main">
   <div class="main-inner">
+    <div class="pay-car-kpi" id="pay-kpi-car"></div>
     <div class="kpi-row" id="pay-kpi"></div>
 
     <div class="mid-row">
@@ -437,8 +438,9 @@
       </div>
       <div style="display:flex;flex-direction:column;gap:10px;flex:1;">
         <div class="card" style="flex:1;">
-          <div class="card-title"><span class="dot" style="background:#10b981"></span>Top 5 สาขาที่มีการจ่ายมากที่สุดวันนี้</div>
-          <div class="cw" style="height:220px;"><canvas id="p-c1"></canvas></div>
+          <div class="card-title"><span class="dot" style="background:#f59e0b"></span>🕐 สถานะรถตามช่วงเวลา OUTBOUND</div>
+          <div id="p-tl-wh-bar" style="display:flex;gap:4px;flex-wrap:wrap;padding:2px 0 6px;"></div>
+          <div class="cw" style="height:175px;"><canvas id="p-timeline"></canvas></div>
         </div>
         <div class="card" style="flex:1;">
           <div class="card-title"><span class="dot" style="background:#f59e0b"></span>คลังที่มีการจ่ายเอกสารคงค้างและเอกสารขอโอนตามช่วงเวลา Car</div>

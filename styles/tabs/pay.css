@@ -11,7 +11,16 @@
 .pay-type.hip { background:rgba(34,211,238,.15); color:#22d3ee; }
 .pay-type.dc  { background:rgba(167,139,250,.15); color:#c4b5fd; }
 
+/* Car KPI section */
+.pay-car-kpi             { margin-bottom:10px; }
+.pay-car-kpi-lbl         { font-size:10px; font-weight:700; color:var(--muted); letter-spacing:.5px; text-transform:uppercase; margin-bottom:6px; display:flex; align-items:center; gap:6px; }
+.pay-car-kpi-lbl::after  { content:''; flex:1; height:1px; background:rgba(255,255,255,.06); }
+.pay-car-kpi-row         { grid-template-columns:repeat(auto-fit,minmax(100px,1fr)) !important; }
+.pay-car-kpi-row .kpi    { padding:8px 10px; }
+.pay-car-kpi-row .kpi-val{ font-size:18px; }
+
 /* ── Light mode ── */
+body.light .pay-car-kpi-lbl::after { background:rgba(0,0,0,.08); }
 body.light .p-search-wrap { background:#fff; border-color:#cbd5e1; }
 body.light .p-search-wrap input { color:#1e293b; }
 body.light .p-search-wrap input::placeholder { color:#94a3b8; }

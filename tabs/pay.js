@@ -41,10 +41,11 @@ function getPayFiltered() {
     if (ftCB.length && !ftCB.includes(r['ประเภท'])) return false;
     if (fcCB.length && !fcCB.includes(r['Category Name'])) return false;
     if (fsearch) {
-      const docNo = (r['เลขที่เอกสาร'] || '').toLowerCase();
-      const poiNo = (r['เลขที่ขอโอน'] || '').toLowerCase();
-      const brNm  = (r['ชื่อสาขา'] || '').toLowerCase();
-      if (!docNo.includes(fsearch) && !poiNo.includes(fsearch) && !brNm.includes(fsearch)) return false;
+      const docNo = (r['เลขที่เอกสาร']     || '').toLowerCase();
+      const poiNo = (r['เลขที่ขอโอน']      || '').toLowerCase();
+      const poi2  = (r['เลขที่เอกสาร POI'] || '').toLowerCase();
+      const brNm  = (r['ชื่อสาขา']         || '').toLowerCase();
+      if (!docNo.includes(fsearch) && !poiNo.includes(fsearch) && !poi2.includes(fsearch) && !brNm.includes(fsearch)) return false;
     }
     return true;
   });
@@ -137,24 +138,6 @@ function renderPay() {
     pie2Card.style.display = 'none';
   }
 
-  // ── Chart 3: Top 5 สาขาที่มีการจ่ายมากที่สุดวันนี้ ──
-  const todayStr2 = _getTodayDdMmYyyy();
-  const todayRows = payFiltered.filter(r => r['วันที่'] === todayStr2);
-  const baseRows  = todayRows.length ? todayRows : payFiltered;
-  const brData    = Object.entries(groupBy(baseRows, 'ชื่อสาขา'))
-    .map(([k, v]) => ({ name: (k || '').replace(/^สาขา\s*/, ''), docs: uniqCount(v, 'เลขที่เอกสาร'), box: v.reduce((s, r) => s + num(r['จำนวน(กล่อง)']), 0) }))
-    .sort((a, b) => b.docs - a.docs).slice(0, 5);
-  mkChart('p-c1', 'bar', {
-    labels: brData.map(d => d.name),
-    datasets: [
-      { label: 'จำนวนเอกสาร', data: brData.map(d => d.docs), backgroundColor: '#10b981', borderRadius: 3 },
-      { label: 'จำนวนกล่อง',   data: brData.map(d => d.box),  backgroundColor: '#22d3ee', borderRadius: 3 }
-    ]
-  }, {
-    plugins: { legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 10, padding: 6 } }, datalabels: { anchor: 'end', align: 'top', font: { size: 9, weight: 'bold' }, formatter: v => v > 0 ? fmtN(v) : '', color: '#e2e8f0' } },
-    scales: { y: { beginAtZero: true, ticks: { font: { size: 9 } }, grid: { color: 'rgba(255,255,255,.05)' } }, x: { ticks: { font: { size: 9 }, maxRotation: 30 } } }
-  });
-
   // ── Chart p-c4: คลังที่มีการจ่ายเอกสารตามช่วงเวลา Car ──
   const slotWhCnt = {};
   const allSlots4 = new Set();
@@ -187,8 +170,116 @@ function renderPay() {
   });
 
 
+  _renderPayCarKPIs();
+  _renderPayTimeline();
   renderPayCarTable();
   renderPayTags();
+}
+
+// ── Car KPI Section (สถานะรถ OUTBOUND แยกคลัง + DC status) ──
+function _renderPayCarKPIs() {
+  const el = document.getElementById('pay-kpi-car');
+  if (!el) return;
+  if (!dataCar.length) { el.innerHTML = ''; return; }
+
+  // นับรถแยกตามคลัง
+  const whCnt = {};
+  dataCar.forEach(r => {
+    const wh = String(r['คลังสินค้า'] || '(ไม่ระบุ)').trim();
+    whCnt[wh] = (whCnt[wh] || 0) + 1;
+  });
+
+  // นับรถตามสถานะ DC
+  let cntWait = 0, cntLoading = 0, cntDep = 0, cntStuck = 0;
+  dataCar.forEach(r => {
+    const dcv   = String(r['รถยังไม่ออกจาก DC'] || '').trim();
+    const stuck = isChecked(r['รถตกค้าง']);
+    if (stuck)              { cntStuck++;   return; }
+    if (isDcDeparted(dcv))  { cntDep++;     return; }
+    if (isDcNotLeft(dcv))   { cntLoading++; return; }
+    cntWait++;
+  });
+
+  const total = dataCar.length;
+  const whCards = Object.entries(whCnt)
+    .sort((a, b) => b[1] - a[1])
+    .map(([wh, cnt]) =>
+      `<div class="kpi inf"><div class="kpi-lbl">🏭 ${esc(wh)}</div><div class="kpi-val">${fmtN(cnt)}</div><div class="kpi-unit">คัน</div></div>`
+    ).join('');
+
+  el.innerHTML = `
+    <div class="pay-car-kpi-lbl">🚛 สถานะรถ OUTBOUND (${fmtN(total)} คัน)</div>
+    <div class="kpi-row pay-car-kpi-row">
+      ${whCards}
+      <div class="kpi warn"><div class="kpi-lbl">⏳ รอขึ้นสินค้า</div><div class="kpi-val">${fmtN(cntWait)}</div><div class="kpi-unit">คัน</div></div>
+      <div class="kpi inf"><div class="kpi-lbl">🔵 กำลังขึ้นสินค้า</div><div class="kpi-val">${fmtN(cntLoading)}</div><div class="kpi-unit">คัน</div></div>
+      <div class="kpi ok"><div class="kpi-lbl">✅ ออกแล้ว</div><div class="kpi-val">${fmtN(cntDep)}</div><div class="kpi-unit">คัน</div></div>
+      ${cntStuck > 0 ? `<div class="kpi alr"><div class="kpi-lbl">⚠️ ตกค้าง</div><div class="kpi-val">${fmtN(cntStuck)}</div><div class="kpi-unit">คัน</div></div>` : ''}
+    </div>`;
+}
+
+// ── Timeline Chart: สถานะรถตามช่วงเวลา ──
+let _tlWhFilter = null;
+let _tlWhList   = [];
+
+function _setTlWh(i) { _tlWhFilter = i < 0 ? null : (_tlWhList[i] || null); _renderPayTimeline(); }
+
+function _renderPayTimeline() {
+  const bar = document.getElementById('p-tl-wh-bar');
+  if (!bar) return;
+
+  if (!dataCar.length) { bar.innerHTML = ''; return; }
+
+  // Build warehouse list
+  const whSet = new Set(dataCar.map(r => String(r['คลังสินค้า'] || '(ไม่ระบุ)').trim()));
+  _tlWhList = [...whSet].sort();
+
+  // Render filter buttons
+  const btnBase = 'font-size:10px;padding:2px 9px;border-radius:12px;border:1px solid;cursor:pointer;transition:all .15s;';
+  bar.innerHTML = [{ label: 'ทั้งหมด', idx: -1 }, ..._tlWhList.map((w, i) => ({ label: w, idx: i }))]
+    .map(({ label, idx }) => {
+      const active = idx < 0 ? _tlWhFilter === null : _tlWhList[idx] === _tlWhFilter;
+      return `<button onclick="_setTlWh(${idx})" style="${btnBase}background:${active ? '#3b82f6' : 'rgba(255,255,255,.06)'};border-color:${active ? '#3b82f6' : 'rgba(255,255,255,.15)'};color:${active ? '#fff' : 'var(--muted)'};">${esc(label)}</button>`;
+    }).join('');
+
+  // Filter data by selected warehouse
+  const cars = _tlWhFilter
+    ? dataCar.filter(r => String(r['คลังสินค้า'] || '').trim() === _tlWhFilter)
+    : dataCar;
+
+  const slotData = {};
+  cars.forEach(r => {
+    const slot  = String(r['ช่วงเวลา'] || '(ไม่ระบุ)').trim();
+    const dcv   = String(r['รถยังไม่ออกจาก DC'] || '').trim();
+    const stuck = isChecked(r['รถตกค้าง']);
+    let status;
+    if (stuck)                 status = 'stuck';
+    else if (isDcDeparted(dcv))  status = 'dep';
+    else if (isDcNotLeft(dcv))   status = 'loading';
+    else                         status = 'wait';
+    if (!slotData[slot]) slotData[slot] = { wait: 0, loading: 0, dep: 0, stuck: 0 };
+    slotData[slot][status]++;
+  });
+
+  const slots = Object.keys(slotData).sort((a, b) => timeSlotStart(a) - timeSlotStart(b));
+  mkChart('p-timeline', 'bar', {
+    labels: slots,
+    datasets: [
+      { label: '⏳ รอขึ้นสินค้า',    data: slots.map(s => slotData[s].wait),    backgroundColor: '#f59e0b', borderRadius: 3 },
+      { label: '🔵 กำลังขึ้นสินค้า', data: slots.map(s => slotData[s].loading), backgroundColor: '#38bdf8', borderRadius: 3 },
+      { label: '✅ ออกแล้ว',          data: slots.map(s => slotData[s].dep),     backgroundColor: '#10b981', borderRadius: 3 },
+      { label: '⚠️ ตกค้าง',          data: slots.map(s => slotData[s].stuck),   backgroundColor: '#ef4444', borderRadius: 3 }
+    ]
+  }, {
+    plugins: {
+      legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 10, padding: 6 } },
+      datalabels: { anchor: 'center', align: 'center', font: { size: 9, weight: 'bold' }, formatter: v => v > 0 ? fmtN(v) : '', color: '#fff', display: ctx => ctx.dataset.data[ctx.dataIndex] > 0 }
+    },
+    scales: {
+      x: { stacked: true, ticks: { font: { size: 9 } }, grid: { color: 'rgba(255,255,255,.05)' } },
+      y: { stacked: true, beginAtZero: true, ticks: { font: { size: 9 } }, grid: { color: 'rgba(255,255,255,.05)' } }
+    }
+  });
 }
 
 // ── Car OUTBOUND Table (ออก DC แล้ว) ──
@@ -234,7 +325,6 @@ function renderPayCarTable() {
   </div>`;
   html += `<table class="gtbl"><thead><tr>
     <th>ช่วงเวลา</th><th>คลัง</th><th>สาขา</th><th>ประเภทรถ</th><th>ประเภทงาน</th><th>ทะเบียน</th><th>คนขับ</th>
-    <th style="text-align:center;">DOMESTIC</th><th style="text-align:center;">IMPORTED</th>
     <th style="text-align:center;">เอกสาร Aging Out รวม</th>
     <th style="text-align:right;">กล่อง</th><th style="text-align:right;">ชิ้น</th>
     <th>สถานะ</th>
@@ -258,9 +348,7 @@ function renderPayCarTable() {
       <td style="font-size:11px;">${esc(r['ประเภทงาน'] || '')}</td>
       <td style="font-family:monospace;font-size:11px;">${esc(r['ป้ายทะเบียน'] || '')}</td>
       <td style="font-size:11px;">${esc(r['ชื่อคนขับ'] || '')}${r['เบอร์โทร'] ? ` <span style="color:var(--muted);font-size:10px;">(${esc(r['เบอร์โทร'])})</span>` : ''}</td>
-      <td style="text-align:center;">${ag.inDocs  ? `<b style="color:#7dd3fc;">${ag.inDocs}</b>`  : '—'}</td>
-      <td style="text-align:center;">${ag.outDocs ? `<b style="color:#fbbf24;">${ag.outDocs}</b>` : '—'}</td>
-      <td style="text-align:center;">${r._agRows.length ? `<b style="color:#a5b4fc;">📑 ${r._agRows.length}</b>` : '<span style="color:var(--muted)">—</span>'}</td>
+      <td style="text-align:center;">${r._agRows.length ? `<b style="color:#a5b4fc;">📑 ${uniqCount(r._agRows, 'เลขที่ขอโอน')}</b>` : '<span style="color:var(--muted)">—</span>'}</td>
       <td style="text-align:right;">${totalBox ? fmtN(totalBox) : '—'}</td>
       <td style="text-align:right;">${totalPcs ? fmtN(totalPcs) : '—'}</td>
       <td><span class="cstat ${statCls}">${esc(statTxt)}</span></td>
@@ -286,32 +374,57 @@ function openPayCarModal(idx) {
   } else {
     const totalBox = agRows.reduce((s, x) => s + num(x['จำนวน(กล่อง)']), 0);
     const totalPcs = agRows.reduce((s, x) => s + num(x['จำนวนโอน(ชิ้น)']), 0);
+
+    // Group by เลขที่ขอโอน
+    const groups = {}, groupOrder = [];
+    agRows.forEach(x => {
+      const key = x['เลขที่ขอโอน'] || '(ไม่ระบุ)';
+      if (!groups[key]) { groups[key] = []; groupOrder.push(key); }
+      groups[key].push(x);
+    });
+
     body = `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
       <span style="font-size:11px;padding:3px 10px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);border-radius:4px;color:#7dd3fc;">📄 ${esc(r._docNo)}</span>
       <span style="font-size:11px;padding:3px 10px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);border-radius:4px;color:#34d399;">📦 ${fmtN(totalBox)} กล่อง</span>
       <span style="font-size:11px;padding:3px 10px;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.2);border-radius:4px;color:#c4b5fd;">${fmtN(totalPcs)} ชิ้น</span>
-      <span style="font-size:11px;padding:3px 10px;background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.2);border-radius:4px;color:#fb923c;">${agRows.length} รายการสินค้า</span>
-    </div>
-    <table class="gtbl"><thead><tr>
-      <th>เลขที่ขอโอน</th><th>รหัสสินค้า</th><th>ชื่อสินค้า</th>
-      <th style="text-align:right;">กล่อง</th><th style="text-align:right;">ชิ้น</th>
-      <th>Category</th><th>ประเภท</th>
-    </tr></thead><tbody>`;
-    agRows.forEach(x => {
-      body += `<tr>
-        <td style="font-size:10.5px;color:#a5b4fc;white-space:nowrap;">${esc(x['เลขที่ขอโอน'] || '')}</td>
-        <td style="font-size:10.5px;">${esc(x['รหัสสินค้า'] || '')}</td>
-        <td style="font-size:10.5px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(x['ชื่อสินค้า'] || '')}">${esc(x['ชื่อสินค้า'] || '')}</td>
-        <td style="text-align:right;font-weight:600;">${fmtN(num(x['จำนวน(กล่อง)']))}</td>
-        <td style="text-align:right;">${fmtN(num(x['จำนวนโอน(ชิ้น)']))}</td>
-        <td style="font-size:10px;">${esc(x['Category Name'] || '')}</td>
-        <td><span class="pay-type ${(x['ประเภท'] || '').toLowerCase()}">${esc(x['ประเภท'] || '')}</span></td>
-      </tr>`;
+      <span style="font-size:11px;padding:3px 10px;background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.2);border-radius:4px;color:#fb923c;">${groupOrder.length} เลขที่ขอโอน</span>
+    </div>`;
+
+    groupOrder.forEach((key, gi) => {
+      const items = groups[key];
+      const gBox  = items.reduce((s, x) => s + num(x['จำนวน(กล่อง)']), 0);
+      const gPcs  = items.reduce((s, x) => s + num(x['จำนวนโอน(ชิ้น)']), 0);
+      const gid   = `pcm-grp-${gi}`;
+      body += `<div style="margin-bottom:6px;border:1px solid rgba(255,255,255,.08);border-radius:6px;overflow:hidden;">
+        <div onclick="(function(el){el.style.display=el.style.display==='none'?'block':'none'})(document.getElementById('${gid}'))"
+          style="display:flex;align-items:center;gap:8px;padding:7px 12px;cursor:pointer;background:rgba(255,255,255,.04);user-select:none;">
+          <span style="font-size:11px;color:#a5b4fc;font-family:monospace;font-weight:700;">${esc(key)}</span>
+          <span style="flex:1;"></span>
+          <span style="font-size:10px;color:#34d399;">📦 ${fmtN(gBox)} กล่อง</span>
+          <span style="font-size:10px;color:#c4b5fd;margin-left:6px;">${fmtN(gPcs)} ชิ้น</span>
+          <span style="font-size:10px;color:var(--muted);margin-left:6px;">${items.length} รายการ ▼</span>
+        </div>
+        <div id="${gid}" style="display:none;">
+          <table class="gtbl"><thead><tr>
+            <th>รหัสสินค้า</th><th>ชื่อสินค้า</th>
+            <th style="text-align:right;">กล่อง</th><th style="text-align:right;">ชิ้น</th>
+            <th>Category</th><th>ประเภท</th>
+          </tr></thead><tbody>`;
+      items.forEach(x => {
+        body += `<tr>
+          <td style="font-size:10.5px;">${esc(x['รหัสสินค้า'] || '')}</td>
+          <td style="font-size:10.5px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(x['ชื่อสินค้า'] || '')}">${esc(x['ชื่อสินค้า'] || '')}</td>
+          <td style="text-align:right;font-weight:600;">${fmtN(num(x['จำนวน(กล่อง)']))}</td>
+          <td style="text-align:right;">${fmtN(num(x['จำนวนโอน(ชิ้น)']))}</td>
+          <td style="font-size:10px;">${esc(x['Category Name'] || '')}</td>
+          <td><span class="pay-type ${(x['ประเภท'] || '').toLowerCase()}">${esc(x['ประเภท'] || '')}</span></td>
+        </tr>`;
+      });
+      body += `</tbody></table></div></div>`;
     });
-    body += '</tbody></table>';
   }
   document.getElementById('pcm-body').innerHTML = body;
-  document.getElementById('pay-car-modal').classList.add('open');
+  document.getElementById('pay-car-modal').classList.add('show');
 }
 
 // ── Filter Tags ──
@@ -372,10 +485,10 @@ function initPayTab() {
   });
   // Pay Car Modal close
   document.getElementById('pcm-close').addEventListener('click', () => {
-    document.getElementById('pay-car-modal').classList.remove('open');
+    document.getElementById('pay-car-modal').classList.remove('show');
   });
   document.getElementById('pay-car-modal').addEventListener('click', e => {
     if (e.target === document.getElementById('pay-car-modal'))
-      document.getElementById('pay-car-modal').classList.remove('open');
+      document.getElementById('pay-car-modal').classList.remove('show');
   });
 }
