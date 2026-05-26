@@ -234,25 +234,26 @@ function _renderPayCarKPIs() {
   if (!el) return;
   if (!dataCar.length) { el.innerHTML = ''; return; }
 
-  // นับรถแยกตามคลัง
-  const whCnt = {};
-  dataCar.forEach(r => {
-    const wh = String(r['คลังสินค้า'] || '(ไม่ระบุ)').trim();
-    whCnt[wh] = (whCnt[wh] || 0) + 1;
-  });
-
-  // นับรถตามสถานะ DC
+  // นับรถตามสถานะ DC (ทุกคัน)
   let cntWait = 0, cntLoading = 0, cntDep = 0, cntStuck = 0;
   dataCar.forEach(r => {
     const dcv   = String(r['รถยังไม่ออกจาก DC'] || '').trim();
     const stuck = isChecked(r['รถตกค้าง']);
-    if (stuck)              { cntStuck++;   return; }
-    if (isDcDeparted(dcv))  { cntDep++;     return; }
-    if (isDcNotLeft(dcv))   { cntLoading++; return; }
+    if (stuck)             { cntStuck++;   return; }
+    if (isDcDeparted(dcv)) { cntDep++;     return; }
+    if (isDcNotLeft(dcv))  { cntLoading++; return; }
     cntWait++;
   });
 
-  const total = dataCar.length;
+  // WH cards นับเฉพาะรถที่ ออก DC แล้ว (ตรงกับ car table)
+  const whCnt = {};
+  dataCar.forEach(r => {
+    if (!isDcDeparted(String(r['รถยังไม่ออกจาก DC'] || '').trim())) return;
+    const wh = String(r['คลังสินค้า'] || '').trim();
+    if (!wh) return;
+    whCnt[wh] = (whCnt[wh] || 0) + 1;
+  });
+
   const whCards = Object.entries(whCnt)
     .sort((a, b) => b[1] - a[1])
     .map(([wh, cnt]) =>
@@ -260,7 +261,7 @@ function _renderPayCarKPIs() {
     ).join('');
 
   el.innerHTML = `
-    <div class="pay-car-kpi-lbl">🚛 สถานะรถ OUTBOUND (${fmtN(total)} คัน)</div>
+    <div class="pay-car-kpi-lbl">🚛 รถออก DC แล้ว ${fmtN(cntDep)} คัน · ทั้งหมด ${fmtN(dataCar.length)} คัน</div>
     <div class="kpi-row pay-car-kpi-row">
       ${whCards}
       <div class="kpi warn"><div class="kpi-lbl">⏳ รอขึ้นสินค้า</div><div class="kpi-val">${fmtN(cntWait)}</div><div class="kpi-unit">คัน</div></div>
