@@ -373,35 +373,19 @@ function renderPayCarTable() {
 
   // ── 1. Build Aging Out lookup จาก payFiltered (ผ่าน filter เดียวกับตารางหลัก) ──
   const agingByDoc = {};
-  const agingSource = dataAgingOut.length ? payFiltered : []; // ถ้าไม่มี Aging Out → ว่าง
-  agingSource.forEach(r => {
+  // Build agingByDoc จาก dataAgingOut ทั้งหมด (ไม่กรองวันที่) เพื่อ join แสดงผล
+  dataAgingOut.forEach(r => {
     const d = String(r['เลขที่เอกสาร'] || '').trim();
     if (!d) return;
     if (!agingByDoc[d]) agingByDoc[d] = [];
     agingByDoc[d].push(r);
   });
 
-  // ── 2. Primary: รถทุกคันที่ออก DC แล้ว + กรองวันที่คิวงาน (BE→CE) ──
-  const fdateFrom2 = (document.getElementById('p-fdate-from')?.value || '').replace(/-/g, '');
-  const fdateTo2   = (document.getElementById('p-fdate-to')?.value   || '').replace(/-/g, '');
-  const agDocSet = new Set(Object.keys(agingByDoc));
-  const departed = dataCar.filter(r => {
-    if (!isDcDeparted(r['รถยังไม่ออกจาก DC'])) return false;
-    if (fdateFrom2 || fdateTo2) {
-      const dk = _toDateKey(r['วันที่คิวงาน'] || r['วันที่'] || '');
-      if (fdateFrom2 && dk < fdateFrom2) return false;
-      if (fdateTo2   && dk > fdateTo2)   return false;
-    }
-    if (!dataAgingOut.length) return true; // ยังไม่โหลด Aging Out → แสดงหมด
-    const docNo = String(r['เลขที่เอกสาร'] || '').trim();
-    return agDocSet.has(docNo);
-  });
+  // ── 2. Primary: _filterCars (date+WH จาก Car.xlsx) → departed เท่านั้น ──
+  const departed = _filterCars(dataCar).filter(r => isDcDeparted(r['รถยังไม่ออกจาก DC']));
 
   if (!departed.length) {
-    const msg = dataAgingOut.length
-      ? 'ไม่มีรถที่ตรงกับเงื่อนไขการกรอง'
-      : 'ไม่มีรถที่ออก DC แล้ว';
-    el.innerHTML = `<div style="padding:30px;text-align:center;color:var(--muted);font-size:13px;">${msg}</div>`;
+    el.innerHTML = `<div style="padding:30px;text-align:center;color:var(--muted);font-size:13px;">ไม่มีรถที่ตรงกับเงื่อนไขการกรอง</div>`;
     return;
   }
 
