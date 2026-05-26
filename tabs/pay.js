@@ -64,7 +64,7 @@ function getPayFiltered() {
       if (!fwhCB.includes(wh)) return false;
     }
     if (fdateFrom || fdateTo) {
-      const rk = _payDateSort(r['วันที่']);
+      const rk = _toDateKey(r['วันที่']); // _toDateKey แปลง BE→CE ก่อนเปรียบเทียบ
       if (fdateFrom && rk < fdateFrom) return false;
       if (fdateTo   && rk > fdateTo)   return false;
     }
@@ -365,15 +365,20 @@ function renderPayCarTable() {
     agingByDoc[d].push(r);
   });
 
-  // ── 2. Primary: รถทุกคันที่ออก DC แล้ว
-  //    ถ้าโหลด Aging Out แล้ว → กรองเฉพาะที่มีเอกสารผ่าน filter
-  //    ถ้ายังไม่โหลด Aging Out → แสดงทุกคัน ──
+  // ── 2. Primary: รถทุกคันที่ออก DC แล้ว + กรองวันที่คิวงาน (BE→CE) ──
+  const fdateFrom2 = (document.getElementById('p-fdate-from')?.value || '').replace(/-/g, '');
+  const fdateTo2   = (document.getElementById('p-fdate-to')?.value   || '').replace(/-/g, '');
   const agDocSet = new Set(Object.keys(agingByDoc));
   const departed = dataCar.filter(r => {
     if (!isDcDeparted(r['รถยังไม่ออกจาก DC'])) return false;
+    if (fdateFrom2 || fdateTo2) {
+      const dk = _toDateKey(r['วันที่คิวงาน'] || r['วันที่'] || '');
+      if (fdateFrom2 && dk < fdateFrom2) return false;
+      if (fdateTo2   && dk > fdateTo2)   return false;
+    }
     if (!dataAgingOut.length) return true; // ยังไม่โหลด Aging Out → แสดงหมด
     const docNo = String(r['เลขที่เอกสาร'] || '').trim();
-    return agDocSet.has(docNo); // มีใน filtered aging out ถึงแสดง
+    return agDocSet.has(docNo);
   });
 
   if (!departed.length) {
