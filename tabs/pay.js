@@ -283,8 +283,10 @@ function _renderPayTimeline() {
 
   if (!dataCar.length) { bar.innerHTML = ''; return; }
 
-  // Build warehouse list
-  const whSet = new Set(dataCar.map(r => String(r['คลังสินค้า'] || '(ไม่ระบุ)').trim()));
+  // Build warehouse list — ตัดออกที่ไม่มีคลัง
+  const whSet = new Set(
+    dataCar.map(r => String(r['คลังสินค้า'] || '').trim()).filter(Boolean)
+  );
   _tlWhList = [...whSet].sort();
 
   // Render filter buttons
@@ -295,14 +297,17 @@ function _renderPayTimeline() {
       return `<button onclick="_setTlWh(${idx})" style="${btnBase}background:${active ? '#3b82f6' : 'rgba(255,255,255,.06)'};border-color:${active ? '#3b82f6' : 'rgba(255,255,255,.15)'};color:${active ? '#fff' : 'var(--muted)'};">${esc(label)}</button>`;
     }).join('');
 
-  // Filter data by selected warehouse
-  const cars = _tlWhFilter
-    ? dataCar.filter(r => String(r['คลังสินค้า'] || '').trim() === _tlWhFilter)
-    : dataCar;
+  // Filter data by selected warehouse (ตัดแถวที่ไม่มีคลังออกด้วย)
+  const cars = dataCar.filter(r => {
+    const wh = String(r['คลังสินค้า'] || '').trim();
+    if (!wh) return false;
+    return !_tlWhFilter || wh === _tlWhFilter;
+  });
 
   const slotData = {};
   cars.forEach(r => {
-    const slot  = String(r['ช่วงเวลา'] || '(ไม่ระบุ)').trim();
+    const slot  = String(r['ช่วงเวลา'] || '').trim();
+    if (!slot) return; // ตัดแถวที่ไม่มีช่วงเวลาออก
     const dcv   = String(r['รถยังไม่ออกจาก DC'] || '').trim();
     const stuck = isChecked(r['รถตกค้าง']);
     let status;
