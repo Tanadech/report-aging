@@ -159,15 +159,17 @@ function renderPay() {
   if (dataCar.length) {
     pie2Card.style.display = '';
     const whStdCnt = {}, whNonStdCnt = {};
-    const whSet2   = new Set();
     dataCar.forEach(r => {
-      const wh = String(r['คลังสินค้า'] || '(ไม่ระบุ)').trim();
+      const wh = String(r['คลังสินค้า'] || '').trim();
+      if (!wh || wh === '(ไม่ระบุ)') return; // ตัดออก
       const v  = String(r['สถานะขึ้นสินค้า'] || '').trim();
-      whSet2.add(wh);
-      if (_isStd(v))    whStdCnt[wh]    = (whStdCnt[wh]    || 0) + 1;
+      if (_isStd(v))         whStdCnt[wh]    = (whStdCnt[wh]    || 0) + 1;
       else if (_isNonStd(v)) whNonStdCnt[wh] = (whNonStdCnt[wh] || 0) + 1;
     });
-    const whs2 = [...whSet2].sort();
+    // แสดงเฉพาะ WH ที่มีคำว่า "WH" (WH1, WH2, WH3 ฯลฯ)
+    const whs2 = [...new Set([...Object.keys(whStdCnt), ...Object.keys(whNonStdCnt)])]
+      .filter(w => /^WH/i.test(w))
+      .sort();
     mkChart('p-pie2', 'bar', {
       labels: whs2,
       datasets: [
