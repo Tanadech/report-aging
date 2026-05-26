@@ -116,9 +116,11 @@ function renderPay() {
   const docsDepted    = uniqCount(payDeparted, 'เลขที่เอกสาร');
   const poisDepted    = uniqCount(payDeparted, 'เลขที่ขอโอน');
 
-  // สถานะขึ้นสินค้า — นับตรงจากคอลัมน์ใน dataCar ทั้งหมด
-  const cntStd    = dataCar.filter(r => String(r['สถานะขึ้นสินค้า'] || '').trim() === 'ได้มาตราฐาน').length;
-  const cntNonStd = dataCar.filter(r => String(r['สถานะขึ้นสินค้า'] || '').trim() === 'ไม่ได้มาตราฐาน').length;
+  // สถานะขึ้นสินค้า — partial match ครอบคลุมทั้ง "มาตรฐาน" และ "มาตราฐาน"
+  const _isStd    = v => v && !v.includes('ไม่') && v.includes('มาตร');
+  const _isNonStd = v => v.includes('ไม่') && v.includes('มาตร');
+  const cntStd    = dataCar.filter(r => _isStd(String(r['สถานะขึ้นสินค้า'] || '').trim())).length;
+  const cntNonStd = dataCar.filter(r => _isNonStd(String(r['สถานะขึ้นสินค้า'] || '').trim())).length;
 
   const mkK = (lbl, val, unit, cls='') =>
     `<div class="kpi${cls ? ' '+cls : ''}"><div class="kpi-lbl">${lbl}</div><div class="kpi-val">${val}</div><div class="kpi-unit">${unit}</div></div>`;
@@ -132,13 +134,6 @@ function renderPay() {
     mkK('จำนวนสาขา',             fmtN(branches),          'สาขา', 'inf') +
     mkK('ได้มาตราฐาน',           fmtN(cntStd),            'คัน', 'ok') +
     mkK('ไม่ได้มาตราฐาน',        fmtN(cntNonStd),         'คัน', cntNonStd > 0 ? 'alr' : 'ok');
-
-  // ใช้สำหรับ Chart 2 (IMPORTED vs Aging Out)
-  const allPaidPOIs = new Set(dataAgingOut.map(r => r['เลขที่ขอโอน']).filter(Boolean));
-  const hasImported = dataUot.length > 0;
-  const remainPOIs  = hasImported
-    ? [...new Set(dataUot.map(r => r['เลขที่เอกสารขอโอน']).filter(Boolean))].filter(p => !allPaidPOIs.has(p))
-    : [];
 
   // ── Chart 1: สัดส่วนตามคลัง (ผ่าน Car.xlsx) ──
   const byWh = {};
@@ -159,18 +154,35 @@ function renderPay() {
     }, cutout: '50%'
   });
 
-  // ── Chart 2: จ่ายแล้ว vs ยังค้าง (ถ้ามี IMPORTED) ──
+  // ── Chart 2: สัดส่วนมาตราฐานการจ่ายตามคลัง ──
   const pie2Card = document.getElementById('p-pie2-wrap');
-  if (hasImported) {
+  if (dataCar.length) {
     pie2Card.style.display = '';
-    mkChart('p-pie2', 'doughnut', {
-      labels: ['จ่ายแล้ว', 'ยังค้างจ่าย'],
-      datasets: [{ data: [allPaidPOIs.size, remainPOIs.length], backgroundColor: ['#10b981', '#ef4444'], borderWidth: 2, borderColor: 'rgba(6,16,30,.8)', hoverOffset: 6 }]
+    const whStdCnt = {}, whNonStdCnt = {};
+    const whSet2   = new Set();
+    dataCar.forEach(r => {
+      const wh = String(r['คลังสินค้า'] || '(ไม่ระบุ)').trim();
+      const v  = String(r['สถานะขึ้นสินค้า'] || '').trim();
+      whSet2.add(wh);
+      if (_isStd(v))    whStdCnt[wh]    = (whStdCnt[wh]    || 0) + 1;
+      else if (_isNonStd(v)) whNonStdCnt[wh] = (whNonStdCnt[wh] || 0) + 1;
+    });
+    const whs2 = [...whSet2].sort();
+    mkChart('p-pie2', 'bar', {
+      labels: whs2,
+      datasets: [
+        { label: '✅ ได้มาตราฐาน',    data: whs2.map(w => whStdCnt[w]    || 0), backgroundColor: '#10b981', borderRadius: 4 },
+        { label: '❌ ไม่ได้มาตราฐาน', data: whs2.map(w => whNonStdCnt[w] || 0), backgroundColor: '#ef4444', borderRadius: 4 }
+      ]
     }, {
       plugins: {
         legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 10, padding: 8 } },
-        datalabels: { color: '#fff', font: { size: 11, weight: 'bold' }, formatter: v => fmtN(v), anchor: 'center', align: 'center', display: ctx => ctx.dataset.data[ctx.dataIndex] > 0 }
-      }, cutout: '50%'
+        datalabels: { anchor: 'end', align: 'top', font: { size: 10, weight: 'bold' }, formatter: v => v > 0 ? fmtN(v) : '', color: '#e2e8f0', display: ctx => ctx.dataset.data[ctx.dataIndex] > 0 }
+      },
+      scales: {
+        x: { ticks: { font: { size: 10 } }, grid: { color: 'rgba(255,255,255,.05)' } },
+        y: { beginAtZero: true, ticks: { font: { size: 9 } }, grid: { color: 'rgba(255,255,255,.05)' } }
+      }
     });
   } else {
     pie2Card.style.display = 'none';
