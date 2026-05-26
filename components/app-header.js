@@ -9,7 +9,7 @@ class AppHeader extends HTMLElement {
         <div class="hdr-left">
           <div class="hdr-icon">📦</div>
           <div>
-            <h1>รายงานการติดตามเอกสารขอโอน ภายในและต่างประเทศ</h1>
+            <h1>รายงานการติดตามเอกสารขอโอน IMPORTED & DOMESTIC</h1>
             <div class="hdr-sub" id="meta">กำลังโหลดข้อมูล...</div>
           </div>
         </div>
