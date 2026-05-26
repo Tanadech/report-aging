@@ -44,6 +44,22 @@ function _payDateSort(v) {
   return s;
 }
 
+// กรอง dataCar ตาม warehouse + date filter ของ Pay tab
+function _filterCars(cars) {
+  const fwhCB     = checkedVals(document.getElementById('p-fwh-list'));
+  const fdateFrom = (document.getElementById('p-fdate-from')?.value || '').replace(/-/g, '');
+  const fdateTo   = (document.getElementById('p-fdate-to')?.value   || '').replace(/-/g, '');
+  return cars.filter(r => {
+    if (fwhCB.length && !fwhCB.includes(String(r['คลังสินค้า'] || '').trim())) return false;
+    if (fdateFrom || fdateTo) {
+      const dk = _toDateKey(r['วันที่คิวงาน'] || r['วันที่'] || '');
+      if (fdateFrom && dk < fdateFrom) return false;
+      if (fdateTo   && dk > fdateTo)   return false;
+    }
+    return true;
+  });
+}
+
 // ── Filter ──
 function getPayFiltered() {
   const fbCB     = checkedVals(document.getElementById('p-fb-list'));
@@ -119,8 +135,9 @@ function renderPay() {
   // สถานะขึ้นสินค้า — partial match ครอบคลุมทั้ง "มาตรฐาน" และ "มาตราฐาน"
   const _isStd    = v => v && !v.includes('ไม่') && v.includes('มาตร');
   const _isNonStd = v => v.includes('ไม่') && v.includes('มาตร');
-  const cntStd    = dataCar.filter(r => _isStd(String(r['สถานะขึ้นสินค้า'] || '').trim())).length;
-  const cntNonStd = dataCar.filter(r => _isNonStd(String(r['สถานะขึ้นสินค้า'] || '').trim())).length;
+  const _carF     = _filterCars(dataCar);
+  const cntStd    = _carF.filter(r => _isStd(String(r['สถานะขึ้นสินค้า'] || '').trim())).length;
+  const cntNonStd = _carF.filter(r => _isNonStd(String(r['สถานะขึ้นสินค้า'] || '').trim())).length;
 
   const mkK = (lbl, val, unit, cls='') =>
     `<div class="kpi${cls ? ' '+cls : ''}"><div class="kpi-lbl">${lbl}</div><div class="kpi-val">${val}</div><div class="kpi-unit">${unit}</div></div>`;
@@ -159,7 +176,7 @@ function renderPay() {
   if (dataCar.length) {
     pie2Card.style.display = '';
     const whStdCnt = {}, whNonStdCnt = {};
-    dataCar.forEach(r => {
+    _filterCars(dataCar).forEach(r => {
       const wh = String(r['คลังสินค้า'] || '').trim();
       if (!wh || wh === '(ไม่ระบุ)') return; // ตัดออก
       const v  = String(r['สถานะขึ้นสินค้า'] || '').trim();
@@ -234,9 +251,11 @@ function _renderPayCarKPIs() {
   if (!el) return;
   if (!dataCar.length) { el.innerHTML = ''; return; }
 
-  // นับรถตามสถานะ DC (ทุกคัน)
+  const filtered = _filterCars(dataCar);
+
+  // นับรถตามสถานะ DC (จาก filtered)
   let cntWait = 0, cntLoading = 0, cntDep = 0, cntStuck = 0;
-  dataCar.forEach(r => {
+  filtered.forEach(r => {
     const dcv   = String(r['รถยังไม่ออกจาก DC'] || '').trim();
     const stuck = isChecked(r['รถตกค้าง']);
     if (stuck)             { cntStuck++;   return; }
@@ -245,9 +264,9 @@ function _renderPayCarKPIs() {
     cntWait++;
   });
 
-  // WH cards นับเฉพาะรถที่ ออก DC แล้ว (ตรงกับ car table)
+  // WH cards นับเฉพาะรถที่ออก DC แล้ว (จาก filtered)
   const whCnt = {};
-  dataCar.forEach(r => {
+  filtered.forEach(r => {
     if (!isDcDeparted(String(r['รถยังไม่ออกจาก DC'] || '').trim())) return;
     const wh = String(r['คลังสินค้า'] || '').trim();
     if (!wh) return;
@@ -261,7 +280,7 @@ function _renderPayCarKPIs() {
     ).join('');
 
   el.innerHTML = `
-    <div class="pay-car-kpi-lbl">🚛 รถออก DC แล้ว ${fmtN(cntDep)} คัน · ทั้งหมด ${fmtN(dataCar.length)} คัน</div>
+    <div class="pay-car-kpi-lbl">🚛 รถออก DC แล้ว ${fmtN(cntDep)} คัน · ทั้งหมด ${fmtN(filtered.length)} คัน</div>
     <div class="kpi-row pay-car-kpi-row">
       ${whCards}
       <div class="kpi warn"><div class="kpi-lbl">⏳ รอขึ้นสินค้า</div><div class="kpi-val">${fmtN(cntWait)}</div><div class="kpi-unit">คัน</div></div>
@@ -283,10 +302,11 @@ function _renderPayTimeline() {
 
   if (!dataCar.length) { bar.innerHTML = ''; return; }
 
-  // Build warehouse list — ตัดออกที่ไม่มีคลัง
-  const whSet = new Set(
-    dataCar.map(r => String(r['คลังสินค้า'] || '').trim()).filter(Boolean)
-  );
+  // ใช้ _filterCars ก่อน (date + WH จาก main filter) แล้วค่อย sub-filter ด้วย _tlWhFilter
+  const tlBase = _filterCars(dataCar).filter(r => String(r['คลังสินค้า'] || '').trim());
+
+  // Build warehouse list จาก filtered
+  const whSet = new Set(tlBase.map(r => String(r['คลังสินค้า'] || '').trim()).filter(Boolean));
   _tlWhList = [...whSet].sort();
 
   // Render filter buttons
@@ -297,12 +317,8 @@ function _renderPayTimeline() {
       return `<button onclick="_setTlWh(${idx})" style="${btnBase}background:${active ? '#3b82f6' : 'rgba(255,255,255,.06)'};border-color:${active ? '#3b82f6' : 'rgba(255,255,255,.15)'};color:${active ? '#fff' : 'var(--muted)'};">${esc(label)}</button>`;
     }).join('');
 
-  // Filter data by selected warehouse (ตัดแถวที่ไม่มีคลังออกด้วย)
-  const cars = dataCar.filter(r => {
-    const wh = String(r['คลังสินค้า'] || '').trim();
-    if (!wh) return false;
-    return !_tlWhFilter || wh === _tlWhFilter;
-  });
+  // Sub-filter ด้วย timeline warehouse button
+  const cars = _tlWhFilter ? tlBase.filter(r => String(r['คลังสินค้า'] || '').trim() === _tlWhFilter) : tlBase;
 
   const slotData = {};
   cars.forEach(r => {
