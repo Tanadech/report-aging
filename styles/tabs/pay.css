@@ -2,9 +2,9 @@
 
 /* Search input in filter bar */
 .p-search-wrap { display:inline-flex; align-items:center; gap:5px; border:1px solid rgba(56,189,248,.2); border-radius:6px; padding:3px 8px; background:rgba(255,255,255,.04); }
-.p-search-wrap input { background:transparent; border:none; outline:none; color:#e0f2fe; font-size:13px; font-family:inherit; width:160px; }
+.p-search-wrap input { background:transparent; border:none; outline:none; color:#e0f2fe; font-size:15px; font-family:inherit; width:160px; }
 .p-search-wrap input::placeholder { color:rgba(255,255,255,.28); }
-.p-search-ico { font-size:13px; color:rgba(255,255,255,.3); }
+.p-search-ico { font-size:15px; color:rgba(255,255,255,.3); }
 
 /* ประเภท badge */
 .pay-type { display:inline-block; padding:2px 8px; border-radius:4px; font-size:10px; font-weight:800; letter-spacing:.3px; background:rgba(100,116,139,.18); color:#94a3b8; }
@@ -13,7 +13,7 @@
 
 /* Car KPI section */
 .pay-car-kpi             { margin-bottom:10px; }
-.pay-car-kpi-lbl         { font-size:12px; font-weight:700; color:var(--muted); letter-spacing:.5px; text-transform:uppercase; margin-bottom:6px; display:flex; align-items:center; gap:6px; }
+.pay-car-kpi-lbl         { font-size:14px; font-weight:700; color:var(--muted); letter-spacing:.5px; text-transform:uppercase; margin-bottom:6px; display:flex; align-items:center; gap:6px; }
 .pay-car-kpi-lbl::after  { content:''; flex:1; height:1px; background:rgba(255,255,255,.06); }
 .pay-car-kpi-row         { grid-template-columns:repeat(auto-fit,minmax(100px,1fr)) !important; }
 .pay-car-kpi-row .kpi    { padding:8px 10px; }

@@ -2,3 +2,8 @@
 data/*.xlsx
 data/*.xls
 data/*.csv
+
+# Auto-update artifacts
+.last-hash
+logs/
+node_modules/

@@ -1,7 +1,7 @@
 /* ============ styles/components/badge.css — Status pills, Day badges, Spinner ============ */
 
 /* Status pill */
-.spill      { display:inline-block; padding:2px 7px; border-radius:999px; font-size:10px; font-weight:700; white-space:nowrap; }
+.spill      { display:inline-block; padding:2px 7px; border-radius:999px; font-size:13px; font-weight:700; white-space:nowrap; }
 table.gtbl .spill { max-width:110px; overflow:hidden; text-overflow:ellipsis; vertical-align:middle; }
 .spill.s0 { background:rgba(239,68,68,.15);  color:#f87171; }
 .spill.s1 { background:rgba(56,189,248,.15); color:#7dd3fc; }
@@ -11,7 +11,7 @@ table.gtbl .spill { max-width:110px; overflow:hidden; text-overflow:ellipsis; ve
 .spill.s5 { background:rgba(100,116,139,.15);color:#94a3b8; }
 
 /* Day badge */
-.db      { display:inline-block; padding:2px 7px; border-radius:5px; font-weight:700; font-size:11px; min-width:24px; text-align:center; }
+.db      { display:inline-block; padding:2px 7px; border-radius:5px; font-weight:700; font-size:13px; min-width:24px; text-align:center; }
 .db.lo   { background:rgba(16,185,129,.15); color:#34d399; }
 .db.mi   { background:rgba(245,158,11,.15); color:#fbbf24; }
 .db.hi   { background:rgba(239,68,68,.15);  color:#f87171; }

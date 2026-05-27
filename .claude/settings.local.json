@@ -4,7 +4,8 @@
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
       "Bash(git commit *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "PowerShell(Remove-Item \"C:\\\\Users\\\\WIN11\\\\Desktop\\\\Work\\\\01 Report Aging\\\\.last-hash\" -Force; cd \"C:\\\\Users\\\\WIN11\\\\Desktop\\\\Work\\\\01 Report Aging\"; node convert.js; echo \"Exit 1st: $LASTEXITCODE\"; node convert.js; echo \"Exit 2nd \\(should be 2\\): $LASTEXITCODE\")"
     ]
   }
 }
