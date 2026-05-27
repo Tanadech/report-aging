@@ -371,15 +371,25 @@ function renderPayCarTable() {
     return;
   }
 
-  // ── 1. Build Aging Out lookup จาก payFiltered (ผ่าน filter เดียวกับตารางหลัก) ──
-  const agingByDoc = {};
-  // Build agingByDoc จาก dataAgingOut ทั้งหมด (ไม่กรองวันที่) เพื่อ join แสดงผล
-  // DOM ใช้คอลัมน์ "เลขที่เอกสาร OUTB", IMP ใช้คอลัมน์ "เลขที่เอกสาร"
-  dataAgingOut.forEach(r => {
-    const d = String((r._src === 'dom' ? r['เลขที่เอกสาร OUTB'] : r['เลขที่เอกสาร']) || '').trim();
-    if (!d) return;
-    if (!agingByDoc[d]) agingByDoc[d] = [];
-    agingByDoc[d].push(r);
+  // ── 1. Build Aging Out lookup แยกตามสาขา ──
+  // Car.xlsx ใช้เลข JR... แต่ Aging ใช้เลข OUTB... → join ด้วยสาขาแทน
+  // DOM: ชื่อสาขา = ชื่อย่อ (SY, BK) → key ด้วย ชื่อย่อสาขา ของรถ
+  // IMP: ชื่อสาขา = ชื่อเต็ม (ตราด)  → key ด้วย ชื่อสาขา ของรถ
+  const agingByDomAbr  = {}; // keyed by abbreviated branch name (uppercase)
+  const agingByImpFull = {}; // keyed by full branch name (lowercase, no prefix)
+  const _normFull = s => String(s || '').trim().replace(/^สาขา\s*/i, '').toLowerCase();
+
+  dataAgingOutDom.forEach(r => {
+    const k = String(r['ชื่อสาขา'] || '').trim().toUpperCase();
+    if (!k) return;
+    if (!agingByDomAbr[k]) agingByDomAbr[k] = [];
+    agingByDomAbr[k].push({ ...r, _src: 'dom' });
+  });
+  dataAgingOutImp.forEach(r => {
+    const k = _normFull(r['ชื่อสาขา']);
+    if (!k) return;
+    if (!agingByImpFull[k]) agingByImpFull[k] = [];
+    agingByImpFull[k].push({ ...r, _src: 'imp' });
   });
 
   // ── 2. Primary: _filterCars (date+WH จาก Car.xlsx) → departed เท่านั้น ──
@@ -394,9 +404,13 @@ function renderPayCarTable() {
   departed
     .sort((a, b) => timeSlotStart(a['ช่วงเวลา'] || '') - timeSlotStart(b['ช่วงเวลา'] || ''))
     .forEach(r => {
-      const docNo = String(r['เลขที่เอกสาร'] || '').trim();
-      const aging = getAgingForBranch(r['ชื่อย่อสาขา'] || '', r['ชื่อสาขา'] || '', r['คลังสินค้า'] || '');
-      _payCarRows.push({ ...r, _docNo: docNo, _agRows: agingByDoc[docNo] || [], _aging: aging });
+      const docNo  = String(r['เลขที่เอกสาร'] || '').trim();
+      const brAbr  = String(r['ชื่อย่อสาขา'] || '').trim().toUpperCase();
+      const brFull = _normFull(r['ชื่อสาขา']);
+      const domAg  = agingByDomAbr[brAbr]   || [];
+      const impAg  = agingByImpFull[brFull]  || [];
+      const aging  = getAgingForBranch(r['ชื่อย่อสาขา'] || '', r['ชื่อสาขา'] || '', r['คลังสินค้า'] || '');
+      _payCarRows.push({ ...r, _docNo: docNo, _agRows: [...domAg, ...impAg], _aging: aging });
     });
 
   // ── 4. Render ──

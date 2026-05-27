@@ -11,6 +11,23 @@ const crypto = require('crypto');
 const DATA_DIR  = path.join(__dirname, 'data');
 const HASH_FILE = path.join(__dirname, '.last-hash');
 
+// คอลัมน์ที่ต้องการต่อ dataset (null = เก็บทั้งหมด)
+const KEEP_COLS = {
+  agingOutDom: [
+    'วันที่รถออกจาก DC', 'เลขที่เอกสาร OUTB', 'รหัสสาขา', 'ชื่อสาขา',
+    'เลขที่เอกสาร POI', 'Onetime Barcode', 'วันที่รับสินค้า', 'ชื่อผู้จำหน่าย',
+  ],
+  agingOutImp: [
+    'วันที่', 'เลขที่เอกสาร', 'รหัสสาขา', 'ชื่อสาขา',
+    'รหัสสินค้า', 'ชื่อสินค้า', 'จำนวน(กล่อง)', 'จำนวนโอน(ชิ้น)',
+    'เลขที่ขอโอน', 'Category Name', 'ประเภท',
+  ],
+  car:    null, // เก็บทั้งหมด
+  pallet: null,
+  in:     null,
+  uot:    null,
+};
+
 // รูปแบบชื่อไฟล์ → key + output filename
 const FILE_PATTERNS = [
   { key: 'agingOutDom', out: 'aging-dom.json', pattern: /^aging.*dom/i },
@@ -29,13 +46,23 @@ function findFile(pattern) {
   } catch { return null; }
 }
 
-function readSheet(filename) {
+function readSheet(filename, keepCols) {
   const fp = path.join(DATA_DIR, filename);
   try {
     const wb   = XLSX.readFile(fp, { cellDates: true, dateNF: 'dd/mm/yyyy' });
     const ws   = wb.Sheets[wb.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(ws, { defval: '', raw: false });
-    console.log(`  ✓ ${filename}: ${rows.length} แถว`);
+    let rows   = XLSX.utils.sheet_to_json(ws, { defval: '', raw: false });
+
+    // ตัด column ที่ไม่ต้องการ
+    if (keepCols) {
+      rows = rows.map(r => {
+        const out = {};
+        keepCols.forEach(c => { out[c] = r[c] ?? ''; });
+        return out;
+      });
+    }
+
+    console.log(`  ✓ ${filename}: ${rows.length} แถว${keepCols ? ` (${keepCols.length} cols)` : ''}`);
     return rows;
   } catch (err) {
     console.error(`  ✗ ${filename}: ${err.message}`);
@@ -52,7 +79,7 @@ function main() {
   for (const { key, pattern } of FILE_PATTERNS) {
     const filename = findFile(pattern);
     if (filename) {
-      dataMap[key] = readSheet(filename);
+      dataMap[key] = readSheet(filename, KEEP_COLS[key]);
     } else {
       console.warn(`  ⚠️  ไม่พบไฟล์ที่ตรงกับ pattern: ${pattern}`);
       dataMap[key] = [];
