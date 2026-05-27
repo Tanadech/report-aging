@@ -1,9 +1,14 @@
 // ============ loaders/status.js — Status badge + pallet map ============
 
+// สถานะที่นับเป็น "พาเลทตกค้าง" (ยังอยู่ในคลัง)
+const PALLET_ACTIVE_STATUS = ['Console Int', 'Buffer'];
+
 function rebuildPalletMap() {
   palletByOnetime = {};
   if (!dataPallet.length) return;
   dataPallet.forEach(r => {
+    const st  = String(r['สถานะ']      || '').trim();
+    if (!PALLET_ACTIVE_STATUS.includes(st)) return;   // เฉพาะ Console Int / Buffer
     const ot  = String(r['ครั้งเดียว'] || '').trim(); if (!ot) return;
     const bar = String(r['บาร์โค้ด']   || '').trim(); if (!bar) return;
     palletByOnetime[ot] = (palletByOnetime[ot] || 0) + 1;
