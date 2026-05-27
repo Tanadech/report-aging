@@ -6,7 +6,7 @@
 
 set TASK_NAME=ReportAgingAutoUpdate
 set SCRIPT=C:\Users\WIN11\Desktop\Work\01 Report Aging\update-data.bat
-set RUN_TIME=07:00
+set RUN_TIME=10:00
 
 echo.
 echo =============================================
