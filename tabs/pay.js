@@ -471,10 +471,10 @@ function _buildPcmSection(agRows, docNo, prefix) {
   });
 
   let body = `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
-    <span style="font-size:11px;padding:3px 10px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);border-radius:4px;color:#7dd3fc;">📄 ${esc(docNo)}</span>
-    <span style="font-size:11px;padding:3px 10px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);border-radius:4px;color:#34d399;">📦 ${fmtN(totalBox)} กล่อง</span>
-    <span style="font-size:11px;padding:3px 10px;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.2);border-radius:4px;color:#c4b5fd;">${fmtN(totalPcs)} ชิ้น</span>
-    <span style="font-size:11px;padding:3px 10px;background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.2);border-radius:4px;color:#fb923c;">${groupOrder.length} เลขที่ขอโอน</span>
+    <span style="font-size:11px;padding:3px 10px;background:rgba(56,189,248,.2);border:1px solid rgba(56,189,248,.5);border-radius:4px;color:#bae6fd;">📄 ${esc(docNo)}</span>
+    <span style="font-size:11px;padding:3px 10px;background:rgba(16,185,129,.2);border:1px solid rgba(16,185,129,.5);border-radius:4px;color:#a7f3d0;">📦 ${fmtN(totalBox)} กล่อง</span>
+    <span style="font-size:11px;padding:3px 10px;background:rgba(167,139,250,.2);border:1px solid rgba(167,139,250,.5);border-radius:4px;color:#ddd6fe;">${fmtN(totalPcs)} ชิ้น</span>
+    <span style="font-size:11px;padding:3px 10px;background:rgba(251,146,60,.2);border:1px solid rgba(251,146,60,.5);border-radius:4px;color:#fed7aa;">${groupOrder.length} เลขที่ขอโอน</span>
   </div>`;
 
   const pidBase = prefix.replace(/\W/g,'') || 'all';
@@ -484,19 +484,19 @@ function _buildPcmSection(agRows, docNo, prefix) {
     const gPcs  = items.reduce((s, x) => s + num(x['จำนวนโอน(ชิ้น)']), 0);
     const src   = items[0]?._src;
     const srcBadge = src === 'dom'
-      ? `<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:rgba(34,211,238,.15);color:#22d3ee;margin-left:4px;">DOM</span>`
+      ? `<span style="font-size:9px;padding:1px 6px;border-radius:3px;background:rgba(34,211,238,.25);border:1px solid rgba(34,211,238,.5);color:#a5f3fc;margin-left:4px;font-weight:700;">DOM</span>`
       : src === 'imp'
-      ? `<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:rgba(167,139,250,.15);color:#c4b5fd;margin-left:4px;">IMP</span>`
+      ? `<span style="font-size:9px;padding:1px 6px;border-radius:3px;background:rgba(167,139,250,.25);border:1px solid rgba(167,139,250,.5);color:#ddd6fe;margin-left:4px;font-weight:700;">IMP</span>`
       : '';
     const gid = `pcm-${pidBase}-grp-${gi}`;
-    body += `<div style="margin-bottom:6px;border:1px solid rgba(255,255,255,.08);border-radius:6px;overflow:hidden;">
+    body += `<div style="margin-bottom:6px;border:1px solid rgba(167,139,250,.3);border-radius:6px;overflow:hidden;">
       <div onclick="(function(el){el.style.display=el.style.display==='none'?'block':'none'})(document.getElementById('${gid}'))"
-        style="display:flex;align-items:center;gap:8px;padding:7px 12px;cursor:pointer;background:rgba(255,255,255,.04);user-select:none;">
-        <span style="font-size:11px;color:#a5b4fc;font-family:monospace;font-weight:700;">${esc(key)}</span>${srcBadge}
+        style="display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;background:rgba(167,139,250,.1);user-select:none;">
+        <span style="font-size:11.5px;color:#c4b5fd;font-family:monospace;font-weight:700;">${esc(key)}</span>${srcBadge}
         <span style="flex:1;"></span>
-        <span style="font-size:10px;color:#34d399;">📦 ${fmtN(gBox)} กล่อง</span>
-        <span style="font-size:10px;color:#c4b5fd;margin-left:6px;">${fmtN(gPcs)} ชิ้น</span>
-        <span style="font-size:10px;color:var(--muted);margin-left:6px;">${items.length} รายการ ▼</span>
+        <span style="font-size:10.5px;color:#6ee7b7;font-weight:600;">📦 ${fmtN(gBox)} กล่อง</span>
+        <span style="font-size:10.5px;color:#ddd6fe;margin-left:6px;">${fmtN(gPcs)} ชิ้น</span>
+        <span style="font-size:10.5px;color:#94a3b8;margin-left:6px;">${items.length} รายการ ▼</span>
       </div>
       <div id="${gid}" style="display:none;">
         <table class="gtbl"><thead><tr>
@@ -531,10 +531,10 @@ function _buildPcmDomSection(domRows, docNo) {
   });
 
   let body = `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
-    <span style="font-size:11px;padding:3px 10px;background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.2);border-radius:4px;color:#22d3ee;">📤 DOM (ในประเทศ)</span>
-    <span style="font-size:11px;padding:3px 10px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);border-radius:4px;color:#7dd3fc;">📄 ${esc(docNo)}</span>
-    <span style="font-size:11px;padding:3px 10px;background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.2);border-radius:4px;color:#fb923c;">${poiOrder.length} เลขที่เอกสาร POI</span>
-    <span style="font-size:11px;padding:3px 10px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);border-radius:4px;color:#34d399;">${domRows.length} Barcode</span>
+    <span style="font-size:11px;padding:3px 10px;background:rgba(34,211,238,.22);border:1px solid rgba(34,211,238,.5);border-radius:4px;color:#a5f3fc;font-weight:700;">📤 DOM (ในประเทศ)</span>
+    <span style="font-size:11px;padding:3px 10px;background:rgba(56,189,248,.2);border:1px solid rgba(56,189,248,.5);border-radius:4px;color:#bae6fd;">📄 ${esc(docNo)}</span>
+    <span style="font-size:11px;padding:3px 10px;background:rgba(251,146,60,.2);border:1px solid rgba(251,146,60,.5);border-radius:4px;color:#fed7aa;">${poiOrder.length} เลขที่เอกสาร POI</span>
+    <span style="font-size:11px;padding:3px 10px;background:rgba(16,185,129,.2);border:1px solid rgba(16,185,129,.5);border-radius:4px;color:#a7f3d0;">${domRows.length} Barcode</span>
   </div>`;
 
   poiOrder.forEach((poi, gi) => {
@@ -542,19 +542,19 @@ function _buildPcmDomSection(domRows, docNo) {
     const gid    = `pcm-dom-grp-${gi}`;
     const vendor  = items[0]?.['ชื่อผู้จำหน่าย'] || '';
     const recDate = items[0]?.['วันที่รับสินค้า'] || '';
-    body += `<div style="margin-bottom:6px;border:1px solid rgba(34,211,238,.2);border-radius:6px;overflow:hidden;">
+    body += `<div style="margin-bottom:6px;border:1px solid rgba(34,211,238,.4);border-radius:6px;overflow:hidden;">
       <div onclick="(function(el){el.style.display=el.style.display==='none'?'block':'none'})(document.getElementById('${gid}'))"
-        style="display:flex;align-items:center;gap:8px;padding:7px 12px;cursor:pointer;background:rgba(34,211,238,.06);user-select:none;">
-        <span style="font-size:11px;color:#22d3ee;font-family:monospace;font-weight:700;">${esc(poi)}</span>
-        <span style="flex:1;font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(vendor)}</span>
-        ${recDate ? `<span style="font-size:10px;color:#94a3b8;white-space:nowrap;">${esc(recDate)}</span>` : ''}
-        <span style="font-size:10px;color:#34d399;margin-left:6px;">${items.length} barcodes ▼</span>
+        style="display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;background:rgba(34,211,238,.14);user-select:none;">
+        <span style="font-size:11.5px;color:#a5f3fc;font-family:monospace;font-weight:700;">${esc(poi)}</span>
+        <span style="flex:1;font-size:10.5px;color:#cbd5e1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(vendor)}</span>
+        ${recDate ? `<span style="font-size:10.5px;color:#94a3b8;white-space:nowrap;">${esc(recDate)}</span>` : ''}
+        <span style="font-size:10.5px;color:#6ee7b7;margin-left:6px;font-weight:600;">${items.length} barcodes ▼</span>
       </div>
-      <div id="${gid}" style="display:none;padding:8px 12px;">
-        <div style="display:flex;flex-wrap:wrap;gap:4px;">`;
+      <div id="${gid}" style="display:none;padding:10px 12px;background:rgba(0,0,0,.15);">
+        <div style="display:flex;flex-wrap:wrap;gap:5px;">`;
     items.forEach(x => {
       const bar = x['Onetime Barcode'] || '';
-      body += `<span style="font-family:monospace;font-size:10.5px;padding:3px 9px;background:rgba(255,255,255,.06);border:1px solid rgba(34,211,238,.15);border-radius:4px;color:#e2e8f0;">${esc(bar)}</span>`;
+      body += `<span style="font-family:monospace;font-size:11px;padding:3px 10px;background:rgba(34,211,238,.12);border:1px solid rgba(34,211,238,.35);border-radius:4px;color:#cffafe;">${esc(bar)}</span>`;
     });
     body += `</div></div></div>`;
   });
@@ -589,7 +589,7 @@ function openPayCarModal(idx) {
   const domHtml = _buildPcmDomSection(domRows, r._docNo);
   const impHtml = _buildPcmSection(impRows, r._docNo, 'IMP (ต่างประเทศ)');
   const allHtml = (domRows.length && impRows.length)
-    ? `<div style="font-size:10px;font-weight:700;color:#22d3ee;padding:6px 0 4px;letter-spacing:.5px;">▌ DOM (ในประเทศ)</div>${domHtml}<div style="font-size:10px;font-weight:700;color:#c4b5fd;padding:10px 0 4px;letter-spacing:.5px;">▌ IMP (ต่างประเทศ)</div>${impHtml}`
+    ? `<div style="font-size:11px;font-weight:700;color:#a5f3fc;padding:6px 0 6px;letter-spacing:.5px;border-bottom:1px solid rgba(34,211,238,.3);margin-bottom:8px;">▌ DOM (ในประเทศ)</div>${domHtml}<div style="font-size:11px;font-weight:700;color:#ddd6fe;padding:10px 0 6px;letter-spacing:.5px;border-bottom:1px solid rgba(167,139,250,.3);margin-bottom:8px;">▌ IMP (ต่างประเทศ)</div>${impHtml}`
     : domRows.length ? domHtml : impHtml;
   _pcmSections = { all: allHtml, dom: domHtml, imp: impHtml };
 
