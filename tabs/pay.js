@@ -374,8 +374,9 @@ function renderPayCarTable() {
   // ── 1. Build Aging Out lookup จาก payFiltered (ผ่าน filter เดียวกับตารางหลัก) ──
   const agingByDoc = {};
   // Build agingByDoc จาก dataAgingOut ทั้งหมด (ไม่กรองวันที่) เพื่อ join แสดงผล
+  // DOM ใช้คอลัมน์ "เลขที่เอกสาร OUTB", IMP ใช้คอลัมน์ "เลขที่เอกสาร"
   dataAgingOut.forEach(r => {
-    const d = String(r['เลขที่เอกสาร'] || '').trim();
+    const d = String((r._src === 'dom' ? r['เลขที่เอกสาร OUTB'] : r['เลขที่เอกสาร']) || '').trim();
     if (!d) return;
     if (!agingByDoc[d]) agingByDoc[d] = [];
     agingByDoc[d].push(r);
@@ -518,6 +519,49 @@ function _buildPcmSection(agRows, docNo, prefix) {
   return body;
 }
 
+// ── Popup DOM section: group by เลขที่เอกสาร POI → แสดง Onetime Barcode ──
+function _buildPcmDomSection(domRows, docNo) {
+  if (!domRows.length) return `<div style="padding:30px;text-align:center;color:var(--muted);">ไม่พบรายการ DOM ใน Aging OUTBOUND</div>`;
+
+  const poiGroups = {}, poiOrder = [];
+  domRows.forEach(x => {
+    const poi = x['เลขที่เอกสาร POI'] || '(ไม่ระบุ)';
+    if (!poiGroups[poi]) { poiGroups[poi] = []; poiOrder.push(poi); }
+    poiGroups[poi].push(x);
+  });
+
+  let body = `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+    <span style="font-size:11px;padding:3px 10px;background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.2);border-radius:4px;color:#22d3ee;">📤 DOM (ในประเทศ)</span>
+    <span style="font-size:11px;padding:3px 10px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);border-radius:4px;color:#7dd3fc;">📄 ${esc(docNo)}</span>
+    <span style="font-size:11px;padding:3px 10px;background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.2);border-radius:4px;color:#fb923c;">${poiOrder.length} เลขที่เอกสาร POI</span>
+    <span style="font-size:11px;padding:3px 10px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);border-radius:4px;color:#34d399;">${domRows.length} Barcode</span>
+  </div>`;
+
+  poiOrder.forEach((poi, gi) => {
+    const items  = poiGroups[poi];
+    const gid    = `pcm-dom-grp-${gi}`;
+    const vendor  = items[0]?.['ชื่อผู้จำหน่าย'] || '';
+    const recDate = items[0]?.['วันที่รับสินค้า'] || '';
+    body += `<div style="margin-bottom:6px;border:1px solid rgba(34,211,238,.2);border-radius:6px;overflow:hidden;">
+      <div onclick="(function(el){el.style.display=el.style.display==='none'?'block':'none'})(document.getElementById('${gid}'))"
+        style="display:flex;align-items:center;gap:8px;padding:7px 12px;cursor:pointer;background:rgba(34,211,238,.06);user-select:none;">
+        <span style="font-size:11px;color:#22d3ee;font-family:monospace;font-weight:700;">${esc(poi)}</span>
+        <span style="flex:1;font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(vendor)}</span>
+        ${recDate ? `<span style="font-size:10px;color:#94a3b8;white-space:nowrap;">${esc(recDate)}</span>` : ''}
+        <span style="font-size:10px;color:#34d399;margin-left:6px;">${items.length} barcodes ▼</span>
+      </div>
+      <div id="${gid}" style="display:none;padding:8px 12px;">
+        <div style="display:flex;flex-wrap:wrap;gap:4px;">`;
+    items.forEach(x => {
+      const bar = x['Onetime Barcode'] || '';
+      body += `<span style="font-family:monospace;font-size:10.5px;padding:3px 9px;background:rgba(255,255,255,.06);border:1px solid rgba(34,211,238,.15);border-radius:4px;color:#e2e8f0;">${esc(bar)}</span>`;
+    });
+    body += `</div></div></div>`;
+  });
+
+  return body;
+}
+
 let _pcmSections = {};
 
 function openPayCarModal(idx) {
@@ -540,11 +584,14 @@ function openPayCarModal(idx) {
   document.getElementById('pcm-imp-cnt').textContent = impRows.length;
 
   // pre-build ทุก section
-  _pcmSections = {
-    all: _buildPcmSection(agRows,    r._docNo, ''),
-    dom: _buildPcmSection(domRows,   r._docNo, 'DOM (ในประเทศ)'),
-    imp: _buildPcmSection(impRows,   r._docNo, 'IMP (ต่างประเทศ)'),
-  };
+  // DOM: group by เลขที่เอกสาร POI → Onetime Barcode
+  // IMP: group by เลขที่ขอโอน → รหัส/ชื่อสินค้า
+  const domHtml = _buildPcmDomSection(domRows, r._docNo);
+  const impHtml = _buildPcmSection(impRows, r._docNo, 'IMP (ต่างประเทศ)');
+  const allHtml = (domRows.length && impRows.length)
+    ? `<div style="font-size:10px;font-weight:700;color:#22d3ee;padding:6px 0 4px;letter-spacing:.5px;">▌ DOM (ในประเทศ)</div>${domHtml}<div style="font-size:10px;font-weight:700;color:#c4b5fd;padding:10px 0 4px;letter-spacing:.5px;">▌ IMP (ต่างประเทศ)</div>${impHtml}`
+    : domRows.length ? domHtml : impHtml;
+  _pcmSections = { all: allHtml, dom: domHtml, imp: impHtml };
 
   // reset tabs → ทั้งหมด
   document.querySelectorAll('#pcm-tabs .mtab').forEach(b => b.classList.toggle('act', b.dataset.pcmtab === 'all'));
