@@ -1,23 +1,59 @@
 // loaders/autoload.js — โหลด data/*.json อัตโนมัติ (GitHub Pages)
-// รันหลัง app.js bootstrap เสร็จ
-// ถ้าเปิดจาก file:// (local) จะข้ามไป ไม่ทำอะไร
+// ใช้ Cache API: เช็ค meta.json ก่อน ถ้าข้อมูลไม่เปลี่ยน → ใช้ cache (เร็วมาก)
+// ถ้าข้อมูลใหม่ → fetch ใหม่ทั้งหมด แล้ว cache ไว้
 
 (async function autoLoad() {
   if (location.protocol === 'file:') return;
 
-  const ts = Date.now();
-  const get = url => fetch(url + '?_=' + ts).then(r => r.ok ? r.json() : null).catch(() => null);
+  const CACHE_NAME = 'report-aging-v1';
+  const DATA_URLS  = [
+    './data/uot.json',
+    './data/in.json',
+    './data/car.json',
+    './data/pallet.json',
+    './data/aging-dom.json',
+    './data/aging-imp.json',
+  ];
 
   try {
-    const [meta, uot, inData, car, pallet, agDom, agImp] = await Promise.all([
-      get('./data/meta.json'),
-      get('./data/uot.json'),
-      get('./data/in.json'),
-      get('./data/car.json'),
-      get('./data/pallet.json'),
-      get('./data/aging-dom.json'),
-      get('./data/aging-imp.json'),
-    ]);
+    // 1. เช็ค meta.json (ไฟล์เล็กมาก ~50 bytes) เพื่อดู updatedAt
+    const meta = await fetch('./data/meta.json?_=' + Date.now())
+      .then(r => r.ok ? r.json() : null).catch(() => null);
+    if (!meta?.updatedAt) return;
+
+    const cachedAt  = localStorage.getItem('ra-updated-at');
+    const hasCache  = 'caches' in window;
+    const isFresh   = cachedAt === meta.updatedAt && hasCache;
+
+    let datasets;
+
+    if (isFresh) {
+      // ── เร็ว: โหลดจาก Cache API (ไม่ใช้ network เลย) ──
+      const cache = await caches.open(CACHE_NAME);
+      datasets = await Promise.all(
+        DATA_URLS.map(url => cache.match(url).then(r => r ? r.json() : null))
+      );
+      // ถ้า cache หายไป → fallback fetch ใหม่
+      if (datasets.some(d => d === null)) {
+        datasets = null;
+      }
+    }
+
+    if (!datasets) {
+      // ── โหลดใหม่จาก network + บันทึกลง cache ──
+      const cache = hasCache ? await caches.open(CACHE_NAME) : null;
+      datasets = await Promise.all(
+        DATA_URLS.map(async url => {
+          const res = await fetch(url + '?_=' + Date.now());
+          if (!res.ok) return null;
+          if (cache) await cache.put(url, res.clone());
+          return res.json();
+        })
+      );
+      if (hasCache) localStorage.setItem('ra-updated-at', meta.updatedAt);
+    }
+
+    const [uot, inData, car, pallet, agDom, agImp] = datasets;
 
     let loaded = 0;
     if (uot?.length)    { dataUot         = uot;    loaded++; }
@@ -32,18 +68,18 @@
 
     // อัพเดท status badge
     const b = document.getElementById('sbadge');
-    if (b) { b.className = 'sbadge live'; b.innerHTML = '<span class="dot"></span>🌐 AUTO'; }
+    if (b) {
+      b.className = 'sbadge live';
+      b.innerHTML = '<span class="dot"></span>' + (isFresh ? '⚡ CACHE' : '🌐 AUTO');
+    }
 
-    const dt = meta?.updatedAt
-      ? new Date(meta.updatedAt).toLocaleString('th-TH')
-      : '';
+    const dt = new Date(meta.updatedAt).toLocaleString('th-TH');
     const metaEl = document.getElementById('meta');
-    if (metaEl && dt) metaEl.textContent = 'ข้อมูล ณ: ' + dt;
+    if (metaEl) metaEl.textContent = 'ข้อมูล ณ: ' + dt;
 
     const alertEl = document.getElementById('alertbox');
     if (alertEl) alertEl.classList.remove('show');
 
-    // Rebuild ทุก tab
     rebuild();
     rebuildCar();
     renderCar();
