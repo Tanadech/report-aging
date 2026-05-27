@@ -1,25 +1,31 @@
-// loaders/autoload.js — โหลด data/data.json อัตโนมัติ (GitHub Pages)
+// loaders/autoload.js — โหลด data/*.json อัตโนมัติ (GitHub Pages)
 // รันหลัง app.js bootstrap เสร็จ
 // ถ้าเปิดจาก file:// (local) จะข้ามไป ไม่ทำอะไร
 
 (async function autoLoad() {
   if (location.protocol === 'file:') return;
 
+  const ts = Date.now();
+  const get = url => fetch(url + '?_=' + ts).then(r => r.ok ? r.json() : null).catch(() => null);
+
   try {
-    const res = await fetch('./data/data.json?_=' + Date.now());
-    if (!res.ok) return;
+    const [meta, uot, inData, car, pallet, agDom, agImp] = await Promise.all([
+      get('./data/meta.json'),
+      get('./data/uot.json'),
+      get('./data/in.json'),
+      get('./data/car.json'),
+      get('./data/pallet.json'),
+      get('./data/aging-dom.json'),
+      get('./data/aging-imp.json'),
+    ]);
 
-    const d = await res.json();
     let loaded = 0;
-
-    if (d.uot?.length)         { dataUot         = d.uot;         loaded++; }
-    if (d.in?.length)          { dataIn          = d.in;          loaded++; }
-    if (d.car?.length)         { dataCar         = d.car;         loaded++; }
-    if (d.pallet?.length)      { dataPallet      = d.pallet;      loaded++; }
-    // รองรับ format ใหม่ (DOM + IMP แยก) และ format เก่า (agingOut รวม)
-    if (d.agingOutDom?.length) { dataAgingOutDom = d.agingOutDom; loaded++; }
-    if (d.agingOutImp?.length) { dataAgingOutImp = d.agingOutImp; loaded++; }
-    else if (d.agingOut?.length) { dataAgingOutImp = d.agingOut;  loaded++; } // backward compat
+    if (uot?.length)    { dataUot         = uot;    loaded++; }
+    if (inData?.length) { dataIn          = inData; loaded++; }
+    if (car?.length)    { dataCar         = car;    loaded++; }
+    if (pallet?.length) { dataPallet      = pallet; loaded++; }
+    if (agDom?.length)  { dataAgingOutDom = agDom;  loaded++; }
+    if (agImp?.length)  { dataAgingOutImp = agImp;  loaded++; }
     if (dataAgingOutDom.length || dataAgingOutImp.length) _rebuildCombinedAging();
 
     if (!loaded) return;
@@ -28,8 +34,8 @@
     const b = document.getElementById('sbadge');
     if (b) { b.className = 'sbadge live'; b.innerHTML = '<span class="dot"></span>🌐 AUTO'; }
 
-    const dt = d.updatedAt
-      ? new Date(d.updatedAt).toLocaleString('th-TH')
+    const dt = meta?.updatedAt
+      ? new Date(meta.updatedAt).toLocaleString('th-TH')
       : '';
     const metaEl = document.getElementById('meta');
     if (metaEl && dt) metaEl.textContent = 'ข้อมูล ณ: ' + dt;
@@ -42,7 +48,7 @@
     rebuildCar();
     renderCar();
 
-    if (d.pallet?.length) rebuildPalletMap();
+    if (pallet?.length) rebuildPalletMap();
 
     if (dataAgingOut.length) {
       fillPayFilters();
@@ -50,6 +56,6 @@
     }
 
   } catch {
-    // ไม่มี data.json — ผู้ใช้จะ upload เองตามปกติ
+    // ไม่มีไฟล์ data — ผู้ใช้จะ upload เองตามปกติ
   }
 })();

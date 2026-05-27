@@ -1,4 +1,4 @@
-// convert.js — แปลง Excel ใน data/ → data/data.json
+// convert.js — แปลง Excel ใน data/ → data/*.json (แยกไฟล์ต่อ dataset)
 // รัน: node convert.js
 // exit code 0 = มีการเปลี่ยนแปลง (ให้ push)
 // exit code 2 = ไม่มีการเปลี่ยนแปลง (ข้าม push)
@@ -9,18 +9,16 @@ const path   = require('path');
 const crypto = require('crypto');
 
 const DATA_DIR  = path.join(__dirname, 'data');
-const OUT_FILE  = path.join(DATA_DIR, 'data.json');
 const HASH_FILE = path.join(__dirname, '.last-hash');
 
-// รูปแบบชื่อไฟล์ → key ใน data.json
-// ใช้ regex match เพื่อรองรับชื่อที่มีวันที่ต่อท้าย เช่น "Car 20052026.xlsx"
+// รูปแบบชื่อไฟล์ → key + output filename
 const FILE_PATTERNS = [
-  { key: 'agingOutDom', pattern: /^aging.*dom/i },  // Aging OUTBOUND DOM (ในประเทศ)
-  { key: 'agingOutImp', pattern: /^aging.*imp/i },  // Aging OUTBOUND IMP (ต่างประเทศ)
-  { key: 'car',         pattern: /^car/i },
-  { key: 'pallet',      pattern: /^in\s*p/i },
-  { key: 'in',          pattern: /^in(?!\s*p)/i },
-  { key: 'uot',         pattern: /^out/i },
+  { key: 'agingOutDom', out: 'aging-dom.json', pattern: /^aging.*dom/i },
+  { key: 'agingOutImp', out: 'aging-imp.json', pattern: /^aging.*imp/i },
+  { key: 'car',         out: 'car.json',        pattern: /^car/i },
+  { key: 'pallet',      out: 'pallet.json',     pattern: /^in\s*p/i },
+  { key: 'in',          out: 'in.json',          pattern: /^in(?!\s*p)/i },
+  { key: 'uot',         out: 'uot.json',         pattern: /^out/i },
 ];
 
 function findFile(pattern) {
@@ -46,23 +44,23 @@ function readSheet(filename) {
 }
 
 function main() {
-  console.log('\n[convert.js] แปลง Excel → data.json ...');
+  console.log('\n[convert.js] แปลง Excel → data/*.json ...');
 
-  const data = { updatedAt: new Date().toISOString() };
+  const updatedAt = new Date().toISOString();
+  const dataMap   = {};
 
   for (const { key, pattern } of FILE_PATTERNS) {
     const filename = findFile(pattern);
     if (filename) {
-      data[key] = readSheet(filename);
+      dataMap[key] = readSheet(filename);
     } else {
       console.warn(`  ⚠️  ไม่พบไฟล์ที่ตรงกับ pattern: ${pattern}`);
-      data[key] = [];
+      dataMap[key] = [];
     }
   }
 
-  // hash เฉพาะข้อมูล (ไม่รวม updatedAt เพื่อให้ detect การเปลี่ยนแปลงจริง)
-  const { updatedAt: _ts, ...dataOnly } = data;
-  const hash     = crypto.createHash('md5').update(JSON.stringify(dataOnly)).digest('hex');
+  // hash เฉพาะข้อมูล (ไม่รวม updatedAt)
+  const hash     = crypto.createHash('md5').update(JSON.stringify(dataMap)).digest('hex');
   const lastHash = fs.existsSync(HASH_FILE)
     ? fs.readFileSync(HASH_FILE, 'utf8').trim()
     : '';
@@ -72,12 +70,24 @@ function main() {
     process.exit(2);
   }
 
-  const json = JSON.stringify(data);
-  fs.writeFileSync(OUT_FILE, json, 'utf8');
-  fs.writeFileSync(HASH_FILE, hash, 'utf8');
+  // เขียนแยกไฟล์ต่อ dataset
+  let totalKb = 0;
+  for (const { key, out } of FILE_PATTERNS) {
+    const json = JSON.stringify(dataMap[key]);
+    const fp   = path.join(DATA_DIR, out);
+    fs.writeFileSync(fp, json, 'utf8');
+    const kb = (json.length / 1024).toFixed(1);
+    totalKb += json.length / 1024;
+    console.log(`  ✅ ${out}: ${kb} KB`);
+  }
 
-  const kb = (json.length / 1024).toFixed(1);
-  console.log(`  ✅ เขียน data.json สำเร็จ (${kb} KB)\n`);
+  // เขียน meta.json (updatedAt)
+  const metaJson = JSON.stringify({ updatedAt });
+  fs.writeFileSync(path.join(DATA_DIR, 'meta.json'), metaJson, 'utf8');
+  console.log(`  ✅ meta.json`);
+
+  fs.writeFileSync(HASH_FILE, hash, 'utf8');
+  console.log(`  📦 รวม ${(totalKb / 1024).toFixed(1)} MB\n`);
   process.exit(0);
 }
 

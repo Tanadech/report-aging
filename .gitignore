@@ -2,6 +2,7 @@
 data/*.xlsx
 data/*.xls
 data/*.csv
+data/data.json
 
 # Auto-update artifacts
 .last-hash
