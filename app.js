@@ -142,8 +142,12 @@ document.getElementById('file-pallet').addEventListener('change', e => {
   if (e.target.files[0]) loadPalletFile(e.target.files[0]);
   e.target.value = '';
 });
-document.getElementById('file-agingout').addEventListener('change', e => {
-  if (e.target.files[0]) loadAgingOutFile(e.target.files[0]);
+document.getElementById('file-agingout-dom').addEventListener('change', e => {
+  if (e.target.files[0]) loadAgingOutDomFile(e.target.files[0]);
+  e.target.value = '';
+});
+document.getElementById('file-agingout-imp').addEventListener('change', e => {
+  if (e.target.files[0]) loadAgingOutImpFile(e.target.files[0]);
   e.target.value = '';
 });
 document.getElementById('btn-folder').addEventListener('click', reloadFolder);

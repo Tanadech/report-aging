@@ -5,7 +5,9 @@ let dataIn        = [];   // ข้อมูล POI IN (DOMESTIC)
 let dataUot       = [];   // ข้อมูล POI OUT (IMPORTED)
 let dataCar       = [];   // ข้อมูลคิวรถ (OUTBOUND)
 let dataPallet    = [];   // ข้อมูลพาเลท (IN P)
-let dataAgingOut  = [];   // ข้อมูลเอกสารจ่าย OUTBOUND (Aging OUTBOUND)
+let dataAgingOutDom = []; // เอกสารจ่าย OUTBOUND ในประเทศ  (Aging OUTBOUND DOM)
+let dataAgingOutImp = []; // เอกสารจ่าย OUTBOUND ต่างประเทศ (Aging OUTBOUND IMP)
+let dataAgingOut    = []; // รวม DOM + IMP (อัพเดทอัตโนมัติ ด้วย _rebuildCombinedAging)
 let palletByOnetime = {}; // { onetime_str: จำนวนบาร์โค้ด }
 
 let inGrid  = null;      // gridjs instance สำหรับ DOMESTIC tab

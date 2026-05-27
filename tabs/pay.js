@@ -457,6 +457,69 @@ function renderPayCarTable() {
 }
 
 // ── Popup: รายละเอียดเอกสารในรถ ──
+function _buildPcmSection(agRows, docNo, prefix) {
+  if (!agRows.length) return `<div style="padding:30px;text-align:center;color:var(--muted);">ไม่พบรายการเอกสาร${prefix ? ' ' + prefix : ''} ใน Aging OUTBOUND</div>`;
+
+  const totalBox = agRows.reduce((s, x) => s + num(x['จำนวน(กล่อง)']), 0);
+  const totalPcs = agRows.reduce((s, x) => s + num(x['จำนวนโอน(ชิ้น)']), 0);
+  const groups = {}, groupOrder = [];
+  agRows.forEach(x => {
+    const key = x['เลขที่ขอโอน'] || '(ไม่ระบุ)';
+    if (!groups[key]) { groups[key] = []; groupOrder.push(key); }
+    groups[key].push(x);
+  });
+
+  let body = `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+    <span style="font-size:11px;padding:3px 10px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);border-radius:4px;color:#7dd3fc;">📄 ${esc(docNo)}</span>
+    <span style="font-size:11px;padding:3px 10px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);border-radius:4px;color:#34d399;">📦 ${fmtN(totalBox)} กล่อง</span>
+    <span style="font-size:11px;padding:3px 10px;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.2);border-radius:4px;color:#c4b5fd;">${fmtN(totalPcs)} ชิ้น</span>
+    <span style="font-size:11px;padding:3px 10px;background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.2);border-radius:4px;color:#fb923c;">${groupOrder.length} เลขที่ขอโอน</span>
+  </div>`;
+
+  const pidBase = prefix.replace(/\W/g,'') || 'all';
+  groupOrder.forEach((key, gi) => {
+    const items = groups[key];
+    const gBox  = items.reduce((s, x) => s + num(x['จำนวน(กล่อง)']), 0);
+    const gPcs  = items.reduce((s, x) => s + num(x['จำนวนโอน(ชิ้น)']), 0);
+    const src   = items[0]?._src;
+    const srcBadge = src === 'dom'
+      ? `<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:rgba(34,211,238,.15);color:#22d3ee;margin-left:4px;">DOM</span>`
+      : src === 'imp'
+      ? `<span style="font-size:9px;padding:1px 5px;border-radius:3px;background:rgba(167,139,250,.15);color:#c4b5fd;margin-left:4px;">IMP</span>`
+      : '';
+    const gid = `pcm-${pidBase}-grp-${gi}`;
+    body += `<div style="margin-bottom:6px;border:1px solid rgba(255,255,255,.08);border-radius:6px;overflow:hidden;">
+      <div onclick="(function(el){el.style.display=el.style.display==='none'?'block':'none'})(document.getElementById('${gid}'))"
+        style="display:flex;align-items:center;gap:8px;padding:7px 12px;cursor:pointer;background:rgba(255,255,255,.04);user-select:none;">
+        <span style="font-size:11px;color:#a5b4fc;font-family:monospace;font-weight:700;">${esc(key)}</span>${srcBadge}
+        <span style="flex:1;"></span>
+        <span style="font-size:10px;color:#34d399;">📦 ${fmtN(gBox)} กล่อง</span>
+        <span style="font-size:10px;color:#c4b5fd;margin-left:6px;">${fmtN(gPcs)} ชิ้น</span>
+        <span style="font-size:10px;color:var(--muted);margin-left:6px;">${items.length} รายการ ▼</span>
+      </div>
+      <div id="${gid}" style="display:none;">
+        <table class="gtbl"><thead><tr>
+          <th>รหัสสินค้า</th><th>ชื่อสินค้า</th>
+          <th style="text-align:right;">กล่อง</th><th style="text-align:right;">ชิ้น</th>
+          <th>Category</th><th>ประเภท</th>
+        </tr></thead><tbody>`;
+    items.forEach(x => {
+      body += `<tr>
+        <td style="font-size:10.5px;">${esc(x['รหัสสินค้า'] || '')}</td>
+        <td style="font-size:10.5px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(x['ชื่อสินค้า'] || '')}">${esc(x['ชื่อสินค้า'] || '')}</td>
+        <td style="text-align:right;font-weight:600;">${fmtN(num(x['จำนวน(กล่อง)']))}</td>
+        <td style="text-align:right;">${fmtN(num(x['จำนวนโอน(ชิ้น)']))}</td>
+        <td style="font-size:10px;">${esc(x['Category Name'] || '')}</td>
+        <td><span class="pay-type ${(x['ประเภท'] || '').toLowerCase()}">${esc(x['ประเภท'] || '')}</span></td>
+      </tr>`;
+    });
+    body += `</tbody></table></div></div>`;
+  });
+  return body;
+}
+
+let _pcmSections = {};
+
 function openPayCarModal(idx) {
   const r = _payCarRows[idx];
   if (!r) return;
@@ -464,63 +527,28 @@ function openPayCarModal(idx) {
   document.getElementById('pcm-title').textContent = `${brDisp} — คลัง ${r['คลังสินค้า'] || '-'}`;
   document.getElementById('pcm-sub').textContent   = `⏰ ${r['ช่วงเวลา'] || '-'}  |  🔖 ${r['ป้ายทะเบียน'] || '-'}${r['ชื่อคนขับ'] ? '  |  👤 ' + r['ชื่อคนขับ'] : ''}`;
 
-  const agRows = r._agRows || [];
-  let body = '';
-  if (!agRows.length) {
-    body = `<div style="padding:30px;text-align:center;color:var(--muted);">ไม่พบรายการเอกสารใน Aging OUTBOUND<br><span style="font-size:10px;">ต้องโหลดไฟล์ Aging Out ก่อน</span></div>`;
-  } else {
-    const totalBox = agRows.reduce((s, x) => s + num(x['จำนวน(กล่อง)']), 0);
-    const totalPcs = agRows.reduce((s, x) => s + num(x['จำนวนโอน(ชิ้น)']), 0);
+  const agRows    = r._agRows || [];
+  const domRows   = agRows.filter(x => x._src === 'dom');
+  const impRows   = agRows.filter(x => x._src === 'imp');
+  const hasBoth   = domRows.length > 0 && impRows.length > 0;
 
-    // Group by เลขที่ขอโอน
-    const groups = {}, groupOrder = [];
-    agRows.forEach(x => {
-      const key = x['เลขที่ขอโอน'] || '(ไม่ระบุ)';
-      if (!groups[key]) { groups[key] = []; groupOrder.push(key); }
-      groups[key].push(x);
-    });
+  // อัพเดท tab counts
+  const tabsEl = document.getElementById('pcm-tabs');
+  tabsEl.style.display = agRows.length ? '' : 'none';
+  document.getElementById('pcm-all-cnt').textContent = agRows.length;
+  document.getElementById('pcm-dom-cnt').textContent = domRows.length;
+  document.getElementById('pcm-imp-cnt').textContent = impRows.length;
 
-    body = `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
-      <span style="font-size:11px;padding:3px 10px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);border-radius:4px;color:#7dd3fc;">📄 ${esc(r._docNo)}</span>
-      <span style="font-size:11px;padding:3px 10px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);border-radius:4px;color:#34d399;">📦 ${fmtN(totalBox)} กล่อง</span>
-      <span style="font-size:11px;padding:3px 10px;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.2);border-radius:4px;color:#c4b5fd;">${fmtN(totalPcs)} ชิ้น</span>
-      <span style="font-size:11px;padding:3px 10px;background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.2);border-radius:4px;color:#fb923c;">${groupOrder.length} เลขที่ขอโอน</span>
-    </div>`;
+  // pre-build ทุก section
+  _pcmSections = {
+    all: _buildPcmSection(agRows,    r._docNo, ''),
+    dom: _buildPcmSection(domRows,   r._docNo, 'DOM (ในประเทศ)'),
+    imp: _buildPcmSection(impRows,   r._docNo, 'IMP (ต่างประเทศ)'),
+  };
 
-    groupOrder.forEach((key, gi) => {
-      const items = groups[key];
-      const gBox  = items.reduce((s, x) => s + num(x['จำนวน(กล่อง)']), 0);
-      const gPcs  = items.reduce((s, x) => s + num(x['จำนวนโอน(ชิ้น)']), 0);
-      const gid   = `pcm-grp-${gi}`;
-      body += `<div style="margin-bottom:6px;border:1px solid rgba(255,255,255,.08);border-radius:6px;overflow:hidden;">
-        <div onclick="(function(el){el.style.display=el.style.display==='none'?'block':'none'})(document.getElementById('${gid}'))"
-          style="display:flex;align-items:center;gap:8px;padding:7px 12px;cursor:pointer;background:rgba(255,255,255,.04);user-select:none;">
-          <span style="font-size:11px;color:#a5b4fc;font-family:monospace;font-weight:700;">${esc(key)}</span>
-          <span style="flex:1;"></span>
-          <span style="font-size:10px;color:#34d399;">📦 ${fmtN(gBox)} กล่อง</span>
-          <span style="font-size:10px;color:#c4b5fd;margin-left:6px;">${fmtN(gPcs)} ชิ้น</span>
-          <span style="font-size:10px;color:var(--muted);margin-left:6px;">${items.length} รายการ ▼</span>
-        </div>
-        <div id="${gid}" style="display:none;">
-          <table class="gtbl"><thead><tr>
-            <th>รหัสสินค้า</th><th>ชื่อสินค้า</th>
-            <th style="text-align:right;">กล่อง</th><th style="text-align:right;">ชิ้น</th>
-            <th>Category</th><th>ประเภท</th>
-          </tr></thead><tbody>`;
-      items.forEach(x => {
-        body += `<tr>
-          <td style="font-size:10.5px;">${esc(x['รหัสสินค้า'] || '')}</td>
-          <td style="font-size:10.5px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(x['ชื่อสินค้า'] || '')}">${esc(x['ชื่อสินค้า'] || '')}</td>
-          <td style="text-align:right;font-weight:600;">${fmtN(num(x['จำนวน(กล่อง)']))}</td>
-          <td style="text-align:right;">${fmtN(num(x['จำนวนโอน(ชิ้น)']))}</td>
-          <td style="font-size:10px;">${esc(x['Category Name'] || '')}</td>
-          <td><span class="pay-type ${(x['ประเภท'] || '').toLowerCase()}">${esc(x['ประเภท'] || '')}</span></td>
-        </tr>`;
-      });
-      body += `</tbody></table></div></div>`;
-    });
-  }
-  document.getElementById('pcm-body').innerHTML = body;
+  // reset tabs → ทั้งหมด
+  document.querySelectorAll('#pcm-tabs .mtab').forEach(b => b.classList.toggle('act', b.dataset.pcmtab === 'all'));
+  document.getElementById('pcm-body').innerHTML = _pcmSections.all;
   document.getElementById('pay-car-modal').classList.add('show');
 }
 
@@ -614,5 +642,13 @@ function initPayTab() {
   document.getElementById('pay-car-modal').addEventListener('click', e => {
     if (e.target === document.getElementById('pay-car-modal'))
       document.getElementById('pay-car-modal').classList.remove('show');
+  });
+  // Pay Car Modal tabs (DOM / IMP / ทั้งหมด)
+  document.getElementById('pcm-tabs').addEventListener('click', e => {
+    const btn = e.target.closest('.mtab');
+    if (!btn) return;
+    const tab = btn.dataset.pcmtab;
+    document.querySelectorAll('#pcm-tabs .mtab').forEach(b => b.classList.toggle('act', b === btn));
+    document.getElementById('pcm-body').innerHTML = _pcmSections[tab] || '';
   });
 }

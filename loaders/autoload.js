@@ -12,11 +12,15 @@
     const d = await res.json();
     let loaded = 0;
 
-    if (d.uot?.length)      { dataUot      = d.uot;      loaded++; }
-    if (d.in?.length)       { dataIn       = d.in;       loaded++; }
-    if (d.car?.length)      { dataCar      = d.car;      loaded++; }
-    if (d.agingOut?.length) { dataAgingOut = d.agingOut; loaded++; }
-    if (d.pallet?.length)   { dataPallet   = d.pallet;   loaded++; }
+    if (d.uot?.length)         { dataUot         = d.uot;         loaded++; }
+    if (d.in?.length)          { dataIn          = d.in;          loaded++; }
+    if (d.car?.length)         { dataCar         = d.car;         loaded++; }
+    if (d.pallet?.length)      { dataPallet      = d.pallet;      loaded++; }
+    // รองรับ format ใหม่ (DOM + IMP แยก) และ format เก่า (agingOut รวม)
+    if (d.agingOutDom?.length) { dataAgingOutDom = d.agingOutDom; loaded++; }
+    if (d.agingOutImp?.length) { dataAgingOutImp = d.agingOutImp; loaded++; }
+    else if (d.agingOut?.length) { dataAgingOutImp = d.agingOut;  loaded++; } // backward compat
+    if (dataAgingOutDom.length || dataAgingOutImp.length) _rebuildCombinedAging();
 
     if (!loaded) return;
 
@@ -40,7 +44,7 @@
 
     if (d.pallet?.length) rebuildPalletMap();
 
-    if (d.agingOut?.length) {
+    if (dataAgingOut.length) {
       fillPayFilters();
       renderPay();
     }

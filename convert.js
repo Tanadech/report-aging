@@ -15,11 +15,12 @@ const HASH_FILE = path.join(__dirname, '.last-hash');
 // รูปแบบชื่อไฟล์ → key ใน data.json
 // ใช้ regex match เพื่อรองรับชื่อที่มีวันที่ต่อท้าย เช่น "Car 20052026.xlsx"
 const FILE_PATTERNS = [
-  { key: 'agingOut', pattern: /^aging/i },
-  { key: 'car',      pattern: /^car/i },
-  { key: 'pallet',   pattern: /^in\s*p/i },
-  { key: 'in',       pattern: /^in(?!\s*p)/i },
-  { key: 'uot',      pattern: /^out/i },
+  { key: 'agingOutDom', pattern: /^aging.*dom/i },  // Aging OUTBOUND DOM (ในประเทศ)
+  { key: 'agingOutImp', pattern: /^aging.*imp/i },  // Aging OUTBOUND IMP (ต่างประเทศ)
+  { key: 'car',         pattern: /^car/i },
+  { key: 'pallet',      pattern: /^in\s*p/i },
+  { key: 'in',          pattern: /^in(?!\s*p)/i },
+  { key: 'uot',         pattern: /^out/i },
 ];
 
 function findFile(pattern) {

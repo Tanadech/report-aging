@@ -54,7 +54,35 @@ function loadCarFile(file) {
   reader.readAsArrayBuffer(file);
 }
 
-function loadAgingOutFile(file) {
+// รวม DOM + IMP → dataAgingOut (DOM มาก่อน ตามที่ผู้ใช้ต้องการ)
+function _rebuildCombinedAging() {
+  dataAgingOut = [
+    ...dataAgingOutDom.map(r => ({ ...r, _src: 'dom' })),
+    ...dataAgingOutImp.map(r => ({ ...r, _src: 'imp' })),
+  ];
+}
+
+function _afterAgingLoad(src, file, rows) {
+  const now = new Date();
+  const b   = document.getElementById('sbadge');
+  b.className = 'sbadge live';
+  const domCnt = dataAgingOutDom.length, impCnt = dataAgingOutImp.length;
+  const label  = domCnt && impCnt ? `📤 AGING DOM+IMP` : src === 'dom' ? '📤 AGING DOM' : '📤 AGING IMP';
+  b.innerHTML  = `<span class="dot"></span>${label}`;
+  document.getElementById('meta').textContent =
+    `AGING ${src.toUpperCase()}: ${file.name} | ${now.toLocaleString('th-TH')} (${rows.length} รายการ)`;
+  document.getElementById('alertbox').classList.remove('show');
+  fillPayFilters();
+  renderPay();
+  renderPayCarTable();
+  document.querySelectorAll('.tb').forEach(b => b.classList.remove('act'));
+  document.querySelectorAll('.tc').forEach(c => c.classList.remove('act'));
+  document.querySelector('.tb[data-tab="pay"]').classList.add('act');
+  document.getElementById('tc-pay').classList.add('act');
+  setTimeout(() => Object.values(CR).forEach(c => c.resize && c.resize()), 80);
+}
+
+function loadAgingOutDomFile(file) {
   const reader = new FileReader();
   reader.onload = e => {
     try {
@@ -62,27 +90,32 @@ function loadAgingOutFile(file) {
       const ws   = wb.Sheets[wb.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(ws, { defval:'', raw:false });
       if (!rows.length) { alert('ไม่พบข้อมูลในไฟล์ ' + file.name); return; }
-      dataAgingOut = rows;
-      const now    = new Date();
-      const b      = document.getElementById('sbadge');
-      b.className  = 'sbadge live';
-      b.innerHTML  = '<span class="dot"></span>📤 AGING OUT';
-      document.getElementById('meta').textContent =
-        'AGING OUTBOUND: ' + file.name + ' | ' + now.toLocaleString('th-TH') +
-        ' (' + rows.length + ' รายการ)';
-      document.getElementById('alertbox').classList.remove('show');
-      fillPayFilters();
-      renderPay();
-      // switch to pay tab
-      document.querySelectorAll('.tb').forEach(b => b.classList.remove('act'));
-      document.querySelectorAll('.tc').forEach(c => c.classList.remove('act'));
-      document.querySelector('.tb[data-tab="pay"]').classList.add('act');
-      document.getElementById('tc-pay').classList.add('act');
-      setTimeout(() => Object.values(CR).forEach(c => c.resize && c.resize()), 80);
-    } catch (err) { alert('โหลดไฟล์ Aging OUTBOUND ไม่สำเร็จ: ' + err.message); }
+      dataAgingOutDom = rows;
+      _rebuildCombinedAging();
+      _afterAgingLoad('dom', file, rows);
+    } catch (err) { alert('โหลดไฟล์ Aging OUTBOUND DOM ไม่สำเร็จ: ' + err.message); }
   };
   reader.readAsArrayBuffer(file);
 }
+
+function loadAgingOutImpFile(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const wb   = XLSX.read(e.target.result, { type:'array', cellDates:true, dateNF:'dd/mm/yyyy' });
+      const ws   = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, { defval:'', raw:false });
+      if (!rows.length) { alert('ไม่พบข้อมูลในไฟล์ ' + file.name); return; }
+      dataAgingOutImp = rows;
+      _rebuildCombinedAging();
+      _afterAgingLoad('imp', file, rows);
+    } catch (err) { alert('โหลดไฟล์ Aging OUTBOUND IMP ไม่สำเร็จ: ' + err.message); }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// Alias เดิมเพื่อ backward compat
+const loadAgingOutFile = loadAgingOutImpFile;
 
 function loadPalletFile(file) {
   const reader = new FileReader();

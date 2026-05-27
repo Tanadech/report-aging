@@ -1,2 +1,532 @@
 <!DOCTYPE html>
-<meta http-equiv="refresh" content="0; url=Report%20Aging.html">
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>รายงานการติดตามเอกสารขอโอน IMPORTED & DOMESTIC</title>
+
+<!-- CDN Libraries -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gridjs@6/dist/gridjs.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridjs@6/dist/theme/mermaid.min.css">
+
+<!-- App Styles -->
+<link rel="stylesheet" href="styles/base/variables.css">
+<link rel="stylesheet" href="styles/base/layout.css">
+<link rel="stylesheet" href="styles/components/header.css">
+<link rel="stylesheet" href="styles/components/filter.css">
+<link rel="stylesheet" href="styles/components/filter-tags.css">
+<link rel="stylesheet" href="styles/components/card.css">
+<link rel="stylesheet" href="styles/components/table.css">
+<link rel="stylesheet" href="styles/components/badge.css">
+<link rel="stylesheet" href="styles/components/modal.css">
+<link rel="stylesheet" href="styles/tabs/car.css">
+<link rel="stylesheet" href="styles/tabs/pay.css">
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-left">
+    <div class="hdr-icon">📦</div>
+    <div>
+      <h1>รายงานการติดตามเอกสารขอโอน IMPORTED & DOMESTIC</h1>
+      <div class="hdr-sub" id="meta">กำลังโหลดข้อมูล...</div>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <span id="sbadge" class="sbadge snap"><span class="dot"></span>SNAPSHOT</span>
+    <div class="hdr-sep"></div>
+    <div class="file-group">
+      <span class="file-group-lbl">โหลดไฟล์ Excel:</span>
+      <label class="btn-rf btn-file" title="เลือกไฟล์ IMPORTED (ต่างประเทศ)">
+        📂 IMPORTED<input type="file" id="file-uot" accept=".xlsx,.xls" style="display:none">
+      </label>
+      <label class="btn-rf btn-file" title="เลือกไฟล์ DOMESTIC (ภายในประเทศ)">
+        📂 DOMESTIC<input type="file" id="file-in" accept=".xlsx,.xls" style="display:none">
+      </label>
+      <label class="btn-rf btn-file" title="เลือกไฟล์ Car.xlsx (คิวรถ OUTBOUND)">
+        🚛 OUTBOUND<input type="file" id="file-car" accept=".xlsx,.xls" style="display:none">
+      </label>
+      <label class="btn-rf btn-file" title="เลือกไฟล์ IN P xxxx.xlsx (พาเลท DOMESTIC)">
+        📦 PALLET IN<input type="file" id="file-pallet" accept=".xlsx,.xls" style="display:none">
+      </label>
+      <label class="btn-rf btn-file" title="เลือกไฟล์ Aging OUTBOUND DOM.xlsx (เอกสารจ่าย ในประเทศ)">
+        📤 AGING DOM<input type="file" id="file-agingout-dom" accept=".xlsx,.xls" style="display:none">
+      </label>
+      <label class="btn-rf btn-file" title="เลือกไฟล์ Aging OUTBOUND IMP.xlsx (เอกสารจ่าย ต่างประเทศ)">
+        📤 AGING IMP<input type="file" id="file-agingout-imp" accept=".xlsx,.xls" style="display:none">
+      </label>
+    </div>
+    <div class="hdr-sep"></div>
+    <button class="btn-rf" id="btn-folder" title="เลือกโฟลเดอร์ data_dc — ระบบจะโหลดทุกไฟล์อัตโนมัติ">
+      📁 <span id="btn-folder-txt">เลือกโฟลเดอร์ข้อมูล</span>
+    </button>
+    <div class="hdr-sep"></div>
+    <button class="btn-rf" id="btn-theme">☀️ Light</button>
+  </div>
+</header>
+
+<div class="alert" id="alertbox">
+  ⚠️ <strong>ไม่สามารถดึงข้อมูลสดจาก Google Sheet</strong> — กำลังแสดง Snapshot<br>
+  📌 เปิด Google Sheet → <code>แชร์</code> → เปลี่ยนสิทธิ์เป็น <code>ทุกคนที่มีลิงก์ (ผู้ดู)</code>
+</div>
+
+<div class="tabs">
+  <button class="tb act" data-tab="uot">🌏 IMPORTED (ต่างประเทศ)</button>
+  <button class="tb" data-tab="in">📦 DOMESTIC (ภายในประเทศ)</button>
+  <button class="tb" data-tab="car">🚛 คิวรถ OUTBOUND</button>
+  <button class="tb" data-tab="pay">🧾 เอกสารจ่าย OUTBOUND</button>
+</div>
+
+<!-- ===== TAB UOT ===== -->
+<div class="tc act" id="tc-uot">
+  <div class="fb">
+    <div class="fb-item">
+      <span class="fb-lbl">Zone</span>
+      <div class="cb-drop" id="u-fz-list"></div>
+    </div>
+    <div class="fb-sep"></div>
+    <div class="fb-item">
+      <span class="fb-lbl">สาขา</span>
+      <div class="cb-drop" id="u-fb-list"></div>
+    </div>
+    <div class="fb-sep"></div>
+    <div class="fb-item">
+      <span class="fb-lbl">ช่วงวันที่</span>
+      <select id="u-fdate">
+        <option value="">ทั้งหมด</option>
+        <option value="7">7 วันล่าสุด</option>
+        <option value="30">30 วัน</option>
+        <option value="90">3 เดือน</option>
+        <option value="180">6 เดือน</option>
+      </select>
+    </div>
+    <div class="fb-sep"></div>
+    <div class="fb-item">
+      <span class="fb-lbl">วันค้าง</span>
+      <div class="fb-range">
+        <input type="number" id="u-fd1" min="0" placeholder="ต่ำสุด">
+        <span>–</span>
+        <input type="number" id="u-fd2" min="0" placeholder="สูงสุด">
+      </div>
+    </div>
+    <div class="fb-sep"></div>
+    <div class="fb-item">
+      <span class="fb-lbl">สถานะ</span>
+      <div class="cb-drop" id="u-fs-list"></div>
+    </div>
+    <div class="fb-sep"></div>
+    <div class="fb-item">
+      <span class="fb-lbl">คลัง</span>
+      <select id="u-fw"><option value="">ทั้งหมด</option></select>
+    </div>
+    <div class="fb-sep"></div>
+    <button class="btn-clr" id="u-clr">✕ Clear</button>
+    <div class="fb-upd" id="out-upd"></div>
+  </div>
+  <div class="fb-tags hidden" id="uot-tags"></div>
+
+  <div class="main" id="main-uot">
+  <div class="main-inner">
+    <div class="kpi-row" id="uot-kpi"></div>
+
+    <div class="mid-row">
+      <div class="pie-col">
+        <div class="card" style="flex:1;">
+          <div class="card-title"><span class="dot" style="background:#22d3ee"></span>จำนวนขอโอน / จำนวนโอนออก</div>
+          <div class="cw" style="height:210px;"><canvas id="u-pie1"></canvas></div>
+        </div>
+        <div class="card" style="flex:1;">
+          <div class="card-title"><span class="dot" style="background:#f87171"></span>สถานะประมวลผล / จำนวนรหัสสินค้า</div>
+          <div class="cw" style="height:200px;"><canvas id="u-pie2"></canvas></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div class="card" style="flex:1;">
+          <div class="card-title"><span class="dot" style="background:#22d3ee"></span>อันดับสาขาที่มีวันคงค้างมากที่สุด 5 อันดับแรก</div>
+          <div class="cw" style="height:210px;"><canvas id="u-c2"></canvas></div>
+        </div>
+        <div class="card" style="flex:1;">
+          <div class="card-title"><span class="dot" style="background:#3b82f6"></span>เอกสารคงค้างและเอกสารขอโอนตามช่วงเวลา</div>
+          <div class="cw" style="height:200px;"><canvas id="u-c3"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:#22d3ee"></span>จำนวนเอกสารตามสาขา / คลัง</div>
+      <div class="zone-scroll" style="height:270px;"><canvas id="u-c5"></canvas></div>
+    </div>
+
+    <div class="bot-row">
+      <div class="card">
+        <div class="card-title"><span class="dot" style="background:#a78bfa"></span>จำนวนสินค้าตามสถานะประมวลผล</div>
+        <div style="margin-bottom:4px;font-size:10px;color:var(--muted);" id="u-legend4"></div>
+        <div class="zone-scroll" style="height:290px;"><canvas id="u-c4"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="tbl-hdr">
+          <div class="card-title">📋 รายละเอียดเอกสารคงค้าง</div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <div class="p-search-wrap">
+              <span class="p-search-ico">🔍</span>
+              <input type="text" id="u-fsearch" placeholder="ค้นหาเลขที่เอกสาร...">
+            </div>
+            <span class="tbl-cnt" id="u-cnt"></span>
+            <div class="tbl-pg">
+              <button id="u-prev">◀</button>
+              <span id="u-pg-info"></span>
+              <button id="u-next">▶</button>
+            </div>
+          </div>
+        </div>
+        <div class="tbl-wrap"><div id="u-tbl"></div></div>
+      </div>
+    </div>
+  </div>
+  </div>
+</div>
+
+<!-- ===== TAB IN ===== -->
+<div class="tc" id="tc-in">
+  <div class="fb">
+    <div class="fb-item">
+      <span class="fb-lbl">Zone</span>
+      <div class="cb-drop" id="i-fz-list"></div>
+    </div>
+    <div class="fb-sep"></div>
+    <div class="fb-item">
+      <span class="fb-lbl">สาขา</span>
+      <div class="cb-drop" id="i-fb-list"></div>
+    </div>
+    <div class="fb-sep"></div>
+    <div class="fb-item">
+      <span class="fb-lbl">ผู้จำหน่าย</span>
+      <select id="i-fv"><option value="">ทั้งหมด</option></select>
+    </div>
+    <div class="fb-sep"></div>
+    <div class="fb-item">
+      <span class="fb-lbl">วันคงค้าง</span>
+      <div class="fb-range">
+        <input type="number" id="i-fd1" min="0" placeholder="ต่ำสุด">
+        <span>–</span>
+        <input type="number" id="i-fd2" min="0" placeholder="สูงสุด">
+      </div>
+    </div>
+    <div class="fb-sep"></div>
+    <div class="fb-item">
+      <span class="fb-lbl">คลัง</span>
+      <div class="cb-drop" id="i-fw-list"></div>
+    </div>
+    <div class="fb-sep"></div>
+    <button class="btn-clr" id="i-clr">✕ Clear</button>
+    <div class="fb-upd" id="in-upd"></div>
+  </div>
+  <div class="fb-tags hidden" id="in-tags"></div>
+
+  <div class="main">
+  <div class="main-inner">
+    <div class="kpi-row" id="in-kpi"></div>
+
+    <div class="mid-row">
+      <div class="pie-col">
+        <div class="card" style="flex:1;">
+          <div class="card-title"><span class="dot" style="background:#22d3ee"></span>จำนวนขอโอนคงค้าง / คลัง</div>
+          <div class="cw" style="height:210px;"><canvas id="i-c1"></canvas></div>
+        </div>
+        <div class="card" style="flex:1;">
+          <div class="card-title"><span class="dot" style="background:#10b981"></span>จำนวนวันคงค้างเฉลี่ย / คลัง</div>
+          <div class="cw" style="height:200px;"><canvas id="i-c2"></canvas></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div class="card" style="flex:1;">
+          <div class="card-title"><span class="dot" style="background:#22d3ee"></span>อันดับสาขาที่มีวันคงค้างมากที่สุด 5 อันดับแรก</div>
+          <div class="cw" style="height:210px;"><canvas id="i-c3"></canvas></div>
+        </div>
+        <div class="card" style="flex:1;">
+          <div class="card-title"><span class="dot" style="background:#3b82f6"></span>เอกสารคงค้างแต่ละคลังตามช่วงเวลา</div>
+          <div class="cw" style="height:200px;"><canvas id="i-c4"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:#a78bfa"></span>จำนวนเอกสารตามสาขา / คลัง</div>
+      <div class="zone-scroll" style="height:270px;"><canvas id="i-c5"></canvas></div>
+    </div>
+
+    <div class="card">
+      <div class="tbl-hdr" style="margin-bottom:8px;">
+        <div class="card-title">📋 รายละเอียดเอกสารคงค้าง</div>
+        <span class="tbl-cnt" id="i-cnt"></span>
+      </div>
+      <div id="i-tbl"></div>
+    </div>
+  </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: KPI Detail ===== -->
+<div class="modal-overlay" id="kpi-modal">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-hdr">
+      <div>
+        <div class="modal-title">📊 <span id="km-title">รายละเอียด</span></div>
+        <div class="modal-sub" id="km-sub"></div>
+      </div>
+      <button class="modal-close" id="km-close" title="ปิด (Esc)">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="km-content"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: รายละเอียดเอกสารคงค้าง ===== -->
+<div class="modal-overlay" id="car-modal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div>
+        <div class="modal-title">📑 <span id="cm-title">รายละเอียดเอกสารคงค้าง</span></div>
+        <div class="modal-sub" id="cm-sub"></div>
+      </div>
+      <button class="modal-close" id="cm-close" title="ปิด (Esc)">✕</button>
+    </div>
+    <div class="modal-tabs">
+      <button class="mtab act" data-mtab="all">📋 ทั้งหมด <span class="mtab-cnt" id="cm-all-cnt">0</span></button>
+      <button class="mtab" data-mtab="in">📦 DOMESTIC <span class="mtab-cnt" id="cm-in-cnt">0</span></button>
+      <button class="mtab" data-mtab="out">🌏 IMPORTED <span class="mtab-cnt" id="cm-out-cnt">0</span></button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section act" id="cm-sec-all"></div>
+      <div class="modal-section" id="cm-sec-in"></div>
+      <div class="modal-section" id="cm-sec-out"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: รายละเอียดเอกสารใน Car OUTBOUND ===== -->
+<div class="modal-overlay" id="pay-car-modal">
+  <div class="modal" style="max-width:760px;">
+    <div class="modal-hdr">
+      <div>
+        <div class="modal-title">🚛 <span id="pcm-title">รายการเอกสาร</span></div>
+        <div class="modal-sub" id="pcm-sub"></div>
+      </div>
+      <button class="modal-close" id="pcm-close" title="ปิด (Esc)">✕</button>
+    </div>
+    <div class="modal-tabs" id="pcm-tabs" style="display:none;">
+      <button class="mtab act" data-pcmtab="all">📋 ทั้งหมด <span class="mtab-cnt" id="pcm-all-cnt">0</span></button>
+      <button class="mtab" data-pcmtab="dom">📤 AGING DOM <span class="mtab-cnt" id="pcm-dom-cnt">0</span></button>
+      <button class="mtab" data-pcmtab="imp">📤 AGING IMP <span class="mtab-cnt" id="pcm-imp-cnt">0</span></button>
+    </div>
+    <div class="modal-body" id="pcm-body" style="max-height:480px;overflow-y:auto;padding:14px;"></div>
+  </div>
+</div>
+
+<!-- ===== TAB CAR ===== -->
+<div class="tc" id="tc-car">
+  <div class="fb">
+    <div class="fb-item">
+      <span class="fb-lbl">ช่วงวันที่</span>
+      <select id="c-fdate">
+        <option value="todaytomorrow">วันนี้ + พรุ่งนี้</option>
+        <option value="today">วันนี้</option>
+        <option value="tomorrow">พรุ่งนี้</option>
+        <option value="week">7 วันข้างหน้า</option>
+        <option value="">ทั้งหมด</option>
+      </select>
+    </div>
+    <div class="fb-sep"></div>
+    <div class="fb-item">
+      <span class="fb-lbl">คลัง</span>
+      <div class="cb-drop" id="c-fwh-list"></div>
+    </div>
+    <div class="fb-sep"></div>
+    <div class="fb-item">
+      <span class="fb-lbl">ประเภทรถ</span>
+      <div class="cb-drop" id="c-fct-list"></div>
+    </div>
+    <div class="fb-sep"></div>
+    <div class="fb-item">
+      <span class="fb-lbl">ประเภทงาน</span>
+      <div class="cb-drop" id="c-fwk-list"></div>
+    </div>
+    <div class="fb-sep"></div>
+    <div class="fb-item">
+      <span class="fb-lbl">สาขา</span>
+      <div class="cb-drop" id="c-fbr-list"></div>
+    </div>
+    <div class="fb-sep"></div>
+    <div class="fb-item">
+      <span class="fb-lbl">สถานะลงคิว</span>
+      <div class="cb-drop" id="c-fst-list"></div>
+    </div>
+    <div class="fb-sep"></div>
+    <button class="btn-clr" id="c-clr">✕ Clear</button>
+    <div class="fb-upd" id="car-upd"></div>
+  </div>
+  <div class="fb-tags hidden" id="car-tags"></div>
+
+  <div class="main">
+  <div class="main-inner">
+    <div class="kpi-row" id="car-kpi"></div>
+
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:#22d3ee"></span>Timeline แผนคิวรถ OUTBOUND ตามช่วงเวลา</div>
+      <div class="cw" style="height:220px;"><canvas id="c-c1"></canvas></div>
+    </div>
+
+    <div class="card" style="padding:0;overflow:hidden;">
+      <div class="car-toolbar">
+        <div class="view-toggle">
+          <button class="act" data-cview="card">📇 Card</button>
+          <button data-cview="table">📋 Table</button>
+        </div>
+        <span class="car-toolbar-hint">🔺 เรียงตามช่วงเวลา → ภายในช่วงเดียวกัน เรียงตามวันค้างสูงสุด มาก→น้อย</span>
+      </div>
+      <div style="padding:13px;">
+        <div id="car-cards"></div>
+        <div id="car-table" style="display:none;"></div>
+      </div>
+    </div>
+  </div>
+  </div>
+</div>
+
+<!-- ===== TAB PAY ===== -->
+<div class="tc" id="tc-pay">
+  <div class="fb">
+    <div class="fb-item">
+      <span class="fb-lbl">สาขา</span>
+      <div class="cb-drop" id="p-fb-list"></div>
+    </div>
+    <div class="fb-sep"></div>
+    <div class="fb-item">
+      <span class="fb-lbl">ประเภท</span>
+      <div class="cb-drop" id="p-ft-list"></div>
+    </div>
+    <div class="fb-sep"></div>
+    <div class="fb-item">
+      <span class="fb-lbl">Category</span>
+      <div class="cb-drop" id="p-fc-list"></div>
+    </div>
+    <div class="fb-sep"></div>
+    <div class="fb-item">
+      <span class="fb-lbl">คลัง</span>
+      <div class="cb-drop" id="p-fwh-list"></div>
+    </div>
+    <div class="fb-sep"></div>
+    <div class="fb-item">
+      <span class="fb-lbl">ช่วงวันที่</span>
+      <div style="display:inline-flex;align-items:center;gap:4px;">
+        <input type="date" id="p-fdate-from" style="background:rgba(255,255,255,.06);border:1px solid rgba(56,189,248,.2);border-radius:5px;color:#e0f2fe;padding:2px 6px;font-size:11px;font-family:inherit;cursor:pointer;">
+        <span style="color:var(--muted);font-size:11px;">–</span>
+        <input type="date" id="p-fdate-to"   style="background:rgba(255,255,255,.06);border:1px solid rgba(56,189,248,.2);border-radius:5px;color:#e0f2fe;padding:2px 6px;font-size:11px;font-family:inherit;cursor:pointer;">
+      </div>
+    </div>
+    <div class="fb-sep"></div>
+    <div class="fb-item">
+      <span class="fb-lbl">ค้นหา</span>
+      <div class="p-search-wrap">
+        <span class="p-search-ico">🔍</span>
+        <input type="text" id="p-fsearch" placeholder="เลขที่ OUTBOUND / เลขที่ขอโอน / เลขที่ POI / สาขา">
+      </div>
+    </div>
+    <div class="fb-sep"></div>
+    <button class="btn-clr" id="p-clr">✕ Clear</button>
+    <div class="fb-upd" id="pay-upd"></div>
+  </div>
+  <div class="fb-tags hidden" id="pay-tags"></div>
+
+  <div class="main">
+  <div class="main-inner">
+    <div class="pay-car-kpi" id="pay-kpi-car"></div>
+    <div class="kpi-row pay-car-kpi-row" id="pay-kpi"></div>
+
+    <div class="mid-row">
+      <div class="pie-col">
+        <div class="card" style="flex:1;">
+          <div class="card-title"><span class="dot" style="background:#22d3ee"></span>สัดส่วนตามคลัง</div>
+          <div class="cw" style="height:220px;"><canvas id="p-pie1"></canvas></div>
+        </div>
+        <div id="p-pie2-wrap" class="card" style="flex:1;">
+          <div class="card-title"><span class="dot" style="background:#10b981"></span>สัดส่วนมาตราฐานการจ่ายตามคลัง</div>
+          <div class="cw" style="height:220px;"><canvas id="p-pie2"></canvas></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;flex:1;">
+        <div class="card" style="flex:1;">
+          <div class="card-title"><span class="dot" style="background:#f59e0b"></span>🕐 สถานะรถตามช่วงเวลา OUTBOUND</div>
+          <div id="p-tl-wh-bar" style="display:flex;gap:4px;flex-wrap:wrap;padding:2px 0 6px;"></div>
+          <div class="cw" style="height:175px;"><canvas id="p-timeline"></canvas></div>
+        </div>
+        <div class="card" style="flex:1;">
+          <div class="card-title"><span class="dot" style="background:#f59e0b"></span>คลังที่มีการจ่ายเอกสารคงค้างและเอกสารขอโอนตามช่วงเวลา Car</div>
+          <div class="zone-scroll" style="height:220px;"><canvas id="p-c4"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="dot" style="background:#10b981"></span>รายงาน 🚛 คิวรถ OUTBOUND สถานะออกจาก DC แล้ว <span style="font-size:10px;color:var(--muted);font-weight:400;">(คลิกแถวเพื่อดูเอกสาร)</span></div>
+      <div class="tbl-wrap"><div id="p-car-tbl"></div></div>
+    </div>
+  </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- Scripts — โหลดเรียงลำดับ: config → state → lib → loaders → components → tabs → modals → app -->
+<!-- ============================================================ -->
+
+<!-- 1. Config & data maps -->
+<script src="config/constants.js"></script>
+<script src="data/branches.js"></script>
+
+<!-- 2. Global state -->
+<script src="state.js"></script>
+
+<!-- 3. Libraries -->
+<script src="lib/csv.js"></script>
+<script src="lib/format.js"></script>
+<script src="lib/dom.js"></script>
+<script src="lib/array.js"></script>
+<script src="lib/filter-ui.js"></script>
+
+<!-- 4. Loaders -->
+<script src="loaders/status.js"></script>
+<script src="loaders/excel.js"></script>
+<script src="loaders/folder.js"></script>
+
+<!-- 5. Web Components -->
+<script src="components/app-header.js"></script>
+<script src="components/stat-card.js"></script>
+<script src="components/data-table.js"></script>
+<script src="components/filter-tags.js"></script>
+
+<!-- 6. Tab renderers -->
+<script src="tabs/uot.js"></script>
+<script src="tabs/in.js"></script>
+<script src="tabs/car/date-helpers.js"></script>
+<script src="tabs/car/aging.js"></script>
+<script src="tabs/car/filter.js"></script>
+<script src="tabs/car/views.js"></script>
+<script src="tabs/car/index.js"></script>
+<script src="tabs/pay.js"></script>
+
+<!-- 7. Modals -->
+<script src="modals/kpi-modal.js"></script>
+<script src="modals/car-modal.js"></script>
+
+<!-- 8. Main app bootstrap -->
+<script src="app.js"></script>
+
+<!-- 9. Auto-load จาก data.json (GitHub Pages เท่านั้น) -->
+<script src="loaders/autoload.js"></script>
+
+</body>
+</html>

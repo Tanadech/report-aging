@@ -36,7 +36,7 @@ async function scanAndLoadFolder() {
   btn.disabled = true;
   document.getElementById('btn-folder-txt').textContent = 'กำลังสแกน...';
 
-  const collected = { car:null, pallet:[], in:[], out:[], agingout:null };
+  const collected = { car:null, pallet:[], in:[], out:[], agingoutDom:null, agingoutImp:null };
   try {
     for await (const [name, h] of dirHandle.entries()) {
       if (h.kind !== 'file') continue;
@@ -47,7 +47,10 @@ async function scanAndLoadFolder() {
       else if (/^in\s*p/i.test(name))   collected.pallet.push({ name, h });
       else if (/^in\s/i.test(name))     collected.in.push({ name, h });
       else if (/^out\s/i.test(name))    collected.out.push({ name, h });
-      else if (/aging/i.test(name))     collected.agingout = h;
+      else if (/aging/i.test(name)) {
+        if (/dom/i.test(name)) collected.agingoutDom = h;
+        else                   collected.agingoutImp = h;
+      }
     }
   } catch (e) {
     alert('สแกนโฟลเดอร์ผิดพลาด: ' + e.message);
@@ -74,8 +77,12 @@ async function scanAndLoadFolder() {
   if (collected.car) {
     tasks.push(collected.car.getFile().then(f => { loadCarFile(f); loadedNames.push('🚛 ' + f.name); }));
   }
-  if (collected.agingout) {
-    tasks.push(collected.agingout.getFile().then(f => { loadAgingOutFile(f); loadedNames.push('📤 ' + f.name); }));
+  // โหลด DOM ก่อน IMP ตามลำดับที่กำหนด
+  if (collected.agingoutDom) {
+    tasks.push(collected.agingoutDom.getFile().then(f => { loadAgingOutDomFile(f); loadedNames.push('📤DOM ' + f.name); }));
+  }
+  if (collected.agingoutImp) {
+    tasks.push(collected.agingoutImp.getFile().then(f => { loadAgingOutImpFile(f); loadedNames.push('📤IMP ' + f.name); }));
   }
 
   await Promise.all(tasks);

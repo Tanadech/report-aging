@@ -64,7 +64,7 @@ set PUSH_EXIT=%ERRORLEVEL%
 echo.
 if %PUSH_EXIT%==0 (
   echo  ✓  สำเร็จ! Dashboard จะอัพเดทใน 1-2 นาที
-  echo  ↗  https://tanadech.github.io/report-aging/Report%%20Aging.html
+  echo  ↗  https://tanadech.github.io/report-aging/
   echo [%DT%] push สำเร็จ >> "%LOGFILE%"
 ) else (
   echo  ✗  Push ไม่สำเร็จ — ดู logs\update.log
