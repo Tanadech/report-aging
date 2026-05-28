@@ -113,6 +113,21 @@ function main() {
   fs.writeFileSync(path.join(DATA_DIR, 'meta.json'), metaJson, 'utf8');
   console.log(`  ✅ meta.json`);
 
+  // อัพเดท cache-busting version ใน index.html → ?v=YYYYMMDD
+  const d = new Date();
+  const ver = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+  const indexPath = path.join(__dirname, 'index.html');
+  try {
+    const html = fs.readFileSync(indexPath, 'utf8');
+    const updated = html.replace(/\?v=\d{8}/g, `?v=${ver}`);
+    if (updated !== html) {
+      fs.writeFileSync(indexPath, updated, 'utf8');
+      console.log(`  🔖 index.html: cache version → v=${ver}`);
+    }
+  } catch (e) {
+    console.warn(`  ⚠️  อัพเดท cache version ไม่สำเร็จ: ${e.message}`);
+  }
+
   fs.writeFileSync(HASH_FILE, hash, 'utf8');
   console.log(`  📦 รวม ${(totalKb / 1024).toFixed(1)} MB\n`);
   process.exit(0);

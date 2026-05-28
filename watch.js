@@ -54,7 +54,7 @@ function runUpdate() {
 
     const dt      = new Date().toLocaleString('th-TH');
     const pushCmd = [
-      'git add data/aging-dom.json data/aging-imp.json data/car.json data/pallet.json data/in.json data/uot.json data/meta.json',
+      'git add data/aging-dom.json data/aging-imp.json data/car.json data/pallet.json data/in.json data/uot.json data/meta.json index.html',
       `git commit -m "data: auto-update ${dt}"`,
       'git push'
     ].join(' && ');

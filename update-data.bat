@@ -56,7 +56,7 @@ if %CONV_EXIT% neq 0 (
 echo [2/2] Push ขึ้น GitHub...
 echo [%DT%] git push >> "%LOGFILE%"
 
-git add data/aging-dom.json data/aging-imp.json data/car.json data/pallet.json data/in.json data/uot.json data/meta.json >> "%LOGFILE%" 2>&1
+git add data/aging-dom.json data/aging-imp.json data/car.json data/pallet.json data/in.json data/uot.json data/meta.json index.html >> "%LOGFILE%" 2>&1
 git commit -m "data: update %DT%" >> "%LOGFILE%" 2>&1
 git push >> "%LOGFILE%" 2>&1
 set PUSH_EXIT=%ERRORLEVEL%
