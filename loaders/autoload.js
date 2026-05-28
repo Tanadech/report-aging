@@ -69,8 +69,9 @@
     // อัพเดท status badge
     const b = document.getElementById('sbadge');
     if (b) {
+      const updTime = new Date(meta.updatedAt).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
       b.className = 'sbadge live';
-      b.innerHTML = '<span class="dot"></span>' + (isFresh ? '⚡ CACHE' : '🌐 AUTO');
+      b.innerHTML = '<span class="dot"></span>AUTO ' + updTime;
     }
 
     const dt = new Date(meta.updatedAt).toLocaleString('th-TH');
