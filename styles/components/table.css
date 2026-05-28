@@ -2,8 +2,12 @@
 
 /* Grouped table */
 .tbl-wrap  { overflow:auto; max-height:340px; border-radius:6px; border:1px solid rgba(56,189,248,.1); }
-table.gtbl { width:100%; border-collapse:collapse; font-size:11px; }
-table.gtbl thead th  { background:rgba(8,20,40,.9); color:#7dd3fc; font-weight:700; font-size:11px; padding:6px 8px; position:sticky; top:0; z-index:1; white-space:nowrap; border-bottom:1px solid rgba(56,189,248,.15); }
+table.gtbl { width:100%; border-collapse:collapse; font-size:16px; }
+table.gtbl thead th  { background:rgba(8,20,40,.9); color:#7dd3fc; font-weight:700; font-size:16px; padding:6px 8px; position:sticky; top:0; z-index:1; white-space:nowrap; border-bottom:1px solid rgba(56,189,248,.15); }
+
+/* Pay car table — เล็กกว่า table ปกติ */
+#p-car-tbl table.gtbl               { font-size:11px; }
+#p-car-tbl table.gtbl thead th      { font-size:11px; }
 table.gtbl tbody td  { padding:4px 8px; border-bottom:1px solid rgba(255,255,255,.04); vertical-align:middle; color:#f1f5f9; }
 table.gtbl tbody tr:hover td { background:rgba(56,189,248,.05); }
 
