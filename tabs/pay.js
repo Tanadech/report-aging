@@ -417,7 +417,7 @@ function renderPayCarTable() {
     <th>วันที่คิวงาน</th><th>ช่วงเวลา</th><th>คลัง</th><th>สาขา</th><th>เลขที่เอกสาร</th>
     <th>ประเภทรถ</th><th>ประเภทงาน</th><th>ทะเบียน</th><th>คนขับ</th>
     <th>เวลาขึ้นสินค้า</th><th>สถานะขึ้นสินค้า</th>
-    <th style="text-align:center;">เลขที่ขอโอน</th>
+    <th style="text-align:center;">จำนวนเอกสาร</th>
     <th style="text-align:right;">กล่อง</th><th style="text-align:right;">ชิ้น</th>
     <th>สถานะ</th>
   </tr></thead><tbody>`;
@@ -434,6 +434,16 @@ function renderPayCarTable() {
     const dateDisp    = _fmtPayDate(r['วันที่คิวงาน'] || r['วันที่'] || '') || '—';
     const loadTime    = r['เวลาขึ้นสินค้า']    || '—';
     const loadStatus  = r['สถานะขึ้นสินค้า']   || '—';
+    const _domAg   = r._agRows.filter(x => x._src === 'dom');
+    const _impAg   = r._agRows.filter(x => x._src === 'imp');
+    const _dCnt    = uniqCount(_domAg, 'เลขที่เอกสาร POI');
+    const _iCnt    = uniqCount(_impAg, 'เลขที่ขอโอน');
+    const _dParts  = [];
+    if (_dCnt) _dParts.push(`<span style="font-size:9.5px;color:#22d3ee;font-weight:700;">DOMESTIC ${_dCnt}</span>`);
+    if (_iCnt) _dParts.push(`<span style="font-size:9.5px;color:#a78bfa;font-weight:700;">IMPORTED ${_iCnt}</span>`);
+    const _docCell = r._agRows.length
+      ? `<b style="color:#a5b4fc;">📑 ${_dCnt + _iCnt}</b><br>${_dParts.join('<br>')}`
+      : '<span style="color:var(--muted)">—</span>';
     html += `<tr class="ctbl-row" onclick="openPayCarModal(${i})" title="คลิกเพื่อดูรายการเอกสาร Aging Out">
       <td style="font-size:11px;white-space:nowrap;">${esc(dateDisp)}</td>
       <td style="font-weight:700;color:#7dd3fc;white-space:nowrap;">${esc(r['ช่วงเวลา'] || '')}</td>
@@ -446,7 +456,7 @@ function renderPayCarTable() {
       <td style="font-size:11px;">${esc(r['ชื่อคนขับ'] || '')}${r['เบอร์โทร'] ? ` <span style="color:var(--muted);font-size:10px;">(${esc(r['เบอร์โทร'])})</span>` : ''}</td>
       <td style="font-size:11px;white-space:nowrap;">${esc(loadTime)}</td>
       <td style="font-size:11px;">${esc(loadStatus)}</td>
-      <td style="text-align:center;">${r._agRows.length ? `<b style="color:#a5b4fc;">📑 ${uniqCount(r._agRows, 'เลขที่ขอโอน')}</b>` : '<span style="color:var(--muted)">—</span>'}</td>
+      <td style="text-align:center;line-height:1.6;">${_docCell}</td>
       <td style="text-align:right;">${totalBox ? fmtN(totalBox) : '—'}</td>
       <td style="text-align:right;">${totalPcs ? fmtN(totalPcs) : '—'}</td>
       <td style="white-space:nowrap;"><span class="cstat dc-out" style="font-size:9.5px;">✅ ออก DC</span> <span class="cstat ${statCls}">${esc(statTxt)}</span></td>
@@ -484,9 +494,9 @@ function _buildPcmSection(agRows, docNo, prefix) {
     const gPcs  = items.reduce((s, x) => s + num(x['จำนวนโอน(ชิ้น)']), 0);
     const src   = items[0]?._src;
     const srcBadge = src === 'dom'
-      ? `<span class="dtag dom" style="margin-left:4px;">DOM</span>`
+      ? `<span class="dtag dom" style="margin-left:4px;">DOMESTIC</span>`
       : src === 'imp'
-      ? `<span class="dtag imp" style="margin-left:4px;">IMP</span>`
+      ? `<span class="dtag imp" style="margin-left:4px;">IMPORTED</span>`
       : '';
     const gid = `pcm-${pidBase}-grp-${gi}`;
     body += `<div style="margin-bottom:6px;border-radius:6px;overflow:hidden;">
@@ -531,7 +541,7 @@ function _buildPcmDomSection(domRows, docNo) {
   });
 
   let body = `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
-    <span class="pcm-badge pcm-badge-dom">📤 DOM (ในประเทศ)</span>
+    <span class="pcm-badge pcm-badge-dom">🏠 DOMESTIC</span>
     <span class="pcm-badge pcm-badge-doc">📄 ${esc(docNo)}</span>
     <span class="pcm-badge pcm-badge-poi">${poiOrder.length} เลขที่เอกสาร POI</span>
     <span class="pcm-badge pcm-badge-bar">${domRows.length} Barcode</span>
@@ -551,10 +561,10 @@ function _buildPcmDomSection(domRows, docNo) {
         <span class="pcm-poi-cnt">${items.length} barcodes ▼</span>
       </div>
       <div id="${gid}" style="display:none;padding:10px 12px;">
-        <div style="display:flex;flex-wrap:wrap;gap:5px;">`;
-    items.forEach(x => {
+        <div style="display:flex;flex-direction:column;gap:4px;">`;
+    items.forEach((x, bi) => {
       const bar = x['Onetime Barcode'] || '';
-      body += `<span class="pcm-bar-chip">${esc(bar)}</span>`;
+      body += `<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:10px;color:var(--muted);min-width:18px;text-align:right;">${bi + 1}.</span><span class="pcm-bar-chip">${esc(bar)}</span></div>`;
     });
     body += `</div></div></div>`;
   });
@@ -587,9 +597,9 @@ function openPayCarModal(idx) {
   // DOM: group by เลขที่เอกสาร POI → Onetime Barcode
   // IMP: group by เลขที่ขอโอน → รหัส/ชื่อสินค้า
   const domHtml = _buildPcmDomSection(domRows, r._docNo);
-  const impHtml = _buildPcmSection(impRows, r._docNo, 'IMP (ต่างประเทศ)');
+  const impHtml = _buildPcmSection(impRows, r._docNo, 'IMPORTED (ต่างประเทศ)');
   const allHtml = (domRows.length && impRows.length)
-    ? `<div class="pcm-sec-dom">▌ DOM (ในประเทศ)</div>${domHtml}<div class="pcm-sec-imp">▌ IMP (ต่างประเทศ)</div>${impHtml}`
+    ? `<div class="pcm-sec-dom">▌ DOMESTIC (ในประเทศ)</div>${domHtml}<div class="pcm-sec-imp">▌ IMPORTED (ต่างประเทศ)</div>${impHtml}`
     : domRows.length ? domHtml : impHtml;
   _pcmSections = { all: allHtml, dom: domHtml, imp: impHtml };
 
