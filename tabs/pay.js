@@ -439,27 +439,27 @@ function renderPayCarTable() {
     const _dCnt    = uniqCount(_domAg, 'เลขที่เอกสาร POI');
     const _iCnt    = uniqCount(_impAg, 'เลขที่ขอโอน');
     const _dParts  = [];
-    if (_dCnt) _dParts.push(`<span style="font-size:9.5px;color:#22d3ee;font-weight:700;">DOMESTIC ${_dCnt}</span>`);
-    if (_iCnt) _dParts.push(`<span style="font-size:9.5px;color:#a78bfa;font-weight:700;">IMPORTED ${_iCnt}</span>`);
+    if (_dCnt) _dParts.push(`<span style="color:#22d3ee;font-weight:700;">DOMESTIC ${_dCnt}</span>`);
+    if (_iCnt) _dParts.push(`<span style="color:#a78bfa;font-weight:700;">IMPORTED ${_iCnt}</span>`);
     const _docCell = r._agRows.length
       ? `<b style="color:#a5b4fc;">📑 ${_dCnt + _iCnt}</b><br>${_dParts.join('<br>')}`
       : '<span style="color:var(--muted)">—</span>';
     html += `<tr class="ctbl-row" onclick="openPayCarModal(${i})" title="คลิกเพื่อดูรายการเอกสาร Aging Out">
-      <td style="font-size:11px;white-space:nowrap;">${esc(dateDisp)}</td>
+      <td style="white-space:nowrap;">${esc(dateDisp)}</td>
       <td style="font-weight:700;color:#7dd3fc;white-space:nowrap;">${esc(r['ช่วงเวลา'] || '')}</td>
       <td style="text-align:center;font-weight:700;">${esc(r['คลังสินค้า'] || '')}</td>
-      <td><span style="font-weight:600;">${esc(brDisp)}</span>${r['ชื่อย่อสาขา'] ? ` <span style="font-size:10px;color:#c4b5fd;">${esc(r['ชื่อย่อสาขา'])}</span>` : ''}</td>
-      <td style="font-family:monospace;font-size:10.5px;color:#7dd3fc;white-space:nowrap;">${esc(r._docNo)}</td>
-      <td style="font-size:11px;">${esc(r['ประเภทรถ'] || '')}</td>
-      <td style="font-size:11px;">${esc(r['ประเภทงาน'] || '')}</td>
-      <td style="font-family:monospace;font-size:11px;">${esc(r['ป้ายทะเบียน'] || '')}</td>
-      <td style="font-size:11px;">${esc(r['ชื่อคนขับ'] || '')}${r['เบอร์โทร'] ? ` <span style="color:var(--muted);font-size:10px;">(${esc(r['เบอร์โทร'])})</span>` : ''}</td>
-      <td style="font-size:11px;white-space:nowrap;">${esc(loadTime)}</td>
-      <td style="font-size:11px;">${esc(loadStatus)}</td>
+      <td><span style="font-weight:600;">${esc(brDisp)}</span>${r['ชื่อย่อสาขา'] ? ` <span style="color:#c4b5fd;">${esc(r['ชื่อย่อสาขา'])}</span>` : ''}</td>
+      <td style="font-family:monospace;color:#7dd3fc;white-space:nowrap;">${esc(r._docNo)}</td>
+      <td>${esc(r['ประเภทรถ'] || '')}</td>
+      <td>${esc(r['ประเภทงาน'] || '')}</td>
+      <td style="font-family:monospace;">${esc(r['ป้ายทะเบียน'] || '')}</td>
+      <td>${esc(r['ชื่อคนขับ'] || '')}${r['เบอร์โทร'] ? ` <span style="color:var(--muted);">(${esc(r['เบอร์โทร'])})</span>` : ''}</td>
+      <td style="white-space:nowrap;">${esc(loadTime)}</td>
+      <td>${esc(loadStatus)}</td>
       <td style="text-align:center;line-height:1.6;">${_docCell}</td>
       <td style="text-align:right;">${totalBox ? fmtN(totalBox) : '—'}</td>
       <td style="text-align:right;">${totalPcs ? fmtN(totalPcs) : '—'}</td>
-      <td style="white-space:nowrap;"><span class="cstat dc-out" style="font-size:9.5px;">✅ ออก DC</span> <span class="cstat ${statCls}">${esc(statTxt)}</span></td>
+      <td style="white-space:nowrap;"><span class="cstat dc-out">✅ ออก DC</span> <span class="cstat ${statCls}">${esc(statTxt)}</span></td>
     </tr>`;
   });
 
