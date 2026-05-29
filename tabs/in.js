@@ -43,7 +43,6 @@ function renderIn() {
   const vendors  = uniqCount(f,'ชื่อผู้จำหน่าย');
   const whCount  = whKeys.length;
   const days     = f.map(r => num(r['วันคงค้าง']));
-  const avg      = days.length ? days.reduce((a,b)=>a+b,0)/days.length : 0;
   const mx       = days.length ? Math.max(...days) : 0;
   const over30   = f.filter(r => num(r['วันคงค้าง']) > 30).length;
   const pct30    = f.length ? (over30/f.length*100).toFixed(1) : '0.0';
@@ -54,7 +53,6 @@ function renderIn() {
     <stat-card variant="ok"   label="จำนวนคลัง"          value="${fmtN(whCount)}"  unit="คลัง"></stat-card>
     <stat-card variant="ok"   label="สาขาที่รอจ่าย"      value="${fmtN(branches)}" unit="สาขา"></stat-card>
     <stat-card                label="ผู้จำหน่าย"         value="${fmtN(vendors)}"  unit="ราย"></stat-card>
-    <stat-card variant="warn" label="วันคงค้างเฉลี่ย"    value="${fmtD(avg,1)}"   unit="วัน"></stat-card>
     <stat-card variant="warn" label="วันคงค้างสูงสุด"    value="${fmtN(mx)}"      unit="วัน"></stat-card>
     <stat-card variant="alr"  label="ค้างเกิน 30 วัน"   value="${fmtN(over30)}"  unit="${pct30}% ของทั้งหมด"></stat-card>
     <stat-card                label="Zone"               value="${fmtN(uniqCount(f,'Zone Name'))}" unit="Zone"></stat-card>

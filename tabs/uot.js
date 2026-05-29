@@ -47,7 +47,6 @@ function renderUot() {
   const pcs      = uotFiltered.reduce((s, r) => s + num(r['จำนวนคงค้างพาเลท']), 0);
   const boxUnit  = uotFiltered.reduce((s, r) => s + num(r['จำนวนต่อกล่อง']), 0);
   const days     = uotFiltered.map(r => num(r['วันค้างส่ง']));
-  const avg      = days.length ? days.reduce((a, b) => a + b, 0) / days.length : 0;
   const mx       = days.length ? Math.max(...days) : 0;
   const over30   = uotFiltered.filter(r => num(r['วันค้างส่ง']) > 30).length;
   const pct30    = uotFiltered.length ? (over30 / uotFiltered.length * 100).toFixed(1) : '0.0';
@@ -57,7 +56,6 @@ function renderUot() {
     <stat-card                label="จำนวนสินค้ารวม"        value="${fmtN(prods)}"   unit="รหัส SKU"></stat-card>
     <stat-card                label="เลขที่เอกสารคงค้าง"    value="${fmtN(docs)}"    unit="เอกสาร"></stat-card>
     <stat-card variant="ok"   label="สาขาที่รอจ่าย"         value="${fmtN(branches)}" unit="สาขา"></stat-card>
-    <stat-card variant="warn" label="วันคงค้างเฉลี่ย"       value="${fmtD(avg)}"     unit="วัน"></stat-card>
     <stat-card variant="warn" label="วันคงค้างสูงสุด"       value="${fmtN(mx)}"      unit="วัน"></stat-card>
     <stat-card variant="alr"  label="ค้างส่ง &gt; 30 วัน"  value="${fmtN(over30)}"  unit="${pct30}% ของทั้งหมด"></stat-card>
     <stat-card                label="จำนวนคงค้างพาเลทรวม"  value="${fmtP(pcs)}"     unit="พาเลท"></stat-card>
