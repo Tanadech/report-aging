@@ -8,8 +8,8 @@
 <!-- CDN Libraries -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@3/dist/apexcharts.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gridjs@6/dist/gridjs.umd.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridjs@6/dist/theme/mermaid.min.css">
 
 <!-- App Styles -->
@@ -38,40 +38,9 @@
   <div class="hdr-right">
     <span id="sbadge" class="sbadge snap"><span class="dot"></span>SNAPSHOT</span>
     <div class="hdr-sep"></div>
-    <div class="file-group">
-      <span class="file-group-lbl">โหลดไฟล์ Excel:</span>
-      <label class="btn-rf btn-file" title="เลือกไฟล์ IMPORTED (ต่างประเทศ)">
-        📂 IMPORTED<input type="file" id="file-uot" accept=".xlsx,.xls" style="display:none">
-      </label>
-      <label class="btn-rf btn-file" title="เลือกไฟล์ DOMESTIC (ภายในประเทศ)">
-        📂 DOMESTIC<input type="file" id="file-in" accept=".xlsx,.xls" style="display:none">
-      </label>
-      <label class="btn-rf btn-file" title="เลือกไฟล์ Car.xlsx (คิวรถ OUTBOUND)">
-        🚛 OUTBOUND<input type="file" id="file-car" accept=".xlsx,.xls" style="display:none">
-      </label>
-      <label class="btn-rf btn-file" title="เลือกไฟล์ IN P xxxx.xlsx (พาเลท DOMESTIC)">
-        📦 PALLET IN<input type="file" id="file-pallet" accept=".xlsx,.xls" style="display:none">
-      </label>
-      <label class="btn-rf btn-file" title="เลือกไฟล์ Aging OUTBOUND DOM.xlsx (เอกสารจ่าย ในประเทศ)">
-        📤 AGING DOM<input type="file" id="file-agingout-dom" accept=".xlsx,.xls" style="display:none">
-      </label>
-      <label class="btn-rf btn-file" title="เลือกไฟล์ Aging OUTBOUND IMP.xlsx (เอกสารจ่าย ต่างประเทศ)">
-        📤 AGING IMP<input type="file" id="file-agingout-imp" accept=".xlsx,.xls" style="display:none">
-      </label>
-    </div>
-    <div class="hdr-sep"></div>
-    <button class="btn-rf" id="btn-folder" title="เลือกโฟลเดอร์ data_dc — ระบบจะโหลดทุกไฟล์อัตโนมัติ">
-      📁 <span id="btn-folder-txt">เลือกโฟลเดอร์ข้อมูล</span>
-    </button>
-    <div class="hdr-sep"></div>
     <button class="btn-rf" id="btn-theme">☀️ Light</button>
   </div>
 </header>
-
-<div class="alert" id="alertbox">
-  ⚠️ <strong>ไม่สามารถดึงข้อมูลสดจาก Google Sheet</strong> — กำลังแสดง Snapshot<br>
-  📌 เปิด Google Sheet → <code>แชร์</code> → เปลี่ยนสิทธิ์เป็น <code>ทุกคนที่มีลิงก์ (ผู้ดู)</code>
-</div>
 
 <div class="tabs">
   <button class="tb act" data-tab="uot">🌏 IMPORTED (ต่างประเทศ)</button>
@@ -136,21 +105,21 @@
       <div class="pie-col">
         <div class="card" style="flex:1;">
           <div class="card-title"><span class="dot" style="background:#22d3ee"></span>จำนวนขอโอน / จำนวนโอนออก</div>
-          <div class="cw" style="height:210px;"><canvas id="u-pie1"></canvas></div>
+          <div class="cw" style="height:290px;"><div id="u-pie1"></div></div>
         </div>
         <div class="card" style="flex:1;">
           <div class="card-title"><span class="dot" style="background:#f87171"></span>สถานะประมวลผล / จำนวนรหัสสินค้า</div>
-          <div class="cw" style="height:200px;"><canvas id="u-pie2"></canvas></div>
+          <div class="cw" style="height:290px;"><div id="u-pie2"></div></div>
         </div>
       </div>
       <div style="display:flex;flex-direction:column;gap:10px;">
         <div class="card" style="flex:1;">
           <div class="card-title"><span class="dot" style="background:#22d3ee"></span>อันดับสาขาที่มีวันคงค้างมากที่สุด 5 อันดับแรก</div>
-          <div class="cw" style="height:210px;"><canvas id="u-c2"></canvas></div>
+          <div class="cw" style="height:250px;"><canvas id="u-c2"></canvas></div>
         </div>
         <div class="card" style="flex:1;">
           <div class="card-title"><span class="dot" style="background:#3b82f6"></span>เอกสารคงค้างและเอกสารขอโอนตามช่วงเวลา</div>
-          <div class="cw" style="height:200px;"><canvas id="u-c3"></canvas></div>
+          <div class="cw" style="height:240px;"><canvas id="u-c3"></canvas></div>
         </div>
       </div>
     </div>
@@ -234,21 +203,21 @@
       <div class="pie-col">
         <div class="card" style="flex:1;">
           <div class="card-title"><span class="dot" style="background:#22d3ee"></span>จำนวนขอโอนคงค้าง / คลัง</div>
-          <div class="cw" style="height:210px;"><canvas id="i-c1"></canvas></div>
+          <div class="cw" style="height:290px;"><div id="i-c1"></div></div>
         </div>
         <div class="card" style="flex:1;">
           <div class="card-title"><span class="dot" style="background:#10b981"></span>จำนวนวันคงค้างเฉลี่ย / คลัง</div>
-          <div class="cw" style="height:200px;"><canvas id="i-c2"></canvas></div>
+          <div class="cw" style="height:230px;"><canvas id="i-c2"></canvas></div>
         </div>
       </div>
       <div style="display:flex;flex-direction:column;gap:10px;">
         <div class="card" style="flex:1;">
           <div class="card-title"><span class="dot" style="background:#22d3ee"></span>อันดับสาขาที่มีวันคงค้างมากที่สุด 5 อันดับแรก</div>
-          <div class="cw" style="height:210px;"><canvas id="i-c3"></canvas></div>
+          <div class="cw" style="height:250px;"><canvas id="i-c3"></canvas></div>
         </div>
         <div class="card" style="flex:1;">
           <div class="card-title"><span class="dot" style="background:#3b82f6"></span>เอกสารคงค้างแต่ละคลังตามช่วงเวลา</div>
-          <div class="cw" style="height:200px;"><canvas id="i-c4"></canvas></div>
+          <div class="cw" style="height:240px;"><canvas id="i-c4"></canvas></div>
         </div>
       </div>
     </div>
@@ -451,18 +420,18 @@
       <div class="pie-col">
         <div class="card" style="flex:1;">
           <div class="card-title"><span class="dot" style="background:#22d3ee"></span>สัดส่วนตามคลัง</div>
-          <div class="cw" style="height:220px;"><canvas id="p-pie1"></canvas></div>
+          <div class="cw" style="height:290px;"><div id="p-pie1"></div></div>
         </div>
         <div id="p-pie2-wrap" class="card" style="flex:1;">
           <div class="card-title"><span class="dot" style="background:#10b981"></span>สัดส่วนมาตราฐานการจ่ายตามคลัง</div>
-          <div class="cw" style="height:220px;"><canvas id="p-pie2"></canvas></div>
+          <div class="cw" style="height:260px;"><canvas id="p-pie2"></canvas></div>
         </div>
       </div>
       <div style="display:flex;flex-direction:column;gap:10px;flex:1;">
         <div class="card" style="flex:1;">
           <div class="card-title"><span class="dot" style="background:#f59e0b"></span>🕐 สถานะรถตามช่วงเวลา OUTBOUND</div>
           <div id="p-tl-wh-bar" style="display:flex;gap:4px;flex-wrap:wrap;padding:2px 0 6px;"></div>
-          <div class="cw" style="height:175px;"><canvas id="p-timeline"></canvas></div>
+          <div class="cw" style="height:250px;"><canvas id="p-timeline"></canvas></div>
         </div>
         <div class="card" style="flex:1;">
           <div class="card-title"><span class="dot" style="background:#f59e0b"></span>คลังที่มีการจ่ายเอกสารคงค้างและเอกสารขอโอนตามช่วงเวลา Car</div>
@@ -499,11 +468,8 @@
 
 <!-- 4. Loaders -->
 <script src="loaders/status.js?v=20260601"></script>
-<script src="loaders/excel.js?v=20260601"></script>
-<script src="loaders/folder.js?v=20260601"></script>
 
 <!-- 5. Web Components -->
-<script src="components/app-header.js?v=20260601"></script>
 <script src="components/stat-card.js?v=20260601"></script>
 <script src="components/data-table.js?v=20260601"></script>
 <script src="components/filter-tags.js?v=20260601"></script>
