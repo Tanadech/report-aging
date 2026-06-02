@@ -565,7 +565,7 @@ function _buildPcmDomSection(domRows, docNo) {
         <div style="display:flex;flex-direction:column;gap:4px;">`;
     items.forEach((x, bi) => {
       const bar = x['onetimeBarcode'] || '';
-      body += `<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:10px;color:var(--muted);min-width:18px;text-align:right;">${bi + 1}.</span><span class="pcm-bar-chip">${esc(bar)}</span></div>`;
+      body += `<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:12px;color:var(--muted);min-width:20px;text-align:right;">${bi + 1}.</span><span class="pcm-bar-chip">${esc(bar)}</span></div>`;
     });
     body += `</div></div></div>`;
   });

@@ -65,7 +65,7 @@
 .pcm-poi-vendor   { flex:1; font-size:10.5px; color:#cbd5e1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .pcm-poi-date     { font-size:10.5px; color:#94a3b8; white-space:nowrap; }
 .pcm-poi-cnt      { font-size:10.5px; color:#6ee7b7; font-weight:600; margin-left:6px; }
-.pcm-bar-chip     { font-family:monospace; font-size:11px; padding:3px 10px; border-radius:4px; background:rgba(34,211,238,.12); border:1px solid rgba(34,211,238,.35); color:#cffafe; }
+.pcm-bar-chip     { font-family:monospace; font-size:13px; padding:4px 12px; border-radius:4px; background:rgba(34,211,238,.12); border:1px solid rgba(34,211,238,.35); color:#cffafe; }
 
 .pcm-grp-hdr      { display:flex; align-items:center; gap:8px; padding:8px 12px; cursor:pointer; user-select:none; background:rgba(167,139,250,.1); border:1px solid rgba(167,139,250,.3); }
 .pcm-grp-num      { font-size:11.5px; font-family:monospace; font-weight:700; color:#c4b5fd; }

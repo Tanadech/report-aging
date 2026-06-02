@@ -8,3 +8,4 @@ data/data.json
 .last-hash
 logs/
 node_modules/
+data/bundle.json

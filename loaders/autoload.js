@@ -1,10 +1,10 @@
 // loaders/autoload.js — โหลด data/*.json อัตโนมัติ (GitHub Pages)
 // ใช้ Cache API: เช็ค meta.json ก่อน ถ้าข้อมูลไม่เปลี่ยน → ใช้ cache (เร็วมาก)
-// ถ้าข้อมูลใหม่ → fetch ใหม่ทั้งหมด แล้ว cache ไว้
+// ถ้าข้อมูลใหม่ → fetch ใหม่ทั้งหมดพร้อมกัน (parallel) แล้ว cache ไว้
 
 // ── Normalization: รองรับ JSON เก่า (ชื่อไทย) และ JSON ใหม่ (API field name) ──
 function _normCar(r) {
-  if ('doc_no' in r) return r; // JSON ใหม่แล้ว
+  if ('doc_no' in r) return r;
   const MAP = {
     'เลขที่เอกสาร':        'doc_no',
     'ชื่อสาขา':            'source_name',
@@ -26,7 +26,7 @@ function _normCar(r) {
 }
 
 function _normAgDom(r) {
-  if ('branchShortName' in r) return r; // JSON ใหม่แล้ว
+  if ('branchShortName' in r) return r;
   const MAP = {
     'รหัสสาขา':                           'branchCode',
     'ชื่อสาขา':                           'branchShortName',
@@ -49,7 +49,7 @@ function _normAgDom(r) {
 }
 
 function _normAgImp(r) {
-  if ('branchShortName' in r) return r; // JSON ใหม่แล้ว
+  if ('branchShortName' in r) return r;
   const MAP = {
     'รหัสสาขา':                           'branchCode',
     'ชื่อสาขา':                           'branchShortName',
@@ -79,11 +79,17 @@ function _rebuildCombinedAging() {
 (async function autoLoad() {
   if (location.protocol === 'file:') return;
 
-  const CACHE_NAME  = 'report-aging-v2'; // v2 = bundle format
-  const BUNDLE_URL  = './data/bundle.json';
+  const CACHE_NAME = 'report-aging-v3';
+  const FILES = [
+    { url: './data/outbound/aging-dom.json', key: 'agDom'  },
+    { url: './data/outbound/aging-imp.json', key: 'agImp'  },
+    { url: './data/outbound/car.json',       key: 'car'    },
+    { url: './data/warehouse/pallet.json',   key: 'pallet' },
+    { url: './data/poi/in.json',             key: 'inData' },
+    { url: './data/poi/uot.json',            key: 'uot'    },
+  ];
 
   try {
-    // 1. เช็ค meta.json (ไฟล์เล็กมาก ~50 bytes) เพื่อดู updatedAt
     const meta = await fetch('./data/meta.json?_=' + Date.now())
       .then(r => r.ok ? r.json() : null).catch(() => null);
     if (!meta?.updatedAt) return;
@@ -91,45 +97,35 @@ function _rebuildCombinedAging() {
     const cachedAt = localStorage.getItem('ra-updated-at');
     const hasCache = 'caches' in window;
     const isFresh  = cachedAt === meta.updatedAt && hasCache;
+    const cache    = hasCache ? await caches.open(CACHE_NAME) : null;
 
-    let bundle = null;
-
-    if (isFresh) {
-      // ── เร็ว: โหลดจาก Cache API (ไม่ใช้ network เลย) ──
-      const cache = await caches.open(CACHE_NAME);
-      const hit   = await cache.match(BUNDLE_URL);
-      if (hit) bundle = await hit.json();
-    }
-
-    if (!bundle) {
-      // ── โหลดใหม่จาก network (1 request แทน 6) + บันทึกลง cache ──
-      const res = await fetch(BUNDLE_URL + '?_=' + Date.now());
-      if (!res.ok) return;
-      if (hasCache) {
-        const cache = await caches.open(CACHE_NAME);
-        await cache.put(BUNDLE_URL, res.clone());
-        localStorage.setItem('ra-updated-at', meta.updatedAt);
+    // โหลดทุกไฟล์พร้อมกัน (parallel)
+    const loaded = {};
+    await Promise.all(FILES.map(async ({ url, key }) => {
+      if (isFresh && cache) {
+        const hit = await cache.match(url);
+        if (hit) { loaded[key] = await hit.json(); return; }
       }
-      bundle = await res.json();
-    }
+      const res = await fetch(url + '?_=' + Date.now());
+      if (!res.ok) return;
+      if (cache) await cache.put(url, res.clone());
+      loaded[key] = await res.json();
+    }));
 
-    const uot    = bundle?.uot;
-    const inData = bundle?.in;
-    const car    = bundle?.car;
-    const pallet = bundle?.pallet;
-    const agDom  = bundle?.agingOutDom;
-    const agImp  = bundle?.agingOutImp;
+    if (!isFresh && hasCache) localStorage.setItem('ra-updated-at', meta.updatedAt);
 
-    let loaded = 0;
-    if (uot?.length)    { dataUot         = uot;                    loaded++; }
-    if (inData?.length) { dataIn          = inData;                loaded++; }
-    if (car?.length)    { dataCar         = car.map(_normCar);     loaded++; }
-    if (pallet?.length) { dataPallet      = pallet;                loaded++; }
-    if (agDom?.length)  { dataAgingOutDom = agDom.map(_normAgDom); loaded++; }
-    if (agImp?.length)  { dataAgingOutImp = agImp.map(_normAgImp); loaded++; }
+    const { uot, inData, car, pallet, agDom, agImp } = loaded;
+
+    let loadedCount = 0;
+    if (uot?.length)    { dataUot         = uot;                    loadedCount++; }
+    if (inData?.length) { dataIn          = inData;                loadedCount++; }
+    if (car?.length)    { dataCar         = car.map(_normCar);     loadedCount++; }
+    if (pallet?.length) { dataPallet      = pallet;                loadedCount++; }
+    if (agDom?.length)  { dataAgingOutDom = agDom.map(_normAgDom); loadedCount++; }
+    if (agImp?.length)  { dataAgingOutImp = agImp.map(_normAgImp); loadedCount++; }
     if (dataAgingOutDom.length || dataAgingOutImp.length) _rebuildCombinedAging();
 
-    if (!loaded) return;
+    if (!loadedCount) return;
 
     // อัพเดท status badge
     const b = document.getElementById('sbadge');

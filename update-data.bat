@@ -39,7 +39,7 @@ if %CONV_EXIT% neq 0 if %CONV_EXIT% neq 2 (
 echo [2/2] Push ขึ้น GitHub...
 echo [%DT%] git push >> "%LOGFILE%"
 
-git add data/bundle.json data/meta.json data/outbound/aging-dom.json data/outbound/aging-imp.json data/outbound/car.json data/warehouse/pallet.json data/poi/in.json data/poi/uot.json index.html >> "%LOGFILE%" 2>&1
+git add data/meta.json data/outbound/aging-dom.json data/outbound/aging-imp.json data/outbound/car.json data/warehouse/pallet.json data/poi/in.json data/poi/uot.json index.html >> "%LOGFILE%" 2>&1
 git commit -m "data: update %DT%" >> "%LOGFILE%" 2>&1
 git push >> "%LOGFILE%" 2>&1
 set PUSH_EXIT=%ERRORLEVEL%
