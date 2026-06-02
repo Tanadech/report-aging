@@ -50,9 +50,9 @@ function _filterCars(cars) {
   const fdateFrom = (document.getElementById('p-fdate-from')?.value || '').replace(/-/g, '');
   const fdateTo   = (document.getElementById('p-fdate-to')?.value   || '').replace(/-/g, '');
   return cars.filter(r => {
-    if (fwhCB.length && !fwhCB.includes(String(r['คลังสินค้า'] || '').trim())) return false;
+    if (fwhCB.length && !fwhCB.includes(String(r['port_id'] || '').trim())) return false;
     if (fdateFrom || fdateTo) {
-      const dk = _toDateKey(r['วันที่คิวงาน'] || r['วันที่'] || '');
+      const dk = _toDateKey(r['search_date'] || r['วันที่'] || '');
       if (fdateFrom && dk < fdateFrom) return false;
       if (fdateTo   && dk > fdateTo)   return false;
     }
@@ -71,7 +71,7 @@ function getPayFiltered() {
   const fdateTo   = (document.getElementById('p-fdate-to')?.value   || '').replace(/-/g, ''); // yyyymmdd
 
   return dataAgingOut.filter(r => {
-    if (fbCB.length && !fbCB.includes(r['ชื่อสาขา'])) return false;
+    if (fbCB.length && !fbCB.includes(r['branchShortName'])) return false;
     if (ftCB.length && !ftCB.includes(r['ประเภท'])) return false;
     if (fcCB.length && !fcCB.includes(r['Category Name'])) return false;
     if (fwhCB.length) {
@@ -88,7 +88,7 @@ function getPayFiltered() {
       const docNo = (r['เลขที่เอกสาร']     || '').toLowerCase();
       const poiNo = (r['เลขที่ขอโอน']      || '').toLowerCase();
       const poi2  = (r['เลขที่เอกสาร POI'] || '').toLowerCase();
-      const brNm  = (r['ชื่อสาขา']         || '').toLowerCase();
+      const brNm  = (r['branchShortName']   || '').toLowerCase();
       if (!docNo.includes(fsearch) && !poiNo.includes(fsearch) && !poi2.includes(fsearch) && !brNm.includes(fsearch)) return false;
     }
     return true;
@@ -107,11 +107,11 @@ function renderPay() {
   // ── Build carInfo first so getPayFiltered() can use it for WH filter ──
   _payCarInfo = {};
   dataCar.forEach(r => {
-    const doc = String(r['เลขที่เอกสาร'] || '').trim();
+    const doc = String(r['doc_no'] || '').trim();
     if (!doc) return;
     _payCarInfo[doc] = {
-      wh:   String(r['คลังสินค้า'] || '(ไม่ระบุ)').trim(),
-      slot: String(r['ช่วงเวลา']   || '(ไม่ระบุ)').trim()
+      wh:   String(r['port_id']   || '(ไม่ระบุ)').trim(),
+      slot: String(r['zone_time'] || '(ไม่ระบุ)').trim()
     };
   });
 
@@ -119,14 +119,14 @@ function renderPay() {
   payPage = 0;
 
   // ── KPI ──
-  const branches  = uniqCount(payFiltered, 'ชื่อสาขา');
+  const branches  = uniqCount(payFiltered, 'branchShortName');
   const totalBox  = payFiltered.reduce((s, r) => s + num(r['จำนวน(กล่อง)']), 0);
   const totalPcs  = payFiltered.reduce((s, r) => s + num(r['จำนวนโอน(ชิ้น)']), 0);
 
   // docs ที่รถ "ออกแล้ว" — join dataCar
   const departedDocSet = new Set(
-    dataCar.filter(r => isDcDeparted(String(r['รถยังไม่ออกจาก DC'] || '').trim()))
-           .map(r => String(r['เลขที่เอกสาร'] || '').trim()).filter(Boolean)
+    dataCar.filter(r => isDcDeparted(String(r['status_shipping'] || '').trim()))
+           .map(r => String(r['doc_no'] || '').trim()).filter(Boolean)
   );
   const payDeparted   = payFiltered.filter(r => departedDocSet.has(String(r['เลขที่เอกสาร'] || '').trim()));
   const docsDepted    = uniqCount(payDeparted, 'เลขที่เอกสาร');
@@ -139,18 +139,23 @@ function renderPay() {
   const cntStd    = _carF.filter(r => _isStd(String(r['สถานะขึ้นสินค้า'] || '').trim())).length;
   const cntNonStd = _carF.filter(r => _isNonStd(String(r['สถานะขึ้นสินค้า'] || '').trim())).length;
 
-  const mkK = (lbl, val, unit, cls='') =>
-    `<div class="kpi${cls ? ' '+cls : ''}"><div class="kpi-lbl">${lbl}</div><div class="kpi-val">${val}</div><div class="kpi-unit">${unit}</div></div>`;
+  const _I = {
+    wh:    'https://img.icons8.com/external-tal-revivo-color-tal-revivo/96/external-box-truck-on-a-consignee-delivery-location-shipping-color-tal-revivo.png',
+    load:  'https://img.icons8.com/isometric/96/warehouse.png',
+    store: 'https://img.icons8.com/color/96/shop.png',
+  };
+  const mkK = (lbl, val, unit, variant='', icon='') =>
+    `<stat-card${variant ? ` variant="${variant}"` : ''}${icon ? ` icon="${icon}"` : ''} label="${lbl}" value="${val}" unit="${unit}"></stat-card>`;
 
   kpiEl.innerHTML =
     mkK('เอกสาร OUTBOUND',       fmtN(docsDepted),        'รถออกแล้ว') +
     mkK('เลขที่ขอโอน จ่ายแล้ว', fmtN(poisDepted),        'รถออกแล้ว', 'ok') +
-    mkK('จำนวนสินค้า',           fmtN(payFiltered.length),'รายการ') +
-    mkK('จำนวนกล่องรวม',         fmtN(totalBox),          'กล่อง') +
-    mkK('จำนวนชิ้นรวม',          fmtN(totalPcs),          'ชิ้น') +
-    mkK('จำนวนสาขา',             fmtN(branches),          'สาขา', 'inf') +
-    mkK('ได้มาตราฐาน',           fmtN(cntStd),            'คัน', 'ok') +
-    mkK('ไม่ได้มาตราฐาน',        fmtN(cntNonStd),         'คัน', cntNonStd > 0 ? 'alr' : 'ok');
+    mkK('จำนวนสินค้า',           fmtN(payFiltered.length),'รายการ',   '',    _I.store) +
+    mkK('จำนวนกล่องรวม',         fmtN(totalBox),          'กล่อง',    '',    _I.store) +
+    mkK('จำนวนชิ้นรวม',          fmtN(totalPcs),          'ชิ้น',     '',    _I.store) +
+    mkK('จำนวนสาขา',             fmtN(branches),          'สาขา',     'inf', _I.store) +
+    mkK('ได้มาตราฐาน',           fmtN(cntStd),            'คัน',      'ok') +
+    mkK('ไม่ได้มาตราฐาน',        fmtN(cntNonStd),         'คัน',      cntNonStd > 0 ? 'alr' : 'ok');
 
   // ── Chart 1: สัดส่วนตามคลัง (ผ่าน Car.xlsx) ──
   const byWh = {};
@@ -161,15 +166,16 @@ function renderPay() {
     byWh[wh].add(doc);
   });
   const whEnt = Object.entries(byWh).map(([k, v]) => [k, v.size]).sort((a, b) => b[1] - a[1]);
-  mkChart('p-pie1', 'doughnut', {
-    labels: whEnt.map(e => e[0]),
-    datasets: [{ data: whEnt.map(e => e[1]), backgroundColor: PALETTE, borderWidth: 2, borderColor: 'rgba(6,16,30,.8)', hoverOffset: 6 }]
-  }, {
-    plugins: {
-      legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 10, padding: 8 } },
-      datalabels: { color: '#fff', font: { size: 11, weight: 'bold' }, formatter: (v, ctx) => { const e = whEnt[ctx.dataIndex]; return e ? e[0] + '\n' + fmtN(v) : fmtN(v); }, anchor: 'center', align: 'center', display: ctx => ctx.dataset.data[ctx.dataIndex] > 0 }
-    }, cutout: '50%'
-  });
+  mkRadialBar('p-pie1',
+    whEnt.map(e => e[0]),
+    whEnt.map(e => e[1]),
+    PALETTE.slice(0, whEnt.length),
+    label => {
+      if (!label || label.startsWith('(')) return;
+      setCBOnly(document.getElementById('p-fwh-list'), label);
+      renderPay();
+    }
+  );
 
   // ── Chart 2: สัดส่วนมาตราฐานการจ่ายตามคลัง ──
   const pie2Card = document.getElementById('p-pie2-wrap');
@@ -177,7 +183,7 @@ function renderPay() {
     pie2Card.style.display = '';
     const whStdCnt = {}, whNonStdCnt = {};
     _filterCars(dataCar).forEach(r => {
-      const wh = String(r['คลังสินค้า'] || '').trim();
+      const wh = String(r['port_id'] || '').trim();
       if (!wh || wh === '(ไม่ระบุ)') return; // ตัดออก
       const v  = String(r['สถานะขึ้นสินค้า'] || '').trim();
       if (_isStd(v))         whStdCnt[wh]    = (whStdCnt[wh]    || 0) + 1;
@@ -190,18 +196,12 @@ function renderPay() {
     mkChart('p-pie2', 'bar', {
       labels: whs2,
       datasets: [
-        { label: '✅ ได้มาตราฐาน',    data: whs2.map(w => whStdCnt[w]    || 0), backgroundColor: '#10b981', borderRadius: 4 },
-        { label: '❌ ไม่ได้มาตราฐาน', data: whs2.map(w => whNonStdCnt[w] || 0), backgroundColor: '#ef4444', borderRadius: 4 }
+        {label:'✅ ได้มาตราฐาน',    data:whs2.map(w=>whStdCnt[w]   ||0), backgroundColor:'#10b981', borderRadius:4},
+        {label:'❌ ไม่ได้มาตราฐาน', data:whs2.map(w=>whNonStdCnt[w]||0), backgroundColor:'#ef4444', borderRadius:4}
       ]
     }, {
-      plugins: {
-        legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 10, padding: 8 } },
-        datalabels: { anchor: 'end', align: 'top', font: { size: 10, weight: 'bold' }, formatter: v => v > 0 ? fmtN(v) : '', color: '#e2e8f0', display: ctx => ctx.dataset.data[ctx.dataIndex] > 0 }
-      },
-      scales: {
-        x: { ticks: { font: { size: 10 } }, grid: { color: 'rgba(255,255,255,.05)' } },
-        y: { beginAtZero: true, ticks: { font: { size: 9 } }, grid: { color: 'rgba(255,255,255,.05)' } }
-      }
+      plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,padding:8}},datalabels:{anchor:'end',align:'top',font:{size:10,weight:'bold'},formatter:v=>v>0?fmtN(v):'',color:'#e2e8f0',display:ctx=>ctx.dataset.data[ctx.dataIndex]>0}},
+      scales:{x:{ticks:{font:{size:10}},grid:{color:'rgba(255,255,255,.05)'}},y:{beginAtZero:true,ticks:{font:{size:9}},grid:{color:'rgba(255,255,255,.05)'}}}
     });
   } else {
     pie2Card.style.display = 'none';
@@ -227,15 +227,10 @@ function renderPay() {
   if (c4El) c4El.style.width = Math.max(320, slotsArr4.length * 100) + 'px';
   mkChart('p-c4', 'bar', {
     labels: slotsArr4,
-    datasets: whsArr4.map((wh, i) => ({
-      label: wh,
-      data: slotsArr4.map(slot => slotWhCnt[slot]?.[wh] || 0),
-      backgroundColor: PALETTE[i % PALETTE.length],
-      borderRadius: 3
-    }))
+    datasets: whsArr4.map((wh, i) => ({ label:wh, data:slotsArr4.map(slot=>slotWhCnt[slot]?.[wh]||0), backgroundColor:PALETTE[i%PALETTE.length], borderRadius:3 }))
   }, {
-    plugins: { legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 10, padding: 6 } }, datalabels: { anchor: 'end', align: 'top', font: { size: 9, weight: 'bold' }, formatter: v => v > 0 ? fmtN(v) : '', color: '#e2e8f0' } },
-    scales: { y: { beginAtZero: true, ticks: { font: { size: 9 } }, grid: { color: 'rgba(255,255,255,.05)' } }, x: { ticks: { font: { size: 9 }, maxRotation: 30 } } }
+    plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,padding:6}},datalabels:{anchor:'end',align:'top',font:{size:9,weight:'bold'},formatter:v=>v>0?fmtN(v):'',color:'#e2e8f0'}},
+    scales:{y:{beginAtZero:true,ticks:{font:{size:9}},grid:{color:'rgba(255,255,255,.05)'}},x:{ticks:{font:{size:9},maxRotation:30}}}
   });
 
 
@@ -256,7 +251,7 @@ function _renderPayCarKPIs() {
   // นับรถตามสถานะ DC (จาก filtered)
   let cntWait = 0, cntLoading = 0, cntDep = 0, cntStuck = 0;
   filtered.forEach(r => {
-    const dcv   = String(r['รถยังไม่ออกจาก DC'] || '').trim();
+    const dcv   = String(r['status_shipping'] || '').trim();
     const stuck = isChecked(r['รถตกค้าง']);
     if (stuck)             { cntStuck++;   return; }
     if (isDcDeparted(dcv)) { cntDep++;     return; }
@@ -267,26 +262,29 @@ function _renderPayCarKPIs() {
   // WH cards นับเฉพาะรถที่ออก DC แล้ว (จาก filtered)
   const whCnt = {};
   filtered.forEach(r => {
-    if (!isDcDeparted(String(r['รถยังไม่ออกจาก DC'] || '').trim())) return;
-    const wh = String(r['คลังสินค้า'] || '').trim();
+    if (!isDcDeparted(String(r['status_shipping'] || '').trim())) return;
+    const wh = String(r['port_id'] || '').trim();
     if (!wh) return;
     whCnt[wh] = (whCnt[wh] || 0) + 1;
   });
 
+  const _ICON_WH   = 'https://img.icons8.com/external-tal-revivo-color-tal-revivo/96/external-box-truck-on-a-consignee-delivery-location-shipping-color-tal-revivo.png';
+  const _ICON_LOAD = 'https://img.icons8.com/isometric/96/warehouse.png';
+
   const whCards = Object.entries(whCnt)
     .sort((a, b) => b[1] - a[1])
     .map(([wh, cnt]) =>
-      `<div class="kpi inf"><div class="kpi-lbl">🏭 ${esc(wh)}</div><div class="kpi-val">${fmtN(cnt)}</div><div class="kpi-unit">คัน</div></div>`
+      `<stat-card variant="inf" icon="${_ICON_WH}" label="🏭 ${esc(wh)}" value="${fmtN(cnt)}" unit="คัน"></stat-card>`
     ).join('');
 
   el.innerHTML = `
     <div class="pay-car-kpi-lbl">🚛 รถออก DC แล้ว ${fmtN(cntDep)} คัน · ทั้งหมด ${fmtN(filtered.length)} คัน</div>
     <div class="kpi-row pay-car-kpi-row">
       ${whCards}
-      <div class="kpi warn"><div class="kpi-lbl">⏳ รอขึ้นสินค้า</div><div class="kpi-val">${fmtN(cntWait)}</div><div class="kpi-unit">คัน</div></div>
-      <div class="kpi inf"><div class="kpi-lbl">🔵 กำลังขึ้นสินค้า</div><div class="kpi-val">${fmtN(cntLoading)}</div><div class="kpi-unit">คัน</div></div>
-      <div class="kpi ok"><div class="kpi-lbl">✅ ออกแล้ว</div><div class="kpi-val">${fmtN(cntDep)}</div><div class="kpi-unit">คัน</div></div>
-      ${cntStuck > 0 ? `<div class="kpi alr"><div class="kpi-lbl">⚠️ ตกค้าง</div><div class="kpi-val">${fmtN(cntStuck)}</div><div class="kpi-unit">คัน</div></div>` : ''}
+      <stat-card variant="warn" label="⏳ รอขึ้นสินค้า"    value="${fmtN(cntWait)}"    unit="คัน"></stat-card>
+      <stat-card variant="inf"  icon="${_ICON_LOAD}" label="🔵 กำลังขึ้นสินค้า" value="${fmtN(cntLoading)}" unit="คัน"></stat-card>
+      <stat-card variant="ok"   label="✅ ออกแล้ว"          value="${fmtN(cntDep)}"     unit="คัน"></stat-card>
+      ${cntStuck > 0 ? `<stat-card variant="alr" label="⚠️ ตกค้าง" value="${fmtN(cntStuck)}" unit="คัน"></stat-card>` : ''}
     </div>`;
 }
 
@@ -303,10 +301,10 @@ function _renderPayTimeline() {
   if (!dataCar.length) { bar.innerHTML = ''; return; }
 
   // ใช้ _filterCars ก่อน (date + WH จาก main filter) แล้วค่อย sub-filter ด้วย _tlWhFilter
-  const tlBase = _filterCars(dataCar).filter(r => String(r['คลังสินค้า'] || '').trim());
+  const tlBase = _filterCars(dataCar).filter(r => String(r['port_id'] || '').trim());
 
   // Build warehouse list จาก filtered
-  const whSet = new Set(tlBase.map(r => String(r['คลังสินค้า'] || '').trim()).filter(Boolean));
+  const whSet = new Set(tlBase.map(r => String(r['port_id'] || '').trim()).filter(Boolean));
   _tlWhList = [...whSet].sort();
 
   // Render filter buttons
@@ -318,13 +316,13 @@ function _renderPayTimeline() {
     }).join('');
 
   // Sub-filter ด้วย timeline warehouse button
-  const cars = _tlWhFilter ? tlBase.filter(r => String(r['คลังสินค้า'] || '').trim() === _tlWhFilter) : tlBase;
+  const cars = _tlWhFilter ? tlBase.filter(r => String(r['port_id'] || '').trim() === _tlWhFilter) : tlBase;
 
   const slotData = {};
   cars.forEach(r => {
-    const slot  = String(r['ช่วงเวลา'] || '').trim();
+    const slot  = String(r['zone_time'] || '').trim();
     if (!slot) return; // ตัดแถวที่ไม่มีช่วงเวลาออก
-    const dcv   = String(r['รถยังไม่ออกจาก DC'] || '').trim();
+    const dcv   = String(r['status_shipping'] || '').trim();
     const stuck = isChecked(r['รถตกค้าง']);
     let status;
     if (stuck)                 status = 'stuck';
@@ -339,20 +337,14 @@ function _renderPayTimeline() {
   mkChart('p-timeline', 'bar', {
     labels: slots,
     datasets: [
-      { label: '⏳ รอขึ้นสินค้า',    data: slots.map(s => slotData[s].wait),    backgroundColor: '#f59e0b', borderRadius: 3 },
-      { label: '🔵 กำลังขึ้นสินค้า', data: slots.map(s => slotData[s].loading), backgroundColor: '#38bdf8', borderRadius: 3 },
-      { label: '✅ ออกแล้ว',          data: slots.map(s => slotData[s].dep),     backgroundColor: '#10b981', borderRadius: 3 },
-      { label: '⚠️ ตกค้าง',          data: slots.map(s => slotData[s].stuck),   backgroundColor: '#ef4444', borderRadius: 3 }
+      {label:'⏳ รอขึ้นสินค้า',    data:slots.map(s=>slotData[s].wait),    backgroundColor:'#f59e0b', borderRadius:3},
+      {label:'🔵 กำลังขึ้นสินค้า', data:slots.map(s=>slotData[s].loading), backgroundColor:'#38bdf8', borderRadius:3},
+      {label:'✅ ออกแล้ว',          data:slots.map(s=>slotData[s].dep),     backgroundColor:'#10b981', borderRadius:3},
+      {label:'⚠️ ตกค้าง',          data:slots.map(s=>slotData[s].stuck),   backgroundColor:'#ef4444', borderRadius:3}
     ]
   }, {
-    plugins: {
-      legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 10, padding: 6 } },
-      datalabels: { anchor: 'end', align: 'top', font: { size: 9, weight: 'bold' }, formatter: v => v > 0 ? fmtN(v) : '', color: '#e2e8f0', display: ctx => ctx.dataset.data[ctx.dataIndex] > 0 }
-    },
-    scales: {
-      x: { ticks: { font: { size: 9 } }, grid: { color: 'rgba(255,255,255,.05)' } },
-      y: { beginAtZero: true, ticks: { font: { size: 9 } }, grid: { color: 'rgba(255,255,255,.05)' } }
-    }
+    plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,padding:6}},datalabels:{anchor:'end',align:'top',font:{size:9,weight:'bold'},formatter:v=>v>0?fmtN(v):'',color:'#e2e8f0',display:ctx=>ctx.dataset.data[ctx.dataIndex]>0}},
+    scales:{y:{beginAtZero:true,ticks:{font:{size:9}},grid:{color:'rgba(255,255,255,.05)'}},x:{ticks:{font:{size:9}}}}
   });
 }
 
@@ -383,19 +375,28 @@ function renderPayCarTable() {
   });
 
   // ── 2. Primary: _filterCars (date+WH จาก Car.xlsx) → departed เท่านั้น ──
-  const departed = _filterCars(dataCar).filter(r => isDcDeparted(r['รถยังไม่ออกจาก DC']));
+  const fsearchCar = (document.getElementById('p-fsearch')?.value || '').trim().toLowerCase();
+  const departed = _filterCars(dataCar).filter(r => {
+    if (!isDcDeparted(r['status_shipping'])) return false;
+    if (fsearchCar) {
+      const docNo = (r['doc_no']      || '').toLowerCase();
+      const brNm  = (r['source_name'] || '').toLowerCase();
+      if (!docNo.includes(fsearchCar) && !brNm.includes(fsearchCar)) return false;
+    }
+    return true;
+  });
 
   if (!departed.length) {
     el.innerHTML = `<div style="padding:30px;text-align:center;color:var(--muted);font-size:13px;">ไม่มีรถที่ตรงกับเงื่อนไขการกรอง</div>`;
     return;
   }
 
-  // ── 3. Sort by ช่วงเวลา แล้ว build rows ──
+  // ── 3. Sort by zone_time แล้ว build rows ──
   departed
-    .sort((a, b) => timeSlotStart(a['ช่วงเวลา'] || '') - timeSlotStart(b['ช่วงเวลา'] || ''))
+    .sort((a, b) => timeSlotStart(a['zone_time'] || '') - timeSlotStart(b['zone_time'] || ''))
     .forEach(r => {
-      const docNo = String(r['เลขที่เอกสาร'] || '').trim();
-      const aging = getAgingForBranch(r['ชื่อย่อสาขา'] || '', r['ชื่อสาขา'] || '', r['คลังสินค้า'] || '');
+      const docNo = String(r['doc_no'] || '').trim();
+      const aging = getAgingForBranch(r['source_code'] || '', r['source_name'] || '', r['port_id'] || '');
       _payCarRows.push({ ...r, _docNo: docNo, _agRows: agingByDoc[docNo] || [], _aging: aging });
     });
 
@@ -423,7 +424,7 @@ function renderPayCarTable() {
   </tr></thead><tbody>`;
 
   _payCarRows.forEach((r, i) => {
-    const brDisp  = (r['ชื่อสาขา'] || BR_ABR_MAP[r['ชื่อย่อสาขา']] || r['ชื่อย่อสาขา'] || '').replace(/^สาขา\s*/, '');
+    const brDisp  = (r['source_name'] || BR_ABR_MAP[r['source_code']] || r['source_code'] || '').replace(/^สาขา\s*/, '');
     const stuck   = isChecked(r['รถตกค้าง']);
     let statCls   = 'unknown', statTxt = r['สถานะลงคิว'] || '-';
     if (stuck)                                                              { statCls = 'late';    statTxt = '⚠ ตกค้าง'; }
@@ -431,7 +432,7 @@ function renderPayCarTable() {
     else if (statTxt.includes('สำเร็จ') || statTxt.includes('เรียบร้อย')) statCls = 'done';
     const totalBox    = r._agRows.reduce((s, x) => s + num(x['จำนวน(กล่อง)']), 0);
     const totalPcs    = r._agRows.reduce((s, x) => s + num(x['จำนวนโอน(ชิ้น)']), 0);
-    const dateDisp    = _fmtPayDate(r['วันที่คิวงาน'] || r['วันที่'] || '') || '—';
+    const dateDisp    = _fmtPayDate(r['search_date'] || r['วันที่'] || '') || '—';
     const loadTime    = r['เวลาขึ้นสินค้า']    || '—';
     const loadStatus  = r['สถานะขึ้นสินค้า']   || '—';
     const _domAg   = r._agRows.filter(x => x._src === 'dom');
@@ -446,14 +447,14 @@ function renderPayCarTable() {
       : '<span style="color:var(--muted)">—</span>';
     html += `<tr class="ctbl-row" onclick="openPayCarModal(${i})" title="คลิกเพื่อดูรายการเอกสาร Aging Out">
       <td style="white-space:nowrap;">${esc(dateDisp)}</td>
-      <td style="font-weight:700;color:#7dd3fc;white-space:nowrap;">${esc(r['ช่วงเวลา'] || '')}</td>
-      <td style="text-align:center;font-weight:700;">${esc(r['คลังสินค้า'] || '')}</td>
-      <td><span style="font-weight:600;">${esc(brDisp)}</span>${r['ชื่อย่อสาขา'] ? ` <span style="color:#c4b5fd;">${esc(r['ชื่อย่อสาขา'])}</span>` : ''}</td>
+      <td style="font-weight:700;color:#7dd3fc;white-space:nowrap;">${esc(r['zone_time'] || '')}</td>
+      <td style="text-align:center;font-weight:700;">${esc(r['port_id'] || '')}</td>
+      <td><span style="font-weight:600;">${esc(brDisp)}</span>${r['source_code'] ? ` <span style="color:#c4b5fd;">${esc(r['source_code'])}</span>` : ''}</td>
       <td style="font-family:monospace;color:#7dd3fc;white-space:nowrap;">${esc(r._docNo)}</td>
-      <td>${esc(r['ประเภทรถ'] || '')}</td>
-      <td>${esc(r['ประเภทงาน'] || '')}</td>
-      <td style="font-family:monospace;">${esc(r['ป้ายทะเบียน'] || '')}</td>
-      <td>${esc(r['ชื่อคนขับ'] || '')}${r['เบอร์โทร'] ? ` <span style="color:var(--muted);">(${esc(r['เบอร์โทร'])})</span>` : ''}</td>
+      <td>${esc(r['truck_info'] || '')}</td>
+      <td>${esc(r['rc_type_product'] || '')}</td>
+      <td style="font-family:monospace;">${esc(r['truck_registration'] || '')}</td>
+      <td>${esc(r['driver_name'] || '')}${r['driver_tel'] ? ` <span style="color:var(--muted);">(${esc(r['driver_tel'])})</span>` : ''}</td>
       <td style="white-space:nowrap;">${esc(loadTime)}</td>
       <td>${esc(loadStatus)}</td>
       <td style="text-align:center;line-height:1.6;">${_docCell}</td>
@@ -563,7 +564,7 @@ function _buildPcmDomSection(domRows, docNo) {
       <div id="${gid}" style="display:none;padding:10px 12px;">
         <div style="display:flex;flex-direction:column;gap:4px;">`;
     items.forEach((x, bi) => {
-      const bar = x['Onetime Barcode'] || '';
+      const bar = x['onetimeBarcode'] || '';
       body += `<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:10px;color:var(--muted);min-width:18px;text-align:right;">${bi + 1}.</span><span class="pcm-bar-chip">${esc(bar)}</span></div>`;
     });
     body += `</div></div></div>`;
@@ -577,9 +578,9 @@ let _pcmSections = {};
 function openPayCarModal(idx) {
   const r = _payCarRows[idx];
   if (!r) return;
-  const brDisp = (r['ชื่อสาขา'] || BR_ABR_MAP[r['ชื่อย่อสาขา']] || r['ชื่อย่อสาขา'] || '').replace(/^สาขา\s*/, '');
-  document.getElementById('pcm-title').textContent = `${brDisp} — คลัง ${r['คลังสินค้า'] || '-'}`;
-  document.getElementById('pcm-sub').textContent   = `⏰ ${r['ช่วงเวลา'] || '-'}  |  🔖 ${r['ป้ายทะเบียน'] || '-'}${r['ชื่อคนขับ'] ? '  |  👤 ' + r['ชื่อคนขับ'] : ''}`;
+  const brDisp = (r['source_name'] || BR_ABR_MAP[r['source_code']] || r['source_code'] || '').replace(/^สาขา\s*/, '');
+  document.getElementById('pcm-title').textContent = `${brDisp} — คลัง ${r['port_id'] || '-'}`;
+  document.getElementById('pcm-sub').textContent   = `⏰ ${r['zone_time'] || '-'}  |  🔖 ${r['truck_registration'] || '-'}${r['driver_name'] ? '  |  👤 ' + r['driver_name'] : ''}`;
 
   const agRows    = r._agRows || [];
   const domRows   = agRows.filter(x => x._src === 'dom');
@@ -660,7 +661,7 @@ function renderPayTags() {
 
 // ── Fill Filters ──
 function fillPayFilters() {
-  fillCBList(document.getElementById('p-fb-list'), uniqVals(dataAgingOut, 'ชื่อสาขา').sort(), 'pfb_');
+  fillCBList(document.getElementById('p-fb-list'), uniqVals(dataAgingOut, 'branchShortName').sort(), 'pfb_');
   document.getElementById('p-fb-list').querySelectorAll('input').forEach(cb => cb.addEventListener('change', renderPay));
   fillCBList(document.getElementById('p-ft-list'), uniqVals(dataAgingOut, 'ประเภท').sort(), 'pft_');
   document.getElementById('p-ft-list').querySelectorAll('input').forEach(cb => cb.addEventListener('change', renderPay));
@@ -672,7 +673,7 @@ function fillPayFilters() {
 function _fillPayWhFilter() {
   const el = document.getElementById('p-fwh-list');
   if (!el) return;
-  const whs = dataCar.length ? uniqVals(dataCar, 'คลังสินค้า').filter(Boolean).sort() : [];
+  const whs = dataCar.length ? uniqVals(dataCar, 'port_id').filter(Boolean).sort() : [];
   fillCBList(el, whs, 'pfwh_');
   el.querySelectorAll('input').forEach(cb => cb.addEventListener('change', renderPay));
 }

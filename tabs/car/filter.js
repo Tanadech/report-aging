@@ -16,17 +16,17 @@ function getCarFiltered() {
 
   return dataCar.filter(r => {
     if (fdate) {
-      const d  = parseCarDate(r['วันที่คิวงาน']); if (!d) return false;
+      const d  = parseCarDate(r['search_date']); if (!d) return false;
       const d0 = new Date(d.getFullYear(), d.getMonth(), d.getDate());
       if (fdate === 'today'         && !sameDate(d0, today))    return false;
       if (fdate === 'tomorrow'      && !sameDate(d0, tomorrow)) return false;
       if (fdate === 'todaytomorrow' && !sameDate(d0, today) && !sameDate(d0, tomorrow)) return false;
       if (fdate === 'week'          && (d0 < today || d0 > weekEnd)) return false;
     }
-    if (fwhCB.length && !fwhCB.includes(r['คลังสินค้า']))                 return false;
-    if (fctCB.length && !fctCB.includes(r['ประเภทรถ']))                    return false;
-    if (fwkCB.length && !fwkCB.includes(r['ประเภทงาน']))                   return false;
-    if (fbrCB.length && !fbrCB.includes(r['ชื่อย่อสาขา']))                 return false;
+    if (fwhCB.length && !fwhCB.includes(r['port_id']))                    return false;
+    if (fctCB.length && !fctCB.includes(r['truck_info']))                  return false;
+    if (fwkCB.length && !fwkCB.includes(r['rc_type_product']))             return false;
+    if (fbrCB.length && !fbrCB.includes(r['source_code']))                 return false;
     if (fstCB.length && !fstCB.includes(r['สถานะลงคิว'] || '(ไม่ระบุ)')) return false;
     return true;
   });
@@ -34,10 +34,10 @@ function getCarFiltered() {
 
 function rebuildCar() {
   [
-    ['c-fwh-list', 'คลังสินค้า',   'cfwh_', null],
-    ['c-fct-list', 'ประเภทรถ',     'cfct_', null],
-    ['c-fwk-list', 'ประเภทงาน',    'cfwk_', null],
-    ['c-fbr-list', 'ชื่อย่อสาขา',  'cfbr_', v => BR_ABR_MAP[v] || v]
+    ['c-fwh-list', 'port_id',         'cfwh_', null],
+    ['c-fct-list', 'truck_info',      'cfct_', null],
+    ['c-fwk-list', 'rc_type_product', 'cfwk_', null],
+    ['c-fbr-list', 'source_code',     'cfbr_', v => BR_ABR_MAP[v] || v]
   ].forEach(([id, col, pfx, lFn]) => {
     fillCBList(document.getElementById(id), uniqVals(dataCar, col), pfx, lFn);
     document.getElementById(id).querySelectorAll('input').forEach(cb => cb.addEventListener('change', renderCar));

@@ -6,12 +6,16 @@ setlocal enabledelayedexpansion
 :: ใช้งาน:
 ::   update-data.bat          (manual mode — pause ท้าย)
 ::   update-data.bat auto     (auto mode   — ไม่ pause)
+::   update-data.bat force    (บังคับ push แม้ข้อมูลไม่เปลี่ยน)
 :: =====================================================
 
 set ROOT=C:\Users\WIN11\Desktop\Work\01 Report Aging
 set AUTO=0
-if /i "%~1"=="auto"   set AUTO=1
-if /i "%~1"=="--auto" set AUTO=1
+set FORCE=0
+if /i "%~1"=="auto"    set AUTO=1
+if /i "%~1"=="--auto"  set AUTO=1
+if /i "%~1"=="force"   set FORCE=1
+if /i "%~1"=="--force" set FORCE=1
 
 cd /d "%ROOT%"
 
@@ -31,11 +35,18 @@ echo  Report Aging — Auto Update
 echo ============================================
 echo.
 
+:: ---- Force mode: ล้าง hash cache ก่อน ----
+if %FORCE%==1 (
+  echo  ⚡ Force mode — บังคับ push แม้ข้อมูลไม่เปลี่ยน
+  echo [%DT%] force mode: ลบ .last-hash >> "%LOGFILE%"
+  if exist .last-hash del /f /q .last-hash
+)
+
 :: ---- Step 1: Convert Excel → JSON ----
 echo [1/2] แปลง Excel...
 echo [%DT%] รัน convert.js >> "%LOGFILE%"
 
-node convert.js 2>> "%LOGFILE%"
+node convert.js >> "%LOGFILE%" 2>&1
 set CONV_EXIT=%ERRORLEVEL%
 
 if %CONV_EXIT%==2 (
@@ -56,7 +67,7 @@ if %CONV_EXIT% neq 0 (
 echo [2/2] Push ขึ้น GitHub...
 echo [%DT%] git push >> "%LOGFILE%"
 
-git add data/aging-dom.json data/aging-imp.json data/car.json data/pallet.json data/in.json data/uot.json data/meta.json index.html >> "%LOGFILE%" 2>&1
+git add data/outbound/aging-dom.json data/outbound/aging-imp.json data/outbound/car.json data/warehouse/pallet.json data/poi/in.json data/poi/uot.json data/meta.json index.html >> "%LOGFILE%" 2>&1
 git commit -m "data: update %DT%" >> "%LOGFILE%" 2>&1
 git push >> "%LOGFILE%" 2>&1
 set PUSH_EXIT=%ERRORLEVEL%

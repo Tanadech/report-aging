@@ -5,7 +5,11 @@
       "Bash(git commit -m ' *)",
       "Bash(git commit *)",
       "Bash(git push *)",
-      "PowerShell(Remove-Item \"C:\\\\Users\\\\WIN11\\\\Desktop\\\\Work\\\\01 Report Aging\\\\.last-hash\" -Force; cd \"C:\\\\Users\\\\WIN11\\\\Desktop\\\\Work\\\\01 Report Aging\"; node convert.js; echo \"Exit 1st: $LASTEXITCODE\"; node convert.js; echo \"Exit 2nd \\(should be 2\\): $LASTEXITCODE\")"
+      "PowerShell(Remove-Item \"C:\\\\Users\\\\WIN11\\\\Desktop\\\\Work\\\\01 Report Aging\\\\.last-hash\" -Force; cd \"C:\\\\Users\\\\WIN11\\\\Desktop\\\\Work\\\\01 Report Aging\"; node convert.js; echo \"Exit 1st: $LASTEXITCODE\"; node convert.js; echo \"Exit 2nd \\(should be 2\\): $LASTEXITCODE\")",
+      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\WIN11\\\\Desktop\\\\Work\\\\01 Report Aging\" -Recurse | Where-Object {!$_.PSIsContainer} | Select-Object @{N='Path';E={$_.FullName.Replace\\('C:\\\\Users\\\\WIN11\\\\Desktop\\\\Work\\\\01 Report Aging\\\\',''\\)}} , @{N='Size\\(KB\\)';E={[math]::Round\\($_.Length/1KB,1\\)}} | Format-Table -AutoSize)",
+      "WebFetch(domain:icons8.com)",
+      "WebFetch(domain:img.icons8.com)",
+      "PowerShell(node \"c:\\\\Users\\\\WIN11\\\\Desktop\\\\Work\\\\01 Report Aging\\\\convert.js\")"
     ]
   }
 }

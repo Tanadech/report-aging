@@ -58,34 +58,30 @@ function renderIn() {
     <stat-card                label="Zone"               value="${fmtN(uniqCount(f,'Zone Name'))}" unit="Zone"></stat-card>
   `;
 
-  // Chart 1: เอกสาร / คลัง (Doughnut)
+  // Chart 1: เอกสาร / คลัง → radialBar
   const wh1data = whKeys.map(wh => uniqCount(byWH[wh],'เลขที่เอกสาร POI'));
-  mkChart('i-c1','doughnut',{
-    labels: whKeys,
-    datasets:[{data:wh1data, backgroundColor:whKeys.map((w,i)=>WH_COLORS[w]||PALETTE[i]), borderWidth:2, borderColor:'rgba(13,26,46,.9)', hoverOffset:6}]
-  },{
-    plugins:{
-      legend:{position:'bottom',labels:{font:{size:11},boxWidth:10,padding:8}},
-      datalabels:{color:'#fff',font:{size:11,weight:'bold'},formatter:(v,ctx)=>ctx.chart.data.labels[ctx.dataIndex]+'\n'+fmtN(v),anchor:'center',align:'center',display:ctx=>ctx.dataset.data[ctx.dataIndex]>0}
-    }, cutout:'50%'
-  });
+  mkRadialBar('i-c1',
+    whKeys,
+    wh1data,
+    whKeys.map((w, i) => WH_COLORS[w] || PALETTE[i]),
+    label => { setCBOnly(document.getElementById('i-fw-list'), label); renderIn(); }
+  );
 
-  // Chart 2: วันคงค้างเฉลี่ย / คลัง (Bar)
+  // Chart 2: วันคงค้างเฉลี่ย / คลัง
   const wh2data = whKeys.map(wh => {
     const ds=byWH[wh].map(r=>num(r['วันคงค้าง']));
     return ds.length ? +(ds.reduce((a,b)=>a+b,0)/ds.length).toFixed(2) : 0;
   });
   mkChart('i-c2','bar',{
-    labels: whKeys,
-    datasets:[{label:'วันคงค้างเฉลี่ย', data:wh2data, backgroundColor:whKeys.map((w,i)=>WH_COLORS[w]||PALETTE[0]), borderRadius:6, borderWidth:0}]
+    labels:whKeys, datasets:[{label:'วันคงค้างเฉลี่ย',data:wh2data,backgroundColor:whKeys.map((w,i)=>WH_COLORS[w]||PALETTE[0]),borderRadius:6,borderWidth:0}]
   },{
-    plugins:{legend:{display:false}, datalabels:{anchor:'end',align:'top',font:{size:12,weight:'bold'},formatter:v=>v>0?fmtD(v,1)+' DAY':'',color:'#e2e8f0'}},
-    scales:{y:{beginAtZero:true,ticks:{font:{size:10}},grid:{color:'rgba(255,255,255,.05)'}}, x:{ticks:{font:{size:12},color:'#93c5fd'}}}
+    plugins:{legend:{display:false},datalabels:{anchor:'end',align:'top',font:{size:12,weight:'bold'},formatter:v=>v>0?fmtD(v,1)+' DAY':'',color:'#e2e8f0'}},
+    scales:{y:{beginAtZero:true,ticks:{font:{size:10}},grid:{color:'rgba(255,255,255,.05)'}},x:{ticks:{font:{size:12},color:'#93c5fd'}}}
   });
 
   // Chart 3: Top 5 สาขา
-  const byBr2 = groupBy(f,'ชื่อย่อสาขา');
-  const brD2  = Object.entries(byBr2).map(([k,v])=>({
+  const byBr2  = groupBy(f,'ชื่อย่อสาขา');
+  const brD2   = Object.entries(byBr2).map(([k,v])=>({
     name: BR_ABR_MAP[k]||k,
     max:  Math.max(...v.map(r=>num(r['วันคงค้าง']))),
     docs: uniqCount(v,'เลขที่เอกสาร POI'),
@@ -95,14 +91,14 @@ function renderIn() {
   mkChart('i-c3','bar',{
     labels:brD2.map(d=>d.name),
     datasets:[
-      {label:'วันค้างสูงสุด', data:brD2.map(d=>d.max),  backgroundColor:'#22d3ee',borderRadius:3},
-      {label:'จำนวนเอกสาร',  data:brD2.map(d=>d.docs), backgroundColor:'#10b981',borderRadius:3},
-      {label:'เลขที่ Onetime',data:brD2.map(d=>d.ot),   backgroundColor:'#a78bfa',borderRadius:3},
-      {label:'พาเลทคงค้าง',  data:brD2.map(d=>d.pal),  backgroundColor:'#fbbf24',borderRadius:3}
+      {label:'วันค้างสูงสุด', data:brD2.map(d=>d.max),  backgroundColor:'#22d3ee', borderRadius:3},
+      {label:'จำนวนเอกสาร',  data:brD2.map(d=>d.docs), backgroundColor:'#10b981', borderRadius:3},
+      {label:'เลขที่ Onetime',data:brD2.map(d=>d.ot),   backgroundColor:'#a78bfa', borderRadius:3},
+      {label:'พาเลทคงค้าง',  data:brD2.map(d=>d.pal),  backgroundColor:'#fbbf24', borderRadius:3}
     ]
   },{
-    plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,padding:6}}, datalabels:{anchor:'end',align:'top',font:{size:9,weight:'bold'},formatter:v=>v>0?fmtN(v):'',color:'#e2e8f0'}},
-    scales:{y:{beginAtZero:true,ticks:{stepSize:50,font:{size:9}},grid:{color:'rgba(255,255,255,.05)'}}, x:{ticks:{font:{size:10}}}}
+    plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,padding:6}},datalabels:{anchor:'end',align:'top',font:{size:9,weight:'bold'},formatter:v=>v>0?fmtN(v):'',color:'#e2e8f0'}},
+    scales:{y:{beginAtZero:true,ticks:{stepSize:50,font:{size:9}},grid:{color:'rgba(255,255,255,.05)'}},x:{ticks:{font:{size:10}}}}
   });
 
   // Chart 4: ช่วงเวลา / คลัง
@@ -112,32 +108,23 @@ function renderIn() {
   ];
   mkChart('i-c4','bar',{
     labels:tb4.map(b=>b.lbl),
-    datasets:whKeys.map((wh,i)=>({
-      label:wh, backgroundColor:WH_COLORS[wh]||PALETTE[i], borderRadius:3,
-      data:tb4.map(b=>{ const rows=byWH[wh].filter(r=>{const d=num(r['วันคงค้าง']);return d>=b.min&&d<=b.max;}); return uniqCount(rows,'เลขที่เอกสาร POI'); })
-    }))
+    datasets:whKeys.map((wh,i)=>({label:wh,backgroundColor:WH_COLORS[wh]||PALETTE[i],borderRadius:3,data:tb4.map(b=>{const rows=byWH[wh].filter(r=>{const d=num(r['วันคงค้าง']);return d>=b.min&&d<=b.max;});return uniqCount(rows,'เลขที่เอกสาร POI');})}))
   },{
-    plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,padding:6}}, datalabels:{anchor:'end',align:'top',font:{size:9,weight:'bold'},formatter:v=>v>0?fmtN(v):'',color:'#e2e8f0'}},
-    scales:{y:{beginAtZero:true,ticks:{stepSize:50,font:{size:9}},grid:{color:'rgba(255,255,255,.05)'}}, x:{ticks:{font:{size:9}}}}
+    plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,padding:6}},datalabels:{anchor:'end',align:'top',font:{size:9,weight:'bold'},formatter:v=>v>0?fmtN(v):'',color:'#e2e8f0'}},
+    scales:{y:{beginAtZero:true,ticks:{stepSize:50,font:{size:9}},grid:{color:'rgba(255,255,255,.05)'}},x:{ticks:{font:{size:9}}}}
   });
 
   // Chart 5: สาขา / คลัง (large grouped bar)
   const allBrRaw = [...new Set(f.map(r=>r['ชื่อย่อสาขา']||'').filter(Boolean))];
   const allBr    = allBrRaw.map(br=>({ br, total:whKeys.reduce((s,wh)=>s+uniqCount((byWH[wh]||[]).filter(r=>r['ชื่อย่อสาขา']===br),'เลขที่ onetime'),0) })).sort((a,b)=>b.total-a.total).map(x=>x.br);
-  const c5El = document.getElementById('i-c5');
+  const c5El    = document.getElementById('i-c5');
   c5El.style.width = Math.max(900, allBr.length * 72) + 'px';
   mkChart('i-c5','bar',{
     labels:allBr.map(br=>(BR_ABR_MAP[br]||br).replace(/^สาขา\s*/,'')),
-    datasets:whKeys.map((wh,i)=>({
-      label:wh, backgroundColor:WH_COLORS[wh]||PALETTE[i], borderRadius:3, borderWidth:0,
-      data:allBr.map(br=>{ const rows=byWH[wh].filter(r=>r['ชื่อย่อสาขา']===br); return uniqCount(rows,'เลขที่ onetime'); })
-    }))
+    datasets:whKeys.map((wh,i)=>({label:wh,backgroundColor:WH_COLORS[wh]||PALETTE[i],borderRadius:3,borderWidth:0,data:allBr.map(br=>{const rows=byWH[wh].filter(r=>r['ชื่อย่อสาขา']===br);return uniqCount(rows,'เลขที่ onetime');})}))
   },{
-    plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:10,padding:8}}, datalabels:{display:false}},
-    scales:{
-      x:{ticks:{font:{size:9},maxRotation:75,minRotation:45},grid:{color:'rgba(255,255,255,.04)'}},
-      y:{beginAtZero:true,ticks:{font:{size:9}},grid:{color:'rgba(255,255,255,.05)'},title:{display:true,text:'เลขที่ Onetime (distinct)',font:{size:10}}}
-    }
+    plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:10,padding:8}},datalabels:{display:false}},
+    scales:{x:{ticks:{font:{size:9},maxRotation:75,minRotation:45},grid:{color:'rgba(255,255,255,.04)'}},y:{beginAtZero:true,ticks:{font:{size:9}},grid:{color:'rgba(255,255,255,.05)'},title:{display:true,text:'เลขที่ Onetime (distinct)',font:{size:10}}}}
   });
 
   // Table (gridjs)

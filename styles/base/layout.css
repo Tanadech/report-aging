@@ -17,5 +17,8 @@
 /* Horizontally scrollable chart wrapper */
 .zone-scroll        { overflow-x:auto; overflow-y:hidden; }
 .zone-scroll canvas { min-width:100%; }
+
+/* Pointer cursor สำหรับ ApexCharts เมื่อ click ได้ */
+.apexcharts-bar-area, .apexcharts-radialbar-area { cursor:pointer; }
 body.light .zone-scroll::-webkit-scrollbar-track { background:#f1f5f9; }
 body.light .zone-scroll::-webkit-scrollbar-thumb { background:#cbd5e1; }

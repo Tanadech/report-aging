@@ -54,7 +54,7 @@ body.light .zone-cell { color:#2563eb; }
 body.light .doc-cell  { color:#3b82f6; }
 body.light .dt-cell   { color:#475569; }
 body.light .num-cell  { color:#1e293b; }
-body.light .gridjs-container,.gridjs-wrapper,.gridjs-head,.gridjs-body,.gridjs-footer { background:#fff!important; border:1px solid #e2e8f0!important; color:#1e293b!important; }
+body.light .gridjs-container, body.light .gridjs-wrapper, body.light .gridjs-head, body.light .gridjs-body, body.light .gridjs-footer { background:#fff!important; border:1px solid #e2e8f0!important; color:#1e293b!important; }
 body.light .gridjs-table  { background:#fff!important; }
 body.light .gridjs-th, body.light .gridjs-th-content { background:#f1f5f9!important; color:#1e293b!important; border-bottom:2px solid #cbd5e1!important; border-right:1px solid #e2e8f0!important; }
 body.light .gridjs-td     { color:#1e293b!important; background:#fff!important; border-bottom:1px solid #e2e8f0!important; border-right:1px solid #f1f5f9!important; }

@@ -24,10 +24,10 @@ function rebuild() {
   fillCBList(document.getElementById('i-fw-list'), [...new Set(dataIn.map(r => getWH(r)).filter(v => v !== '(อื่นๆ)'))].sort(), 'ifw_');
   document.getElementById('i-fw-list').querySelectorAll('input').forEach(cb => cb.addEventListener('change', renderIn));
 
-  renderUot();
-  renderIn();
+  if (dataUot.length)      renderUot();
+  if (dataIn.length)       renderIn();
   // re-render CAR เพื่อ refresh aging เมื่อโหลด POI ใหม่
-  if (dataCar.length) renderCar();
+  if (dataCar.length)      renderCar();
   // refresh Pay car table เมื่อ aging data เปลี่ยน
   if (dataAgingOut.length) renderPayCarTable();
 }
@@ -89,7 +89,7 @@ document.querySelectorAll('.tb').forEach(btn => {
     btn.classList.add('act');
     document.getElementById('tc-' + btn.dataset.tab).classList.add('act');
     setTimeout(() => {
-      Object.values(CR).forEach(c => c.resize && c.resize());
+      if (btn.dataset.tab === 'uot' && dataUot.length)      { renderUot(); }
       if (btn.dataset.tab === 'in'  && dataIn.length)       { renderIn();  }
       if (btn.dataset.tab === 'car' && dataCar.length)      { renderCar(); }
       if (btn.dataset.tab === 'pay' && dataAgingOut.length) { renderPay(); }
@@ -124,33 +124,6 @@ document.addEventListener('click', () => {
   apply(localStorage.getItem('theme') || 'dark', false);
 })();
 
-// ============ File Input Events ============
-// ผูก event ตรงนี้เพราะ HTML ใช้ <header> ธรรมดา ไม่ใช่ <app-header> custom element
-document.getElementById('file-uot').addEventListener('change', e => {
-  if (e.target.files[0]) loadExcelFile(e.target.files[0], 'uot');
-  e.target.value = '';
-});
-document.getElementById('file-in').addEventListener('change', e => {
-  if (e.target.files[0]) loadExcelFile(e.target.files[0], 'in');
-  e.target.value = '';
-});
-document.getElementById('file-car').addEventListener('change', e => {
-  if (e.target.files[0]) loadCarFile(e.target.files[0]);
-  e.target.value = '';
-});
-document.getElementById('file-pallet').addEventListener('change', e => {
-  if (e.target.files[0]) loadPalletFile(e.target.files[0]);
-  e.target.value = '';
-});
-document.getElementById('file-agingout-dom').addEventListener('change', e => {
-  if (e.target.files[0]) loadAgingOutDomFile(e.target.files[0]);
-  e.target.value = '';
-});
-document.getElementById('file-agingout-imp').addEventListener('change', e => {
-  if (e.target.files[0]) loadAgingOutImpFile(e.target.files[0]);
-  e.target.value = '';
-});
-document.getElementById('btn-folder').addEventListener('click', reloadFolder);
 
 // Search in IMPORTED table
 document.getElementById('u-fsearch').addEventListener('input', renderUotTable);

@@ -11,7 +11,7 @@ function renderCar() {
     if (f.length) {
       const tagsEl = document.getElementById('car-tags');
       if (tagsEl) {
-        const dates   = [...new Set(dataCar.map(r => { const d = parseCarDate(r['วันที่คิวงาน']); return d ? d.toLocaleDateString('th-TH') : ''; }).filter(Boolean))].sort();
+        const dates   = [...new Set(dataCar.map(r => { const d = parseCarDate(r['search_date']); return d ? d.toLocaleDateString('th-TH') : ''; }).filter(Boolean))].sort();
         const dateStr = dates.slice(0, 3).join(', ') + (dates.length > 3 ? '...' : '');
         tagsEl.classList.remove('hidden');
         tagsEl.innerHTML = `<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);border-radius:7px;font-size:12px;color:#fbbf24;width:100%;">
@@ -26,32 +26,32 @@ function renderCar() {
   // KPI cards
   const today    = new Date(); today.setHours(0, 0, 0, 0);
   const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
-  const inRange  = (rows, tgt) => rows.filter(r => { const d = parseCarDate(r['วันที่คิวงาน']); return d && sameDate(new Date(d.getFullYear(), d.getMonth(), d.getDate()), tgt); });
+  const inRange  = (rows, tgt) => rows.filter(r => { const d = parseCarDate(r['search_date']); return d && sameDate(new Date(d.getFullYear(), d.getMonth(), d.getDate()), tgt); });
   const cntBySt  = st => f.filter(r => (r['สถานะลงคิว'] || '').trim() === st).length;
 
   document.getElementById('car-kpi').innerHTML = `
-    <stat-card variant="inf"  data-kpi="today"    label="รถเข้าวันนี้"      value="${fmtN(inRange(dataCar,today).length)}"    unit="คัน"></stat-card>
-    <stat-card                data-kpi="tomorrow" label="รถเข้าพรุ่งนี้"    value="${fmtN(inRange(dataCar,tomorrow).length)}" unit="คัน"></stat-card>
-    <stat-card variant="inf"  data-kpi="view"     label="รถในมุมมอง"        value="${fmtN(f.length)}"                        unit="คัน"></stat-card>
-    <stat-card variant="ok"   data-kpi="wh"       label="คลังที่ต้องเตรียม"  value="${fmtN(uniqCount(f,'คลังสินค้า'))}"      unit="คลัง"></stat-card>
+    <stat-card variant="inf"  data-kpi="today"    label="รถเข้าวันนี้"      value="${fmtN(inRange(dataCar,today).length)}"    unit="คัน" icon="https://img.icons8.com/color/96/loading-truck.png"></stat-card>
+    <stat-card                data-kpi="tomorrow" label="รถเข้าพรุ่งนี้"    value="${fmtN(inRange(dataCar,tomorrow).length)}" unit="คัน" icon="https://img.icons8.com/isometric/96/truck.png"></stat-card>
+    <stat-card variant="inf"  data-kpi="view"     label="รถในมุมมอง"        value="${fmtN(f.length)}"                        unit="คัน" icon="https://img.icons8.com/cotton/96/warehouse.png"></stat-card>
+    <stat-card variant="ok"   data-kpi="wh"       label="คลังที่ต้องเตรียม"  value="${fmtN(uniqCount(f,'port_id'))}"         unit="คลัง"></stat-card>
     <stat-card variant="ok"   data-kpi="early"    label="มาก่อนเวลา"        value="${fmtN(cntBySt('มาก่อนเวลา'))}"          unit="คัน"></stat-card>
     <stat-card variant="warn" data-kpi="late"     label="มาหลังเวลานัด"      value="${fmtN(cntBySt('มาหลังเวลานัด'))}"      unit="คัน"></stat-card>
     <stat-card variant="alr"  data-kpi="cancel"   label="ยกเลิกรับงาน"      value="${fmtN(cntBySt('ยกเลิกรับงาน'))}"       unit="คัน"></stat-card>
     <stat-card                data-kpi="notqueue" label="ยังไม่มาลงคิว"      value="${fmtN(cntBySt('ยังไม่มาลงคิว'))}"      unit="คัน"></stat-card>
-    <stat-card variant="alr"  data-kpi="stuck"    label="รถตกค้าง"          value="${fmtN(f.filter(r=>isChecked(r['รถตกค้าง'])).length)}"           unit="คัน"></stat-card>
-    <stat-card variant="warn" data-kpi="notout"   label="ยังไม่ออก DC"      value="${fmtN(f.filter(r=>isChecked(r['รถยังไม่ออกจาก DC'])).length)}"  unit="คัน"></stat-card>
+    <stat-card variant="alr"  data-kpi="stuck"    label="รถตกค้าง"          value="${fmtN(f.filter(r=>isChecked(r['รถตกค้าง'])).length)}"             unit="คัน"></stat-card>
+    <stat-card variant="warn" data-kpi="notout"   label="ยังไม่ออก DC"      value="${fmtN(f.filter(r=>isDcDeparted(r['status_shipping'])).length)}"   unit="คัน"></stat-card>
   `;
   document.querySelectorAll('#car-kpi stat-card[data-kpi]').forEach(el => { el.dataset.kpi = el.getAttribute('data-kpi'); });
 
   // Timeline chart
-  const slots  = [...new Set(f.map(r => r['ช่วงเวลา'] || '').filter(Boolean))].sort((a,b) => timeSlotStart(a) - timeSlotStart(b));
-  const whKeys = [...new Set(f.map(r => r['คลังสินค้า'] || '').filter(Boolean))].sort();
+  const slots  = [...new Set(f.map(r => r['zone_time'] || '').filter(Boolean))].sort((a,b) => timeSlotStart(a) - timeSlotStart(b));
+  const whKeys = [...new Set(f.map(r => r['port_id'] || '').filter(Boolean))].sort();
   const wPal   = ['#22d3ee','#10b981','#a78bfa','#fb923c','#f87171','#3b82f6','#fbbf24'];
   mkChart('c-c1', 'bar', {
     labels: slots,
     datasets: whKeys.map((wh, i) => ({
       label: wh, backgroundColor: wPal[i % wPal.length], borderRadius: 4, borderWidth: 0,
-      data: slots.map(s => f.filter(r => r['ช่วงเวลา'] === s && r['คลังสินค้า'] === wh).length)
+      data: slots.map(s => f.filter(r => r['zone_time'] === s && r['port_id'] === wh).length)
     }))
   }, {
     plugins: {
@@ -65,10 +65,10 @@ function renderCar() {
   });
 
   // เสริม aging + sort แล้ว dispatch ให้ view ที่เลือก
-  const enriched = f.map(r => ({ ...r, _slot: timeSlotStart(r['ช่วงเวลา'] || ''), _aging: getAgingForBranch(r['ชื่อย่อสาขา'] || '', r['ชื่อสาขา'] || '', r['คลังสินค้า'] || '') }));
+  const enriched = f.map(r => ({ ...r, _slot: timeSlotStart(r['zone_time'] || ''), _aging: getAgingForBranch(r['source_code'] || '', r['source_name'] || '', r['port_id'] || '') }));
   enriched.sort((a, b) => a._slot !== b._slot ? a._slot - b._slot : (b._aging.maxDays || 0) - (a._aging.maxDays || 0));
   const grouped      = {};
-  enriched.forEach(r => { const k = r['ช่วงเวลา'] || '(ไม่ระบุเวลา)'; (grouped[k] = grouped[k] || []).push(r); });
+  enriched.forEach(r => { const k = r['zone_time'] || '(ไม่ระบุเวลา)'; (grouped[k] = grouped[k] || []).push(r); });
   const slotsOrdered = Object.keys(grouped).sort((a, b) => timeSlotStart(a) - timeSlotStart(b));
 
   if (carView === 'card') {

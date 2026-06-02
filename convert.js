@@ -14,13 +14,17 @@ const HASH_FILE = path.join(__dirname, '.last-hash');
 // คอลัมน์ที่ต้องการต่อ dataset (null = เก็บทั้งหมด)
 const KEEP_COLS = {
   agingOutDom: [
-    'วันที่รถออกจาก DC', 'เลขที่เอกสาร OUTB', 'รหัสสาขา', 'ชื่อสาขา',
-    'เลขที่เอกสาร POI', 'Onetime Barcode', 'วันที่รับสินค้า', 'ชื่อผู้จำหน่าย',
+    'วันที่รถออกจาก DC', 'เลขที่เอกสาร OUTB', 'รหัสสาขา', 'ชื่อสาขา', 'ชื่อย่อสาขา (EN)',
+    'เลขที่เอกสาร POI', 'บาร์โค้ด Onetime', 'วันที่รับสินค้า', 'ชื่อผู้จำหน่าย',
+    'วันที่ดำเนินการ', 'รหัส Location', 'ชื่อ Location', 'รหัสพาเลท',
+    'รหัสพนักงาน', 'ชื่อ-นามสกุลผู้บันทึก Console Int', 'วันที่บันทึก Console Int', 'สถานะพาเลท',
   ],
   agingOutImp: [
-    'วันที่', 'เลขที่เอกสาร', 'รหัสสาขา', 'ชื่อสาขา',
+    'วันที่', 'เลขที่เอกสาร', 'รหัสสาขา', 'ชื่อสาขา', 'ชื่อย่อสาขา (EN)',
     'รหัสสินค้า', 'ชื่อสินค้า', 'จำนวน(กล่อง)', 'จำนวนโอน(ชิ้น)',
     'เลขที่ขอโอน', 'Category Name', 'ประเภท',
+    'วันที่ดำเนินการ', 'รหัส Location', 'ชื่อ Location', 'รหัสพาเลท',
+    'รหัสพนักงาน', 'ชื่อ-นามสกุลผู้บันทึก Console Int', 'วันที่บันทึก Console Int', 'สถานะพาเลท',
   ],
   car:    null, // เก็บทั้งหมด
   pallet: null,
@@ -28,14 +32,60 @@ const KEEP_COLS = {
   uot:    null,
 };
 
-// รูปแบบชื่อไฟล์ → key + output filename
+// ชื่อ column Excel → ชื่อ field API (เฉพาะ agingOutDom และ agingOutImp)
+const RENAME_COLS = {
+  agingOutDom: {
+    'รหัสสาขา':                           'branchCode',
+    'ชื่อสาขา':                           'branchShortName',
+    'ชื่อย่อสาขา (EN)':                   'branchShortNameEn',
+    'บาร์โค้ด Onetime':                   'onetimeBarcode',
+    'วันที่ดำเนินการ':                    'daterun',
+    'รหัส Location':                      'locationCode',
+    'ชื่อ Location':                      'locationName',
+    'รหัสพาเลท':                         'palletid',
+    'รหัสพนักงาน':                        'scanintEmp',
+    'ชื่อ-นามสกุลผู้บันทึก Console Int':  'scanintFullname',
+    'วันที่บันทึก Console Int':            'scanintTime',
+    'สถานะพาเลท':                        'statusName',
+  },
+  agingOutImp: {
+    'รหัสสาขา':                           'branchCode',
+    'ชื่อสาขา':                           'branchShortName',
+    'ชื่อย่อสาขา (EN)':                   'branchShortNameEn',
+    'วันที่ดำเนินการ':                    'daterun',
+    'รหัส Location':                      'locationCode',
+    'ชื่อ Location':                      'locationName',
+    'รหัสพาเลท':                         'palletid',
+    'รหัสพนักงาน':                        'scanintEmp',
+    'ชื่อ-นามสกุลผู้บันทึก Console Int':  'scanintFullname',
+    'วันที่บันทึก Console Int':            'scanintTime',
+    'สถานะพาเลท':                        'statusName',
+  },
+  car: {
+    'เลขที่เอกสาร':           'doc_no',
+    'ชื่อสาขา':               'source_name',
+    'ชื่อย่อสาขา':            'source_code',
+    'คลังสินค้า':             'port_id',
+    'ช่วงเวลา':               'zone_time',
+    'วันที่คิวงาน':            'search_date',
+    'ประเภทรถ':               'truck_info',
+    'ประเภทงาน':              'rc_type_product',
+    'ป้ายทะเบียน':            'truck_registration',
+    'ชื่อคนขับ':              'driver_name',
+    'เบอร์โทร':               'driver_tel',
+    'รถยังไม่ออกจาก DC':      'status_shipping',
+    'Vendor Name':            'vendor_name',
+  },
+};
+
+// รูปแบบชื่อไฟล์ → key + output path (สัมพัทธ์กับ DATA_DIR)
 const FILE_PATTERNS = [
-  { key: 'agingOutDom', out: 'aging-dom.json', pattern: /^aging.*dom/i },
-  { key: 'agingOutImp', out: 'aging-imp.json', pattern: /^aging.*imp/i },
-  { key: 'car',         out: 'car.json',        pattern: /^car/i },
-  { key: 'pallet',      out: 'pallet.json',     pattern: /^in\s*p/i },
-  { key: 'in',          out: 'in.json',          pattern: /^in(?!\s*p)/i },
-  { key: 'uot',         out: 'uot.json',         pattern: /^out/i },
+  { key: 'agingOutDom', out: 'outbound/aging-dom.json', pattern: /^aging.*dom/i },
+  { key: 'agingOutImp', out: 'outbound/aging-imp.json', pattern: /^aging.*imp/i },
+  { key: 'car',         out: 'outbound/car.json',        pattern: /^car/i },
+  { key: 'pallet',      out: 'warehouse/pallet.json',    pattern: /^in\s*p/i },
+  { key: 'in',          out: 'poi/in.json',              pattern: /^in(?!\s*p)/i },
+  { key: 'uot',         out: 'poi/uot.json',             pattern: /^out/i },
 ];
 
 function findFile(pattern) {
@@ -46,18 +96,28 @@ function findFile(pattern) {
   } catch { return null; }
 }
 
-function readSheet(filename, keepCols) {
+function readSheet(filename, keepCols, renameCols) {
   const fp = path.join(DATA_DIR, filename);
   try {
     const wb   = XLSX.readFile(fp, { cellDates: true, dateNF: 'dd/mm/yyyy' });
     const ws   = wb.Sheets[wb.SheetNames[0]];
     let rows   = XLSX.utils.sheet_to_json(ws, { defval: '', raw: false });
 
-    // ตัด column ที่ไม่ต้องการ
+    // ตัด column ที่ไม่ต้องการ + rename ตาม API field name
     if (keepCols) {
       rows = rows.map(r => {
         const out = {};
-        keepCols.forEach(c => { out[c] = r[c] ?? ''; });
+        keepCols.forEach(c => {
+          const newKey = renameCols?.[c] || c;
+          out[newKey] = r[c] ?? '';
+        });
+        return out;
+      });
+    } else if (renameCols) {
+      // keepCols = null (เก็บทั้งหมด) แต่ยัง rename ได้
+      rows = rows.map(r => {
+        const out = {};
+        Object.entries(r).forEach(([k, v]) => { out[renameCols[k] || k] = v; });
         return out;
       });
     }
@@ -79,7 +139,7 @@ function main() {
   for (const { key, pattern } of FILE_PATTERNS) {
     const filename = findFile(pattern);
     if (filename) {
-      dataMap[key] = readSheet(filename, KEEP_COLS[key]);
+      dataMap[key] = readSheet(filename, KEEP_COLS[key], RENAME_COLS[key]);
     } else {
       console.warn(`  ⚠️  ไม่พบไฟล์ที่ตรงกับ pattern: ${pattern}`);
       dataMap[key] = [];
@@ -102,11 +162,17 @@ function main() {
   for (const { key, out } of FILE_PATTERNS) {
     const json = JSON.stringify(dataMap[key]);
     const fp   = path.join(DATA_DIR, out);
+    fs.mkdirSync(path.dirname(fp), { recursive: true });
     fs.writeFileSync(fp, json, 'utf8');
     const kb = (json.length / 1024).toFixed(1);
     totalKb += json.length / 1024;
     console.log(`  ✅ ${out}: ${kb} KB`);
   }
+
+  // เขียน bundle.json (รวมทุก dataset = 1 HTTP request แทน 6)
+  const bundleJson = JSON.stringify(dataMap);
+  fs.writeFileSync(path.join(DATA_DIR, 'bundle.json'), bundleJson, 'utf8');
+  console.log(`  ✅ bundle.json: ${(bundleJson.length / 1024).toFixed(1)} KB`);
 
   // เขียน meta.json (updatedAt)
   const metaJson = JSON.stringify({ updatedAt });

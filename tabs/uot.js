@@ -62,48 +62,38 @@ function renderUot() {
     <stat-card                label="จำนวนต่อกล่อง (รวม)"  value="${fmtN(boxUnit)}" unit="หน่วย"></stat-card>
   `;
 
-  // Pie 1: ขอโอน vs โอนออก
+  // Pie 1: ขอโอน vs โอนออก → radialBar
   const totalReq = uotFiltered.reduce((s, r) => s + num(r['จำนวนขอโอน']), 0);
   const totalOut = uotFiltered.reduce((s, r) => s + num(r['จำนวนโอนออก']), 0);
-  mkChart('u-pie1', 'doughnut', {
-    labels: ['จำนวนขอโอน', 'จำนวนโอนออก'],
-    datasets: [{ data:[totalReq,totalOut], backgroundColor:['#22d3ee','#10b981'], borderWidth:2, borderColor:'rgba(6,16,30,.8)', hoverOffset:6 }]
-  }, {
-    plugins: {
-      legend: { position:'bottom', labels:{ font:{size:10}, boxWidth:10, padding:8 } },
-      datalabels: { color:'#fff', font:{size:11,weight:'bold'}, formatter:v=>fmtN(v), anchor:'center', align:'center', display:ctx=>ctx.dataset.data[ctx.dataIndex]>0 }
-    }, cutout:'55%'
-  });
+  mkRadialBar('u-pie1',
+    ['จำนวนขอโอน', 'จำนวนโอนออก'],
+    [totalReq, totalOut],
+    ['#22d3ee', '#10b981']
+  );
 
-  // Pie 2: สถานะ / SKU
+  // Pie 2: สถานะ / SKU → radialBar
   const byStatus = groupBy(uotFiltered, 'สถานะประมวลผล');
   const statEnt  = Object.entries(byStatus).map(([k,v]) => [k, uniqCount(v,'รหัสสินค้า')]).sort((a,b) => b[1]-a[1]);
-  mkChart('u-pie2', 'doughnut', {
-    labels: statEnt.map(e => e[0]),
-    datasets: [{ data:statEnt.map(e=>e[1]), backgroundColor:statEnt.map(e=>statusCol(e[0])), borderWidth:2, borderColor:'rgba(6,16,30,.8)', hoverOffset:6 }]
-  }, {
-    plugins: {
-      legend: { position:'bottom', labels:{ font:{size:10}, boxWidth:10, padding:6 } },
-      datalabels: { color:'#fff', font:{size:10,weight:'bold'}, formatter:v=>fmtN(v), anchor:'center', align:'center', display:ctx=>ctx.dataset.data[ctx.dataIndex]>0 }
-    }, cutout:'55%'
-  });
+  mkRadialBar('u-pie2',
+    statEnt.map(e => e[0]),
+    statEnt.map(e => e[1]),
+    statEnt.map(e => statusCol(e[0])),
+    label => { setCBOnly(document.getElementById('u-fs-list'), label); renderUot(); }
+  );
 
   // Bar 1: Top 5 สาขา
   const brData = _rankBranches(uotFiltered);
   mkChart('u-c2', 'bar', {
     labels: brData.map(d => d.name),
     datasets: [
-      { label:'วันค้างสูงสุด',    data:brData.map(d=>d.max),                    backgroundColor:'#22d3ee', borderRadius:3 },
-      { label:'จำนวนเอกสารค้าง', data:brData.map(d=>d.docs),                   backgroundColor:'#10b981', borderRadius:3 },
-      { label:'จำนวนสินค้า',     data:brData.map(d=>d.skus),                   backgroundColor:'#a78bfa', borderRadius:3 },
-      { label:'พาเลทคงค้าง',     data:brData.map(d=>+d.pal.toFixed(2)),        backgroundColor:'#fbbf24', borderRadius:3 }
+      { label:'วันค้างสูงสุด',    data:brData.map(d=>d.max),             backgroundColor:'#22d3ee', borderRadius:3 },
+      { label:'จำนวนเอกสารค้าง', data:brData.map(d=>d.docs),            backgroundColor:'#10b981', borderRadius:3 },
+      { label:'จำนวนสินค้า',     data:brData.map(d=>d.skus),            backgroundColor:'#a78bfa', borderRadius:3 },
+      { label:'พาเลทคงค้าง',     data:brData.map(d=>+d.pal.toFixed(2)), backgroundColor:'#fbbf24', borderRadius:3 }
     ]
   }, {
-    plugins: {
-      legend: { position:'bottom', labels:{ font:{size:10}, boxWidth:10, padding:6 } },
-      datalabels: { anchor:'end', align:'top', font:{size:9,weight:'bold'}, formatter:(v,ctx)=>v>0?(ctx.datasetIndex===3?fmtP(v):fmtN(v)):'', color:'#e2e8f0' }
-    },
-    scales: { y:{ beginAtZero:true, ticks:{stepSize:50,font:{size:9}}, grid:{color:'rgba(255,255,255,.05)'} }, x:{ ticks:{font:{size:10}} } }
+    plugins: { legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,padding:6}}, datalabels:{anchor:'end',align:'top',font:{size:9,weight:'bold'},formatter:(v,ctx)=>v>0?(ctx.datasetIndex===3?fmtP(v):fmtN(v)):'',color:'#e2e8f0'} },
+    scales: { y:{beginAtZero:true,ticks:{stepSize:50,font:{size:9}},grid:{color:'rgba(255,255,255,.05)'}}, x:{ticks:{font:{size:10}}} }
   });
 
   // Bar 2: ช่วงเวลา
@@ -139,24 +129,8 @@ function renderUot() {
   const c4El = document.getElementById('u-c4');
   c4El.style.width = Math.max(600, zoneKeys.length * 45) + 'px';
   mkChart('u-c4', 'bar', { labels:zoneKeys, datasets:ds4 }, {
-    plugins: {
-      legend: { display:false },
-      datalabels: {
-        anchor:'center', align:'center', font:{size:9,weight:'bold'},
-        formatter:(v,ctx)=>{
-          if (ctx.datasetIndex === ds4.length-1) { const tot=ds4.reduce((s,d)=>s+(d.data[ctx.dataIndex]||0),0); return tot>0?fmtN(tot):''; }
-          return v>0?fmtN(v):'';
-        },
-        color: ctx=>ctx.datasetIndex===ds4.length-1?'#e2e8f0':'#fff',
-        anchor: ctx=>ctx.datasetIndex===ds4.length-1?'end':'center',
-        align:  ctx=>ctx.datasetIndex===ds4.length-1?'top':'center',
-        display: ctx=>ctx.dataset.data[ctx.dataIndex]>0
-      }
-    },
-    scales: {
-      x:{ stacked:true, ticks:{font:{size:9}}, grid:{color:'rgba(255,255,255,.04)'} },
-      y:{ stacked:true, beginAtZero:true, ticks:{font:{size:9}}, grid:{color:'rgba(255,255,255,.05)'}, title:{display:true,text:'จำนวนรหัสสินค้า (distinct)',font:{size:9}} }
-    }
+    plugins: { legend:{display:false}, datalabels:{anchor:'end',align:'top',font:{size:9,weight:'bold'},formatter:(v,ctx)=>{if(ctx.datasetIndex===ds4.length-1){const tot=ds4.reduce((s,d)=>s+(d.data[ctx.dataIndex]||0),0);return tot>0?fmtN(tot):'';} return v>0?fmtN(v):'';},color:ctx=>ctx.datasetIndex===ds4.length-1?'#e2e8f0':'#fff',anchor:ctx=>ctx.datasetIndex===ds4.length-1?'end':'center',align:ctx=>ctx.datasetIndex===ds4.length-1?'top':'center',display:ctx=>ctx.dataset.data[ctx.dataIndex]>0} },
+    scales: { x:{stacked:true,ticks:{font:{size:9}},grid:{color:'rgba(255,255,255,.04)'}}, y:{stacked:true,beginAtZero:true,ticks:{font:{size:9}},grid:{color:'rgba(255,255,255,.05)'},title:{display:true,text:'จำนวนรหัสสินค้า (distinct)',font:{size:9}}} }
   });
   const lgHtml = allStats.filter(st=>ds4.some(d=>d.label===st))
     .map(st=>`<span style="display:inline-flex;align-items:center;gap:3px;margin-right:10px;"><span style="width:10px;height:10px;border-radius:2px;background:${statusCol(st)};display:inline-block;"></span><span style="font-size:10px;color:var(--muted);">${st}</span></span>`).join('');
@@ -171,21 +145,14 @@ function renderUot() {
   const uotAllBr     = uotAllBrRaw.map(br => ({
     br, total:uotWHKeys.reduce((s,wh)=>s+uniqCount((uotByWH[wh]||[]).filter(r=>r['ชื่อสาขา']===br),'เลขที่เอกสารขอโอน'),0)
   })).sort((a,b) => b.total - a.total).map(x => x.br);
-  const c5El = document.getElementById('u-c5');
+  const c5El       = document.getElementById('u-c5');
   c5El.style.width = Math.max(900, uotAllBr.length * 55) + 'px';
   mkChart('u-c5', 'bar', {
     labels: uotAllBr.map(br => br.replace(/^สาขา\s*/, '')),
-    datasets: uotWHKeys.map(wh => ({
-      label: wh || '(ไม่ระบุ)',
-      data:  uotAllBr.map(br => uniqCount((uotByWH[wh]||[]).filter(r=>r['ชื่อสาขา']===br),'เลขที่เอกสารขอโอน')),
-      backgroundColor: UOT_WH_COLOR[wh] || '#94a3b8', borderRadius:3, borderWidth:0
-    }))
+    datasets: uotWHKeys.map(wh => ({ label:wh||'(ไม่ระบุ)', data:uotAllBr.map(br=>uniqCount((uotByWH[wh]||[]).filter(r=>r['ชื่อสาขา']===br),'เลขที่เอกสารขอโอน')), backgroundColor:UOT_WH_COLOR[wh]||'#94a3b8', borderRadius:3, borderWidth:0 }))
   }, {
     plugins: { legend:{position:'bottom',labels:{font:{size:11},boxWidth:10,padding:8}}, datalabels:{display:false} },
-    scales: {
-      x:{ ticks:{font:{size:9},maxRotation:75,minRotation:45}, grid:{color:'rgba(255,255,255,.04)'} },
-      y:{ beginAtZero:true, ticks:{font:{size:9}}, grid:{color:'rgba(255,255,255,.05)'}, title:{display:true,text:'จำนวนเอกสาร (distinct)',font:{size:10}} }
-    }
+    scales: { x:{ticks:{font:{size:9},maxRotation:75,minRotation:45},grid:{color:'rgba(255,255,255,.04)'}}, y:{beginAtZero:true,ticks:{font:{size:9}},grid:{color:'rgba(255,255,255,.05)'},title:{display:true,text:'จำนวนเอกสาร (distinct)',font:{size:10}}} }
   });
 
   renderUotTable();
