@@ -79,10 +79,12 @@ function renderUot() {
     name: st, color: statusCol(st),
     data: u2WH.map(wh => uniqCount((u2ByWH[wh] || []).filter(r => r['สถานะประมวลผล'] === st), 'รหัสสินค้า'))
   })).filter(s => s.data.some(v => v > 0));
-  mkApexBar('u-pie2', u2WH, u2Series, {
-    stacked: true, yTitle: 'SKU (distinct)', tooltipShared: true,
-    onClick: (_wh, statusName) => { if (statusName) { setCBOnly(document.getElementById('u-fs-list'), statusName); renderUot(); } }
-  });
+  try {
+    mkApexBar('u-pie2', u2WH, u2Series, {
+      stacked: true, yTitle: 'SKU (distinct)', tooltipShared: true,
+      onClick: (_wh, statusName) => { if (statusName) { setCBOnly(document.getElementById('u-fs-list'), statusName); renderUot(); } }
+    });
+  } catch(_) {}
 
   // Bar 1: Top 5 สาขา (mixed: วันค้างสูงสุด = line บน y1, ที่เหลือ = bar บน y)
   const brData = _rankBranches(uotFiltered);
