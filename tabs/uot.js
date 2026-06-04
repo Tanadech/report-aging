@@ -2,6 +2,7 @@
 
 const UOT_PAGE_SIZE = 50;
 let uotFiltered = [], uotPage = 0;
+let _uotC5View = 'branch';
 
 // ── Filter ──
 function getUotFiltered() {
@@ -71,28 +72,30 @@ function renderUot() {
     ['#22d3ee', '#10b981']
   );
 
-  // Pie 2: สถานะ / SKU → radialBar
-  const byStatus = groupBy(uotFiltered, 'สถานะประมวลผล');
-  const statEnt  = Object.entries(byStatus).map(([k,v]) => [k, uniqCount(v,'รหัสสินค้า')]).sort((a,b) => b[1]-a[1]);
-  mkDonut('u-pie2',
-    statEnt.map(e => e[0]),
-    statEnt.map(e => e[1]),
-    statEnt.map(e => statusCol(e[0])),
-    label => { setCBOnly(document.getElementById('u-fs-list'), label); renderUot(); }
-  );
+  // Bar: สถานะ / SKU แยกตามคลัง → stacked bar
+  const u2ByWH   = groupBy(uotFiltered, 'คลังสินค้า');
+  const u2WH     = [...new Set(uotFiltered.map(r => r['คลังสินค้า'] || '').filter(Boolean))].sort();
+  const u2Series = Object.entries(STATUS_MAP).map(([st]) => ({
+    name: st, color: statusCol(st),
+    data: u2WH.map(wh => uniqCount((u2ByWH[wh] || []).filter(r => r['สถานะประมวลผล'] === st), 'รหัสสินค้า'))
+  })).filter(s => s.data.some(v => v > 0));
+  mkApexBar('u-pie2', u2WH, u2Series, {
+    stacked: true, yTitle: 'SKU (distinct)', tooltipShared: true,
+    onClick: (_wh, statusName) => { if (statusName) { setCBOnly(document.getElementById('u-fs-list'), statusName); renderUot(); } }
+  });
 
-  // Bar 1: Top 5 สาขา
+  // Bar 1: Top 5 สาขา (mixed: วันค้างสูงสุด = line, ที่เหลือ = bar)
   const brData = _rankBranches(uotFiltered);
   mkChart('u-c2', 'bar', {
     labels: brData.map(d => d.name),
     datasets: [
-      { label:'วันค้างสูงสุด',    data:brData.map(d=>d.max),             backgroundColor:'#22d3ee', borderRadius:3 },
-      { label:'จำนวนเอกสารค้าง', data:brData.map(d=>d.docs),            backgroundColor:'#10b981', borderRadius:3 },
-      { label:'จำนวนสินค้า',     data:brData.map(d=>d.skus),            backgroundColor:'#a78bfa', borderRadius:3 },
-      { label:'พาเลทคงค้าง',     data:brData.map(d=>+d.pal.toFixed(2)), backgroundColor:'#fbbf24', borderRadius:3 }
+      { type:'line', label:'วันค้างสูงสุด', data:brData.map(d=>d.max), borderColor:'#22d3ee', backgroundColor:'rgba(34,211,238,.1)', fill:false, tension:0.3, pointRadius:5, pointBackgroundColor:'#22d3ee', borderWidth:2, order:0 },
+      { label:'จำนวนเอกสารค้าง', data:brData.map(d=>d.docs),            backgroundColor:'#10b981', borderRadius:3, order:1 },
+      { label:'จำนวนสินค้า',     data:brData.map(d=>d.skus),            backgroundColor:'#a78bfa', borderRadius:3, order:1 },
+      { label:'พาเลทคงค้าง',     data:brData.map(d=>+d.pal.toFixed(2)), backgroundColor:'#fbbf24', borderRadius:3, order:1 }
     ]
   }, {
-    plugins: { legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,padding:6}}, datalabels:{anchor:'end',align:'top',font:{size:9,weight:'bold'},formatter:(v,ctx)=>v>0?(ctx.datasetIndex===3?fmtP(v):fmtN(v)):'',color:'#e2e8f0'} },
+    plugins: { legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,padding:6}}, datalabels:{anchor:'end',align:'top',font:{size:9,weight:'bold'},formatter:(v,ctx)=>v>0?(ctx.datasetIndex===3?fmtP(v):fmtN(v)):'',color:ctx=>ctx.datasetIndex===0?'#22d3ee':'#e2e8f0'} },
     scales: { y:{beginAtZero:true,ticks:{stepSize:50,font:{size:9}},grid:{color:'rgba(255,255,255,.05)'}}, x:{ticks:{font:{size:10}}} }
   });
 
@@ -136,36 +139,72 @@ function renderUot() {
     .map(st=>`<span style="display:inline-flex;align-items:center;gap:3px;margin-right:10px;"><span style="width:10px;height:10px;border-radius:2px;background:${statusCol(st)};display:inline-block;"></span><span style="font-size:10px;color:var(--muted);">${st}</span></span>`).join('');
   document.getElementById('u-legend4').innerHTML = lgHtml;
 
-  // Bar 5: สาขา / คลัง
+  // Bar 5: สาขา / คลัง — toggle view (branch / warehouse)
   const uotByWH      = groupBy(uotFiltered, 'คลังสินค้า');
   const uotAllWHKeys = [...new Set(dataUot.map(r=>r['คลังสินค้า']||'').filter(Boolean))].sort();
   const UOT_WH_COLOR = Object.fromEntries(uotAllWHKeys.map((wh,i)=>[wh,PALETTE[i%PALETTE.length]]));
-  const uotWHKeys    = uotAllWHKeys.filter(wh => uotByWH[wh]);
-  const uotAllBrRaw  = [...new Set(uotFiltered.map(r=>r['ชื่อสาขา']||'').filter(Boolean))];
-  const uotAllBr     = uotAllBrRaw.map(br => ({
-    br, total:uotWHKeys.reduce((s,wh)=>s+uniqCount((uotByWH[wh]||[]).filter(r=>r['ชื่อสาขา']===br),'เลขที่เอกสารขอโอน'),0)
-  })).sort((a,b) => b.total - a.total).map(x => x.br);
-  const c5El       = document.getElementById('u-c5');
-  c5El.style.width = Math.max(900, uotAllBr.length * 55) + 'px';
-  mkChart('u-c5', 'bar', {
-    labels: uotAllBr.map(br => br.replace(/^สาขา\s*/, '')),
-    datasets: uotWHKeys.map(wh => ({ label:wh||'(ไม่ระบุ)', data:uotAllBr.map(br=>uniqCount((uotByWH[wh]||[]).filter(r=>r['ชื่อสาขา']===br),'เลขที่เอกสารขอโอน')), backgroundColor:UOT_WH_COLOR[wh]||'#94a3b8', borderRadius:3, borderWidth:0 }))
-  }, {
-    plugins: { legend:{position:'bottom',labels:{font:{size:11},boxWidth:10,padding:8}}, datalabels:{display:false} },
-    scales: { x:{ticks:{font:{size:9},maxRotation:75,minRotation:45},grid:{color:'rgba(255,255,255,.04)'}}, y:{beginAtZero:true,ticks:{font:{size:9}},grid:{color:'rgba(255,255,255,.05)'},title:{display:true,text:'จำนวนเอกสาร (distinct)',font:{size:10}}} }
-  });
+  const c5El         = document.getElementById('u-c5');
+  const c5BrBtn      = document.getElementById('u-c5-branch-btn');
+  const c5WhBtn      = document.getElementById('u-c5-wh-btn');
+  const _btnOn  = 'rgba(56,189,248,.25)', _btnOff = 'rgba(56,189,248,.08)';
+  const _clrOn  = '#fff',                 _clrOff = '#7dd3fc';
+  if (c5BrBtn) { c5BrBtn.style.background = _uotC5View==='branch'?_btnOn:_btnOff; c5BrBtn.style.color = _uotC5View==='branch'?_clrOn:_clrOff; }
+  if (c5WhBtn) { c5WhBtn.style.background = _uotC5View==='wh'?_btnOn:_btnOff;     c5WhBtn.style.color = _uotC5View==='wh'?_clrOn:_clrOff; }
 
+  if (_uotC5View === 'wh') {
+    c5El.style.width = '';
+    const whViewData = uotAllWHKeys.map(wh => uniqCount(uotByWH[wh]||[], 'เลขที่เอกสารขอโอน'));
+    mkChart('u-c5', 'bar', {
+      labels: uotAllWHKeys,
+      datasets: [{ label:'จำนวนเอกสาร', data:whViewData, backgroundColor:uotAllWHKeys.map((_,i)=>PALETTE[i%PALETTE.length]), borderRadius:8, borderWidth:0 }]
+    }, {
+      plugins: { legend:{display:false}, datalabels:{anchor:'end',align:'top',font:{size:14,weight:'bold'},formatter:v=>v>0?fmtN(v):'',color:'#e2e8f0'} },
+      scales: { y:{beginAtZero:true,ticks:{font:{size:10}},grid:{color:'rgba(255,255,255,.05)'},title:{display:true,text:'จำนวนเอกสาร (distinct)',font:{size:10}}}, x:{ticks:{font:{size:13}}} }
+    });
+  } else {
+    const uotWHKeys   = uotAllWHKeys.filter(wh => uotByWH[wh]);
+    const uotAllBrRaw = [...new Set(uotFiltered.map(r=>r['ชื่อสาขา']||'').filter(Boolean))];
+    const uotAllBr    = uotAllBrRaw.map(br => ({
+      br, total:uotWHKeys.reduce((s,wh)=>s+uniqCount((uotByWH[wh]||[]).filter(r=>r['ชื่อสาขา']===br),'เลขที่เอกสารขอโอน'),0)
+    })).sort((a,b) => b.total - a.total).map(x => x.br);
+    c5El.style.width = Math.max(900, uotAllBr.length * 55) + 'px';
+    mkChart('u-c5', 'bar', {
+      labels: uotAllBr.map(br => br.replace(/^สาขา\s*/, '')),
+      datasets: uotWHKeys.map(wh => ({ label:wh||'(ไม่ระบุ)', data:uotAllBr.map(br=>uniqCount((uotByWH[wh]||[]).filter(r=>r['ชื่อสาขา']===br),'เลขที่เอกสารขอโอน')), backgroundColor:UOT_WH_COLOR[wh]||'#94a3b8', borderRadius:3, borderWidth:0 }))
+    }, {
+      plugins: { legend:{position:'bottom',labels:{font:{size:11},boxWidth:10,padding:8}}, datalabels:{display:false} },
+      scales: { x:{ticks:{font:{size:9},maxRotation:75,minRotation:45},grid:{color:'rgba(255,255,255,.04)'}}, y:{beginAtZero:true,ticks:{font:{size:9}},grid:{color:'rgba(255,255,255,.05)'},title:{display:true,text:'จำนวนเอกสาร (distinct)',font:{size:10}}} }
+    });
+  }
+
+  populateUotTblFilters();
   renderUotTable();
   renderUotTags();
+}
+
+// ── Populate quick-filter selects for u-tbl ──
+function populateUotTblFilters() {
+  const fwEl = document.getElementById('u-tbl-fw');
+  const fzEl = document.getElementById('u-tbl-fz');
+  if (!fwEl || !fzEl) return;
+  const curFw = fwEl.value, curFz = fzEl.value;
+  const whs = [...new Set(uotFiltered.map(r => r['คลังสินค้า'] || '').filter(Boolean))].sort();
+  const zns = [...new Set(uotFiltered.map(r => r['Zone ID'] || '').filter(Boolean))].sort();
+  fwEl.innerHTML = '<option value="">คลัง: ทั้งหมด</option>' + whs.map(w => `<option${w === curFw ? ' selected' : ''}>${esc(w)}</option>`).join('');
+  fzEl.innerHTML = '<option value="">Zone: ทั้งหมด</option>' + zns.map(z => `<option${z === curFz ? ' selected' : ''}>${esc(z)}</option>`).join('');
 }
 
 // ── Table (paginated) ──
 function renderUotTable() {
   const pg      = uotPage;
   const fsearch = (document.getElementById('u-fsearch')?.value || '').trim().toLowerCase();
-  const searchFiltered = fsearch
+  const tblFw   = document.getElementById('u-tbl-fw')?.value || '';
+  const tblFz   = document.getElementById('u-tbl-fz')?.value || '';
+  let searchFiltered = fsearch
     ? uotFiltered.filter(r => (r['เลขที่เอกสารขอโอน'] || '').toLowerCase().includes(fsearch))
     : uotFiltered;
+  if (tblFw) searchFiltered = searchFiltered.filter(r => r['คลังสินค้า'] === tblFw);
+  if (tblFz) searchFiltered = searchFiltered.filter(r => r['Zone ID'] === tblFz);
 
   const zMaxDays = {}, dMaxDays = {};
   searchFiltered.forEach(r => {

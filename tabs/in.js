@@ -1,6 +1,8 @@
 // ============ tabs/in.js — DOMESTIC (ภายในประเทศ) Tab ============
 
-const WH_COLORS = { 'WH1':'#22d3ee','WH2':'#10b981','WH3':'#a78bfa','WH4':'#fb923c','WH5':'#f87171' };
+const WH_COLORS   = { 'WH1':'#22d3ee','WH2':'#10b981','WH3':'#a78bfa','WH4':'#fb923c','WH5':'#f87171' };
+const IN_PAGE_SIZE = 50;
+let inFiltered = [], inPage = 0;
 
 // คลังจาก "ประตูลงสินค้า" → "WH1" / "(อื่นๆ)"
 function getWH(r) {
@@ -91,13 +93,13 @@ function renderIn() {
   mkChart('i-c3','bar',{
     labels:brD2.map(d=>d.name),
     datasets:[
-      {label:'วันค้างสูงสุด', data:brD2.map(d=>d.max),  backgroundColor:'#22d3ee', borderRadius:3},
-      {label:'จำนวนเอกสาร',  data:brD2.map(d=>d.docs), backgroundColor:'#10b981', borderRadius:3},
-      {label:'เลขที่ Onetime',data:brD2.map(d=>d.ot),   backgroundColor:'#a78bfa', borderRadius:3},
-      {label:'พาเลทคงค้าง',  data:brD2.map(d=>d.pal),  backgroundColor:'#fbbf24', borderRadius:3}
+      {type:'line', label:'วันค้างสูงสุด', data:brD2.map(d=>d.max), borderColor:'#22d3ee', backgroundColor:'rgba(34,211,238,.1)', fill:false, tension:0.3, pointRadius:5, pointBackgroundColor:'#22d3ee', borderWidth:2, order:0},
+      {label:'จำนวนเอกสาร',  data:brD2.map(d=>d.docs), backgroundColor:'#10b981', borderRadius:3, order:1},
+      {label:'เลขที่ Onetime',data:brD2.map(d=>d.ot),   backgroundColor:'#a78bfa', borderRadius:3, order:1},
+      {label:'พาเลทคงค้าง',  data:brD2.map(d=>d.pal),  backgroundColor:'#fbbf24', borderRadius:3, order:1}
     ]
   },{
-    plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,padding:6}},datalabels:{anchor:'end',align:'top',font:{size:9,weight:'bold'},formatter:v=>v>0?fmtN(v):'',color:'#e2e8f0'}},
+    plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,padding:6}},datalabels:{anchor:'end',align:'top',font:{size:9,weight:'bold'},formatter:v=>v>0?fmtN(v):'',color:ctx=>ctx.datasetIndex===0?'#22d3ee':'#e2e8f0'}},
     scales:{y:{beginAtZero:true,ticks:{stepSize:50,font:{size:9}},grid:{color:'rgba(255,255,255,.05)'}},x:{ticks:{font:{size:10}}}}
   });
 
@@ -127,31 +129,12 @@ function renderIn() {
     scales:{x:{ticks:{font:{size:9},maxRotation:75,minRotation:45},grid:{color:'rgba(255,255,255,.04)'}},y:{beginAtZero:true,ticks:{font:{size:9}},grid:{color:'rgba(255,255,255,.05)'},title:{display:true,text:'เลขที่ Onetime (distinct)',font:{size:10}}}}
   });
 
-  // Table (gridjs)
-  document.getElementById('i-cnt').textContent = `(${fmtN(f.length)} รายการ)`;
-  const iData = [...f].sort((a,b)=>num(b['วันคงค้าง'])-num(a['วันคงค้าง'])).map(r => {
-    const ot=String(r['เลขที่ onetime']||'').trim();
-    const pal=ot?(palletByOnetime[ot]||0):0;
-    return [num(r['วันคงค้าง']),getWH(r),r['เลขที่เอกสาร POI']||'',ot,pal,getBrName(r)||r['ชื่อย่อสาขา']||'',r['ชื่อผู้จำหน่าย']||'',r['Zone Name']||''];
-  });
-  if (inGrid) { try { inGrid.destroy(); } catch(e){} inGrid=null; }
-  document.getElementById('i-tbl').innerHTML = '';
-  inGrid = new gridjs.Grid({
-    columns:[
-      {name:'วันคงค้าง',    formatter:c=>gridjs.html(db(c)),width:'90px',resizable:true},
-      {name:'คลัง',         width:'70px',resizable:true},
-      {name:'เลขที่เอกสาร POI',width:'185px',resizable:true},
-      {name:'Onetime',      width:'140px',resizable:true},
-      {name:'จำนวนพาเลท',   width:'120px',resizable:true, formatter:c=>gridjs.html(c>0?`<b style="color:#fbbf24;">${c}</b>`:'<span style="color:#475569;">-</span>')},
-      {name:'ชื่อสาขา',     width:'210px',resizable:true},
-      {name:'ผู้จำหน่าย',   resizable:true},
-      {name:'Zone',         resizable:true}
-    ],
-    data:iData, sort:true, search:true, resizable:true,
-    pagination:{limit:15,summary:true},
-    language:{search:{placeholder:'ค้นหา...'},pagination:{previous:'◀',next:'▶',showing:'แสดง',of:'จาก',to:'ถึง',results:()=>'รายการ'},noRecordsFound:'ไม่พบข้อมูล'}
-  });
-  inGrid.render(document.getElementById('i-tbl'));
+  // Table (paginated)
+  if (inGrid) { try { inGrid.destroy(); } catch(e){} inGrid = null; }
+  inFiltered = f;
+  inPage = 0;
+  populateInTblFilter();
+  renderInTable();
   renderInTags();
 }
 
@@ -195,5 +178,95 @@ function renderInTags() {
     document.getElementById('i-fd1').value='';
     document.getElementById('i-fd2').value='';
     renderIn();
+  });
+}
+
+// ── Populate quick-filter select for i-tbl ──
+function populateInTblFilter() {
+  const fwEl = document.getElementById('i-tbl-fw');
+  if (!fwEl) return;
+  const curFw = fwEl.value;
+  const whs = [...new Set(inFiltered.map(r => getWH(r)).filter(Boolean))].sort();
+  fwEl.innerHTML = '<option value="">คลัง: ทั้งหมด</option>' + whs.map(w => `<option${w === curFw ? ' selected' : ''}>${esc(w)}</option>`).join('');
+}
+
+// ── Table (paginated) for DOMESTIC ──
+function renderInTable() {
+  const pg      = inPage;
+  const fsearch = (document.getElementById('i-fsearch')?.value || '').trim().toLowerCase();
+  const tblFw   = document.getElementById('i-tbl-fw')?.value || '';
+
+  let searchFiltered = fsearch
+    ? inFiltered.filter(r =>
+        (r['เลขที่เอกสาร POI'] || '').toLowerCase().includes(fsearch) ||
+        String(r['เลขที่ onetime'] || '').toLowerCase().includes(fsearch))
+    : inFiltered;
+  if (tblFw) searchFiltered = searchFiltered.filter(r => getWH(r) === tblFw);
+
+  const zMaxDays = {}, dMaxDays = {};
+  searchFiltered.forEach(r => {
+    const z = r['Zone Name'] || '', d = r['เลขที่เอกสาร POI'] || '', v = num(r['วันคงค้าง']);
+    if (!(z in zMaxDays) || v > zMaxDays[z]) zMaxDays[z] = v;
+    if (!(d in dMaxDays) || v > dMaxDays[d]) dMaxDays[d] = v;
+  });
+  const sorted = [...searchFiltered].sort((a, b) => {
+    const az = a['Zone Name'] || '', bz = b['Zone Name'] || '';
+    const ad = a['เลขที่เอกสาร POI'] || '', bd = b['เลขที่เอกสาร POI'] || '';
+    const zd = (zMaxDays[bz] || 0) - (zMaxDays[az] || 0); if (zd) return zd;
+    if (az !== bz) return az < bz ? -1 : 1;
+    const dd = (dMaxDays[bd] || 0) - (dMaxDays[ad] || 0); if (dd) return dd;
+    if (ad !== bd) return ad < bd ? -1 : 1;
+    return num(b['วันคงค้าง']) - num(a['วันคงค้าง']);
+  });
+
+  const total = sorted.length, pages = Math.ceil(total / IN_PAGE_SIZE) || 1;
+  const slice = sorted.slice(pg * IN_PAGE_SIZE, (pg + 1) * IN_PAGE_SIZE);
+
+  document.getElementById('i-cnt').textContent     = `(${fmtN(total)} รายการ)`;
+  document.getElementById('i-pg-info').textContent  = `หน้า ${pg + 1}/${pages}`;
+  document.getElementById('i-prev').disabled        = pg === 0;
+  document.getElementById('i-next').disabled        = pg >= pages - 1;
+
+  const zSpan = {}, dSpan = {};
+  slice.forEach(r => {
+    const z = r['Zone Name'] || '';
+    const d = z + '|' + (r['เลขที่เอกสาร POI'] || '');
+    zSpan[z] = (zSpan[z] || 0) + 1;
+    dSpan[d] = (dSpan[d] || 0) + 1;
+  });
+  const zSeen = {}, dSeen = {};
+
+  let html = '<table class="gtbl"><thead><tr><th>Zone</th><th>เลขที่เอกสาร POI</th><th>Onetime</th><th>วันคงค้าง</th><th>คลัง</th><th>ชื่อสาขา</th><th>ผู้จำหน่าย</th><th>พาเลท</th></tr></thead><tbody>';
+  slice.forEach(r => {
+    const z = r['Zone Name'] || '', docNum = r['เลขที่เอกสาร POI'] || '';
+    const dKey = z + '|' + docNum;
+    const ot   = String(r['เลขที่ onetime'] || '').trim();
+    const pal  = ot ? (palletByOnetime[ot] || 0) : 0;
+    html += '<tr>';
+    if (!zSeen[z])    { html += `<td class="zone-cell" rowspan="${zSpan[z]}">${esc(z)}</td>`; zSeen[z] = true; }
+    if (!dSeen[dKey]) { html += `<td class="doc-cell" rowspan="${dSpan[dKey]}">${esc(docNum)}</td>`; dSeen[dKey] = true; }
+    html += `<td>${esc(ot)}</td>`;
+    html += `<td style="text-align:center;">${db(num(r['วันคงค้าง']))}</td>`;
+    html += `<td style="text-align:center;">${esc(getWH(r))}</td>`;
+    if (!dSeen[dKey + '_br']) {
+      html += `<td rowspan="${dSpan[dKey]}" style="max-width:130px;">${esc(getBrName(r) || r['ชื่อย่อสาขา'] || '')}</td>`;
+      html += `<td rowspan="${dSpan[dKey]}">${esc(r['ชื่อผู้จำหน่าย'] || '')}</td>`;
+      dSeen[dKey + '_br'] = true;
+    }
+    html += `<td class="num-cell">${pal > 0 ? `<b style="color:#fbbf24;">${pal}</b>` : '-'}</td>`;
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('i-tbl').innerHTML = html;
+}
+
+// ── Pagination buttons ──
+function initInPagination() {
+  document.getElementById('i-prev')?.addEventListener('click', () => {
+    if (inPage > 0) { inPage--; renderInTable(); }
+  });
+  document.getElementById('i-next')?.addEventListener('click', () => {
+    const pages = Math.ceil(inFiltered.length / IN_PAGE_SIZE) || 1;
+    if (inPage < pages - 1) { inPage++; renderInTable(); }
   });
 }

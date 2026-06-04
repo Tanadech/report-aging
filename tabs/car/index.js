@@ -1,5 +1,12 @@
 // ============ tabs/car/index.js — renderCar: KPI + Timeline chart + view dispatch ============
 
+function _truckTypeSummary(rows) {
+  if (!rows.length) return '';
+  const byType = {};
+  rows.forEach(r => { const t = (r['truck_info'] || '').trim() || 'อื่นๆ'; byType[t] = (byType[t] || 0) + 1; });
+  return Object.entries(byType).sort((a, b) => b[1] - a[1]).map(([t, n]) => `${t}:${n}`).join(' · ').replace(/"/g, '&quot;');
+}
+
 function renderCar() {
   let f         = getCarFiltered();
   const fdateEl = document.getElementById('c-fdate');
@@ -27,19 +34,27 @@ function renderCar() {
   const today    = new Date(); today.setHours(0, 0, 0, 0);
   const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
   const inRange  = (rows, tgt) => rows.filter(r => { const d = parseCarDate(r['search_date']); return d && sameDate(new Date(d.getFullYear(), d.getMonth(), d.getDate()), tgt); });
-  const cntBySt  = st => f.filter(r => (r['สถานะลงคิว'] || '').trim() === st).length;
+
+  const todayRows    = inRange(dataCar, today);
+  const tomorrowRows = inRange(dataCar, tomorrow);
+  const earlyRows    = f.filter(r => (r['สถานะลงคิว'] || '').trim() === 'มาก่อนเวลา');
+  const lateRows     = f.filter(r => (r['สถานะลงคิว'] || '').trim() === 'มาหลังเวลานัด');
+  const cancelRows   = f.filter(r => (r['สถานะลงคิว'] || '').trim() === 'ยกเลิกรับงาน');
+  const notqueueRows = f.filter(r => (r['สถานะลงคิว'] || '').trim() === 'ยังไม่มาลงคิว');
+  const stuckRows    = f.filter(r => isChecked(r['รถตกค้าง']));
+  const notoutRows   = f.filter(r => isDcDeparted(r['status_shipping']));
 
   document.getElementById('car-kpi').innerHTML = `
-    <stat-card variant="inf"  data-kpi="today"    label="รถเข้าวันนี้"      value="${fmtN(inRange(dataCar,today).length)}"    unit="คัน" icon="https://img.icons8.com/color/96/loading-truck.png"></stat-card>
-    <stat-card                data-kpi="tomorrow" label="รถเข้าพรุ่งนี้"    value="${fmtN(inRange(dataCar,tomorrow).length)}" unit="คัน" icon="https://img.icons8.com/isometric/96/truck.png"></stat-card>
-    <stat-card variant="inf"  data-kpi="view"     label="รถในมุมมอง"        value="${fmtN(f.length)}"                        unit="คัน" icon="https://img.icons8.com/cotton/96/warehouse.png"></stat-card>
-    <stat-card variant="ok"   data-kpi="wh"       label="คลังที่ต้องเตรียม"  value="${fmtN(uniqCount(f,'port_id'))}"         unit="คลัง"></stat-card>
-    <stat-card variant="ok"   data-kpi="early"    label="มาก่อนเวลา"        value="${fmtN(cntBySt('มาก่อนเวลา'))}"          unit="คัน"></stat-card>
-    <stat-card variant="warn" data-kpi="late"     label="มาหลังเวลานัด"      value="${fmtN(cntBySt('มาหลังเวลานัด'))}"      unit="คัน"></stat-card>
-    <stat-card variant="alr"  data-kpi="cancel"   label="ยกเลิกรับงาน"      value="${fmtN(cntBySt('ยกเลิกรับงาน'))}"       unit="คัน"></stat-card>
-    <stat-card                data-kpi="notqueue" label="ยังไม่มาลงคิว"      value="${fmtN(cntBySt('ยังไม่มาลงคิว'))}"      unit="คัน"></stat-card>
-    <stat-card variant="alr"  data-kpi="stuck"    label="รถตกค้าง"          value="${fmtN(f.filter(r=>isChecked(r['รถตกค้าง'])).length)}"             unit="คัน"></stat-card>
-    <stat-card variant="warn" data-kpi="notout"   label="ยังไม่ออก DC"      value="${fmtN(f.filter(r=>isDcDeparted(r['status_shipping'])).length)}"   unit="คัน"></stat-card>
+    <stat-card variant="inf"  data-kpi="today"    label="รถเข้าวันนี้"      value="${fmtN(todayRows.length)}"    unit="คัน" icon="https://img.icons8.com/color/96/loading-truck.png"    subtitle="${_truckTypeSummary(todayRows)}"></stat-card>
+    <stat-card                data-kpi="tomorrow" label="รถเข้าพรุ่งนี้"    value="${fmtN(tomorrowRows.length)}" unit="คัน" icon="https://img.icons8.com/isometric/96/truck.png"          subtitle="${_truckTypeSummary(tomorrowRows)}"></stat-card>
+    <stat-card variant="inf"  data-kpi="view"     label="รถในมุมมอง"        value="${fmtN(f.length)}"            unit="คัน" icon="https://img.icons8.com/cotton/96/warehouse.png"         subtitle="${_truckTypeSummary(f)}"></stat-card>
+    <stat-card variant="ok"   data-kpi="wh"       label="คลังที่ต้องเตรียม"  value="${fmtN(uniqCount(f,'port_id'))}"  unit="คลัง"></stat-card>
+    <stat-card variant="ok"   data-kpi="early"    label="มาก่อนเวลา"        value="${fmtN(earlyRows.length)}"    unit="คัน" subtitle="${_truckTypeSummary(earlyRows)}"></stat-card>
+    <stat-card variant="warn" data-kpi="late"     label="มาหลังเวลานัด"      value="${fmtN(lateRows.length)}"     unit="คัน" subtitle="${_truckTypeSummary(lateRows)}"></stat-card>
+    <stat-card variant="alr"  data-kpi="cancel"   label="ยกเลิกรับงาน"      value="${fmtN(cancelRows.length)}"   unit="คัน" subtitle="${_truckTypeSummary(cancelRows)}"></stat-card>
+    <stat-card                data-kpi="notqueue" label="ยังไม่มาลงคิว"      value="${fmtN(notqueueRows.length)}" unit="คัน" subtitle="${_truckTypeSummary(notqueueRows)}"></stat-card>
+    <stat-card variant="alr"  data-kpi="stuck"    label="รถตกค้าง"          value="${fmtN(stuckRows.length)}"    unit="คัน" subtitle="${_truckTypeSummary(stuckRows)}"></stat-card>
+    <stat-card variant="warn" data-kpi="notout"   label="ยังไม่ออก DC"      value="${fmtN(notoutRows.length)}"   unit="คัน" subtitle="${_truckTypeSummary(notoutRows)}"></stat-card>
   `;
   document.querySelectorAll('#car-kpi stat-card[data-kpi]').forEach(el => { el.dataset.kpi = el.getAttribute('data-kpi'); });
 

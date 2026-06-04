@@ -126,11 +126,14 @@ document.addEventListener('click', () => {
 
 
 // Search in IMPORTED table
-document.getElementById('u-fsearch').addEventListener('input', renderUotTable);
+document.getElementById('u-fsearch').addEventListener('input', () => { uotPage = 0; renderUotTable(); });
+// Search in DOMESTIC table
+document.getElementById('i-fsearch')?.addEventListener('input', () => { inPage = 0; renderInTable(); });
 
 // ============ Init ============
 initChartDefaults();
 initUotPagination();
+initInPagination();
 initPayTab();
 dataIn        = [];
 dataUot       = [];

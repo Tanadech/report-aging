@@ -130,7 +130,13 @@
     </div>
 
     <div class="card">
-      <div class="card-title"><span class="dot" style="background:#22d3ee"></span>จำนวนเอกสารตามสาขา / คลัง</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+        <div class="card-title"><span class="dot" style="background:#22d3ee"></span>จำนวนเอกสารตามสาขา / คลัง</div>
+        <div style="display:flex;gap:4px;">
+          <button id="u-c5-branch-btn" onclick="_uotC5View='branch';renderUot();" style="font-size:11px;padding:3px 10px;border-radius:5px;cursor:pointer;font-family:inherit;border:1px solid rgba(56,189,248,.35);background:rgba(56,189,248,.25);color:#fff;">ตามสาขา</button>
+          <button id="u-c5-wh-btn"    onclick="_uotC5View='wh';renderUot();"     style="font-size:11px;padding:3px 10px;border-radius:5px;cursor:pointer;font-family:inherit;border:1px solid rgba(56,189,248,.35);background:rgba(56,189,248,.08);color:#7dd3fc;">ตามคลัง</button>
+        </div>
+      </div>
       <div class="zone-scroll" style="height:270px;"><canvas id="u-c5"></canvas></div>
     </div>
 
@@ -143,11 +149,17 @@
       <div class="card">
         <div class="tbl-hdr">
           <div class="card-title">📋 รายละเอียดเอกสารคงค้าง</div>
-          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
             <div class="p-search-wrap">
               <span class="p-search-ico">🔍</span>
               <input type="text" id="u-fsearch" placeholder="ค้นหาเลขที่เอกสาร...">
             </div>
+            <select id="u-tbl-fw" onchange="uotPage=0;renderUotTable();" style="font-size:12px;padding:4px 8px;border-radius:5px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.25);color:#e2e8f0;font-family:inherit;">
+              <option value="">คลัง: ทั้งหมด</option>
+            </select>
+            <select id="u-tbl-fz" onchange="uotPage=0;renderUotTable();" style="font-size:12px;padding:4px 8px;border-radius:5px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.25);color:#e2e8f0;font-family:inherit;">
+              <option value="">Zone: ทั้งหมด</option>
+            </select>
             <span class="tbl-cnt" id="u-cnt"></span>
             <div class="tbl-pg">
               <button id="u-prev">◀</button>
@@ -233,11 +245,25 @@
     </div>
 
     <div class="card">
-      <div class="tbl-hdr" style="margin-bottom:8px;">
+      <div class="tbl-hdr">
         <div class="card-title">📋 รายละเอียดเอกสารคงค้าง</div>
-        <span class="tbl-cnt" id="i-cnt"></span>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <div class="p-search-wrap">
+            <span class="p-search-ico">🔍</span>
+            <input type="text" id="i-fsearch" placeholder="ค้นหาเลขที่เอกสาร / Onetime...">
+          </div>
+          <select id="i-tbl-fw" onchange="inPage=0;renderInTable();" style="font-size:12px;padding:4px 8px;border-radius:5px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.25);color:#e2e8f0;font-family:inherit;">
+            <option value="">คลัง: ทั้งหมด</option>
+          </select>
+          <span class="tbl-cnt" id="i-cnt"></span>
+          <div class="tbl-pg">
+            <button id="i-prev">◀</button>
+            <span id="i-pg-info"></span>
+            <button id="i-next">▶</button>
+          </div>
+        </div>
       </div>
-      <div id="i-tbl"></div>
+      <div class="tbl-wrap"><div id="i-tbl"></div></div>
     </div>
   </div>
   </div>
