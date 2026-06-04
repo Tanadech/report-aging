@@ -81,12 +81,15 @@ function _rebuildCombinedAging() {
 
   const CACHE_NAME = 'report-aging-v3';
   // aging-dom/aging-imp ไม่ได้อยู่ใน git (ใหญ่เกิน 100MB GitHub limit)
-  // โหลดเฉพาะไฟล์ที่ commit ได้
+  // แต่ถ้ามีไฟล์อยู่ (เช่น Local / Live Server) จะโหลดได้ตามปกติ
+  // ถ้าไม่มี (404 บน GitHub Pages) จะข้ามไปเงียบๆ
   const FILES = [
-    { url: './data/outbound/car.json',     key: 'car'    },
-    { url: './data/warehouse/pallet.json', key: 'pallet' },
-    { url: './data/poi/in.json',           key: 'inData' },
-    { url: './data/poi/uot.json',          key: 'uot'    },
+    { url: './data/outbound/aging-dom.json', key: 'agDom'  },
+    { url: './data/outbound/aging-imp.json', key: 'agImp'  },
+    { url: './data/outbound/car.json',       key: 'car'    },
+    { url: './data/warehouse/pallet.json',   key: 'pallet' },
+    { url: './data/poi/in.json',             key: 'inData' },
+    { url: './data/poi/uot.json',            key: 'uot'    },
   ];
 
   try {
