@@ -93,14 +93,18 @@ function renderIn() {
   mkChart('i-c3','bar',{
     labels:brD2.map(d=>d.name),
     datasets:[
-      {type:'line', label:'วันค้างสูงสุด', data:brD2.map(d=>d.max), borderColor:'#22d3ee', backgroundColor:'rgba(34,211,238,.1)', fill:false, tension:0.3, pointRadius:5, pointBackgroundColor:'#22d3ee', borderWidth:2, order:0},
-      {label:'จำนวนเอกสาร',  data:brD2.map(d=>d.docs), backgroundColor:'#10b981', borderRadius:3, order:1},
-      {label:'เลขที่ Onetime',data:brD2.map(d=>d.ot),   backgroundColor:'#a78bfa', borderRadius:3, order:1},
-      {label:'พาเลทคงค้าง',  data:brD2.map(d=>d.pal),  backgroundColor:'#fbbf24', borderRadius:3, order:1}
+      {type:'line', label:'วันค้างสูงสุด', data:brD2.map(d=>d.max), yAxisID:'y1', borderColor:'#22d3ee', backgroundColor:'rgba(34,211,238,.1)', fill:false, tension:0.3, pointRadius:5, pointBackgroundColor:'#22d3ee', borderWidth:2, order:0},
+      {label:'จำนวนเอกสาร',  data:brD2.map(d=>d.docs), yAxisID:'y', backgroundColor:'#10b981', borderRadius:3, order:1},
+      {label:'เลขที่ Onetime',data:brD2.map(d=>d.ot),   yAxisID:'y', backgroundColor:'#a78bfa', borderRadius:3, order:1},
+      {label:'พาเลทคงค้าง',  data:brD2.map(d=>d.pal),  yAxisID:'y', backgroundColor:'#fbbf24', borderRadius:3, order:1}
     ]
   },{
     plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,padding:6}},datalabels:{anchor:'end',align:'top',font:{size:9,weight:'bold'},formatter:v=>v>0?fmtN(v):'',color:ctx=>ctx.datasetIndex===0?'#22d3ee':'#e2e8f0'}},
-    scales:{y:{beginAtZero:true,ticks:{stepSize:50,font:{size:9}},grid:{color:'rgba(255,255,255,.05)'}},x:{ticks:{font:{size:10}}}}
+    scales:{
+      y:  {beginAtZero:true,ticks:{stepSize:50,font:{size:9}},grid:{color:'rgba(255,255,255,.05)'},title:{display:true,text:'จำนวน',font:{size:9}}},
+      y1: {type:'linear',position:'right',beginAtZero:true,ticks:{font:{size:9},color:'#22d3ee'},grid:{drawOnChartArea:false},title:{display:true,text:'วันค้างสูงสุด',font:{size:9},color:'#22d3ee'}},
+      x:  {ticks:{font:{size:10}}}
+    }
   });
 
   // Chart 4: ช่วงเวลา / คลัง

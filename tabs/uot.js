@@ -84,19 +84,23 @@ function renderUot() {
     onClick: (_wh, statusName) => { if (statusName) { setCBOnly(document.getElementById('u-fs-list'), statusName); renderUot(); } }
   });
 
-  // Bar 1: Top 5 สาขา (mixed: วันค้างสูงสุด = line, ที่เหลือ = bar)
+  // Bar 1: Top 5 สาขา (mixed: วันค้างสูงสุด = line บน y1, ที่เหลือ = bar บน y)
   const brData = _rankBranches(uotFiltered);
   mkChart('u-c2', 'bar', {
     labels: brData.map(d => d.name),
     datasets: [
-      { type:'line', label:'วันค้างสูงสุด', data:brData.map(d=>d.max), borderColor:'#22d3ee', backgroundColor:'rgba(34,211,238,.1)', fill:false, tension:0.3, pointRadius:5, pointBackgroundColor:'#22d3ee', borderWidth:2, order:0 },
-      { label:'จำนวนเอกสารค้าง', data:brData.map(d=>d.docs),            backgroundColor:'#10b981', borderRadius:3, order:1 },
-      { label:'จำนวนสินค้า',     data:brData.map(d=>d.skus),            backgroundColor:'#a78bfa', borderRadius:3, order:1 },
-      { label:'พาเลทคงค้าง',     data:brData.map(d=>+d.pal.toFixed(2)), backgroundColor:'#fbbf24', borderRadius:3, order:1 }
+      { type:'line', label:'วันค้างสูงสุด', data:brData.map(d=>d.max), yAxisID:'y1', borderColor:'#22d3ee', backgroundColor:'rgba(34,211,238,.1)', fill:false, tension:0.3, pointRadius:5, pointBackgroundColor:'#22d3ee', borderWidth:2, order:0 },
+      { label:'จำนวนเอกสารค้าง', data:brData.map(d=>d.docs),            yAxisID:'y', backgroundColor:'#10b981', borderRadius:3, order:1 },
+      { label:'จำนวนสินค้า',     data:brData.map(d=>d.skus),            yAxisID:'y', backgroundColor:'#a78bfa', borderRadius:3, order:1 },
+      { label:'พาเลทคงค้าง',     data:brData.map(d=>+d.pal.toFixed(2)), yAxisID:'y', backgroundColor:'#fbbf24', borderRadius:3, order:1 }
     ]
   }, {
     plugins: { legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,padding:6}}, datalabels:{anchor:'end',align:'top',font:{size:9,weight:'bold'},formatter:(v,ctx)=>v>0?(ctx.datasetIndex===3?fmtP(v):fmtN(v)):'',color:ctx=>ctx.datasetIndex===0?'#22d3ee':'#e2e8f0'} },
-    scales: { y:{beginAtZero:true,ticks:{stepSize:50,font:{size:9}},grid:{color:'rgba(255,255,255,.05)'}}, x:{ticks:{font:{size:10}}} }
+    scales: {
+      y:  { beginAtZero:true, ticks:{stepSize:50,font:{size:9}}, grid:{color:'rgba(255,255,255,.05)'}, title:{display:true,text:'จำนวน',font:{size:9}} },
+      y1: { type:'linear', position:'right', beginAtZero:true, ticks:{font:{size:9},color:'#22d3ee'}, grid:{drawOnChartArea:false}, title:{display:true,text:'วันค้างสูงสุด',font:{size:9},color:'#22d3ee'} },
+      x:  { ticks:{font:{size:10}} }
+    }
   });
 
   // Bar 2: ช่วงเวลา
