@@ -60,7 +60,7 @@ function renderIn() {
 
   // Chart 1: เอกสาร / คลัง → radialBar
   const wh1data = whKeys.map(wh => uniqCount(byWH[wh],'เลขที่เอกสาร POI'));
-  mkRadialBar('i-c1',
+  mkDonut('i-c1',
     whKeys,
     wh1data,
     whKeys.map((w, i) => WH_COLORS[w] || PALETTE[i]),

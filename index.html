@@ -5,12 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>รายงานการติดตามเอกสารขอโอน IMPORTED & DOMESTIC</title>
 <!-- Preload data เพื่อเริ่ม fetch ก่อน JS run -->
-<link rel="preload" href="./data/meta.json"                  as="fetch" crossorigin>
-<link rel="preload" href="./data/outbound/aging-dom.json"   as="fetch" crossorigin>
-<link rel="preload" href="./data/outbound/aging-imp.json"   as="fetch" crossorigin>
-<link rel="preload" href="./data/outbound/car.json"         as="fetch" crossorigin>
-<link rel="preload" href="./data/poi/in.json"               as="fetch" crossorigin>
-<link rel="preload" href="./data/poi/uot.json"              as="fetch" crossorigin>
+<link rel="preload" href="./data/meta.json"              as="fetch" crossorigin>
+<link rel="preload" href="./data/outbound/car.json"     as="fetch" crossorigin>
+<link rel="preload" href="./data/poi/in.json"           as="fetch" crossorigin>
+<link rel="preload" href="./data/poi/uot.json"          as="fetch" crossorigin>
 
 <!-- CDN Libraries -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js"></script>
@@ -112,11 +110,11 @@
       <div class="pie-col">
         <div class="card" style="flex:1;">
           <div class="card-title"><span class="dot" style="background:#22d3ee"></span>จำนวนขอโอน / จำนวนโอนออก</div>
-          <div class="cw" style="height:290px;"><div id="u-pie1"></div></div>
+          <div class="cw" style="height:320px;"><div id="u-pie1"></div></div>
         </div>
         <div class="card" style="flex:1;">
           <div class="card-title"><span class="dot" style="background:#f87171"></span>สถานะประมวลผล / จำนวนรหัสสินค้า</div>
-          <div class="cw" style="height:290px;"><div id="u-pie2"></div></div>
+          <div class="cw" style="height:320px;"><div id="u-pie2"></div></div>
         </div>
       </div>
       <div style="display:flex;flex-direction:column;gap:10px;">
@@ -210,7 +208,7 @@
       <div class="pie-col">
         <div class="card" style="flex:1;">
           <div class="card-title"><span class="dot" style="background:#22d3ee"></span>จำนวนขอโอนคงค้าง / คลัง</div>
-          <div class="cw" style="height:290px;"><div id="i-c1"></div></div>
+          <div class="cw" style="height:320px;"><div id="i-c1"></div></div>
         </div>
         <div class="card" style="flex:1;">
           <div class="card-title"><span class="dot" style="background:#10b981"></span>จำนวนวันคงค้างเฉลี่ย / คลัง</div>
@@ -427,7 +425,7 @@
       <div class="pie-col">
         <div class="card" style="flex:1;">
           <div class="card-title"><span class="dot" style="background:#22d3ee"></span>สัดส่วนตามคลัง</div>
-          <div class="cw" style="height:290px;"><div id="p-pie1"></div></div>
+          <div class="cw" style="height:320px;"><div id="p-pie1"></div></div>
         </div>
         <div id="p-pie2-wrap" class="card" style="flex:1;">
           <div class="card-title"><span class="dot" style="background:#10b981"></span>สัดส่วนมาตราฐานการจ่ายตามคลัง</div>
@@ -473,32 +471,32 @@
 <script src="lib/filter-ui.js"></script>
 
 <!-- 4. Loaders -->
-<script src="loaders/status.js?v=20260602"></script>
+<script src="loaders/status.js?v=20260604"></script>
 
 <!-- 5. Web Components -->
-<script src="components/stat-card.js?v=20260602"></script>
-<script src="components/data-table.js?v=20260602"></script>
-<script src="components/filter-tags.js?v=20260602"></script>
+<script src="components/stat-card.js?v=20260604"></script>
+<script src="components/data-table.js?v=20260604"></script>
+<script src="components/filter-tags.js?v=20260604"></script>
 
 <!-- 6. Tab renderers -->
-<script src="tabs/uot.js?v=20260602"></script>
-<script src="tabs/in.js?v=20260602"></script>
-<script src="tabs/car/date-helpers.js?v=20260602"></script>
-<script src="tabs/car/aging.js?v=20260602"></script>
-<script src="tabs/car/filter.js?v=20260602"></script>
-<script src="tabs/car/views.js?v=20260602"></script>
-<script src="tabs/car/index.js?v=20260602"></script>
-<script src="tabs/pay.js?v=20260602"></script>
+<script src="tabs/uot.js?v=20260604"></script>
+<script src="tabs/in.js?v=20260604"></script>
+<script src="tabs/car/date-helpers.js?v=20260604"></script>
+<script src="tabs/car/aging.js?v=20260604"></script>
+<script src="tabs/car/filter.js?v=20260604"></script>
+<script src="tabs/car/views.js?v=20260604"></script>
+<script src="tabs/car/index.js?v=20260604"></script>
+<script src="tabs/pay.js?v=20260604"></script>
 
 <!-- 7. Modals -->
-<script src="modals/kpi-modal.js?v=20260602"></script>
-<script src="modals/car-modal.js?v=20260602"></script>
+<script src="modals/kpi-modal.js?v=20260604"></script>
+<script src="modals/car-modal.js?v=20260604"></script>
 
 <!-- 8. Main app bootstrap -->
-<script src="app.js?v=20260602"></script>
+<script src="app.js?v=20260604"></script>
 
 <!-- 9. Auto-load จาก data.json (GitHub Pages เท่านั้น) -->
-<script src="loaders/autoload.js?v=20260602"></script>
+<script src="loaders/autoload.js?v=20260604"></script>
 
 </body>
 </html>

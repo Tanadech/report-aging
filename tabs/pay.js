@@ -166,7 +166,7 @@ function renderPay() {
     byWh[wh].add(doc);
   });
   const whEnt = Object.entries(byWh).map(([k, v]) => [k, v.size]).sort((a, b) => b[1] - a[1]);
-  mkRadialBar('p-pie1',
+  mkDonut('p-pie1',
     whEnt.map(e => e[0]),
     whEnt.map(e => e[1]),
     PALETTE.slice(0, whEnt.length),

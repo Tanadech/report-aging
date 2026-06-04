@@ -65,7 +65,7 @@ function renderUot() {
   // Pie 1: ขอโอน vs โอนออก → radialBar
   const totalReq = uotFiltered.reduce((s, r) => s + num(r['จำนวนขอโอน']), 0);
   const totalOut = uotFiltered.reduce((s, r) => s + num(r['จำนวนโอนออก']), 0);
-  mkRadialBar('u-pie1',
+  mkDonut('u-pie1',
     ['จำนวนขอโอน', 'จำนวนโอนออก'],
     [totalReq, totalOut],
     ['#22d3ee', '#10b981']
@@ -74,7 +74,7 @@ function renderUot() {
   // Pie 2: สถานะ / SKU → radialBar
   const byStatus = groupBy(uotFiltered, 'สถานะประมวลผล');
   const statEnt  = Object.entries(byStatus).map(([k,v]) => [k, uniqCount(v,'รหัสสินค้า')]).sort((a,b) => b[1]-a[1]);
-  mkRadialBar('u-pie2',
+  mkDonut('u-pie2',
     statEnt.map(e => e[0]),
     statEnt.map(e => e[1]),
     statEnt.map(e => statusCol(e[0])),

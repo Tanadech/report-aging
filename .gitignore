@@ -9,3 +9,5 @@ data/data.json
 logs/
 node_modules/
 data/bundle.json
+data/outbound/aging-dom.json
+data/outbound/aging-imp.json
