@@ -22,7 +22,7 @@ const _KPI_ICONS = {
 
 class StatCard extends HTMLElement {
   static get observedAttributes() {
-    return ['label', 'value', 'unit', 'variant', 'subtitle', 'badge', 'icon', 'pct'];
+    return ['label', 'value', 'unit', 'variant', 'subtitle', 'badge', 'icon', 'pct', 'list'];
   }
 
   connectedCallback() { this.render(); }
@@ -45,6 +45,13 @@ class StatCard extends HTMLElement {
           ? `<img src="${iconAttr}" class="kpi-ico-img" alt="" draggable="false">`
           : iconAttr)
       : (_KPI_ICONS[variant] || _KPI_ICONS['']);
+
+    const listRaw   = this.getAttribute('list') || '';
+    const listItems = listRaw ? listRaw.split('|').filter(Boolean) : [];
+    const _s = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const listHtml  = listItems.length
+      ? `<div class="kpi-list">${listItems.map(s => `<div>${_s(s)}</div>`).join('')}</div>`
+      : '';
 
     this.className = 'kpi' + (variant ? ' ' + variant : '');
 
@@ -70,6 +77,7 @@ class StatCard extends HTMLElement {
             ${subHtml}
           </div>
           ${ringHtml}
+          ${listHtml}
         </div>
         <div class="kpi-prog"><div class="kpi-bar" style="width:${p.toFixed(1)}%"></div></div>
         <div class="kpi-ft">
@@ -89,6 +97,7 @@ class StatCard extends HTMLElement {
               <span class="kpi-unit">&thinsp;${unit}</span>
             </div>
           </div>
+          ${listHtml}
         </div>`;
     }
   }

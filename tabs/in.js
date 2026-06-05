@@ -3,6 +3,7 @@
 const WH_COLORS   = { 'WH1':'#00B8D9','WH2':'#22C55E','WH3':'#fda92d','WH4':'#7C3AED','WH5':'#FF5630' };
 const IN_PAGE_SIZE = 50;
 let inFiltered = [], inPage = 0;
+let _inC5WHFilter = null;
 
 // คลังจาก "ประตูลงสินค้า" → "WH1" / "(อื่นๆ)"
 function getWH(r) {
@@ -81,7 +82,7 @@ function renderIn() {
     scales:{y:{beginAtZero:true,ticks:{font:{size:10}}},x:{ticks:{font:{size:12}}}}
   });
 
-  // Chart 3: Top 5 สาขา
+  // Chart 3: Top 10 สาขา
   const byBr2  = groupBy(f,'ชื่อย่อสาขา');
   const brD2   = Object.entries(byBr2).map(([k,v])=>({
     name: BR_ABR_MAP[k]||k,
@@ -89,7 +90,7 @@ function renderIn() {
     docs: uniqCount(v,'เลขที่เอกสาร POI'),
     ot:   uniqCount(v,'เลขที่ onetime'),
     pal:  palletForRows(v)
-  })).sort((a,b)=>b.max!==a.max?b.max-a.max:b.docs!==a.docs?b.docs-a.docs:a.name.localeCompare(b.name,'th')).slice(0,5);
+  })).sort((a,b)=>b.max!==a.max?b.max-a.max:b.docs!==a.docs?b.docs-a.docs:a.name.localeCompare(b.name,'th')).slice(0,10);
   mkChart('i-c3','bar',{
     labels:brD2.map(d=>d.name),
     datasets:[
@@ -120,18 +121,49 @@ function renderIn() {
     scales:{y:{beginAtZero:true,ticks:{stepSize:50,font:{size:9}}},x:{ticks:{font:{size:9}}}}
   });
 
-  // Chart 5: สาขา / คลัง (large grouped bar)
-  const allBrRaw = [...new Set(f.map(r=>r['ชื่อย่อสาขา']||'').filter(Boolean))];
-  const allBr    = allBrRaw.map(br=>({ br, total:whKeys.reduce((s,wh)=>s+uniqCount((byWH[wh]||[]).filter(r=>r['ชื่อย่อสาขา']===br),'เลขที่ onetime'),0) })).sort((a,b)=>b.total-a.total).map(x=>x.br);
-  const c5El    = document.getElementById('i-c5');
-  c5El.style.width = Math.max(900, allBr.length * 72) + 'px';
+  // Chart 5: สาขา / คลัง (stacked bar + WH filter)
+  const i5FltEl  = document.getElementById('i-c5-wh-filter');
+  const i5LgEl   = document.getElementById('i-legend5');
+  const _L5      = document.body.classList.contains('light');
+  const _i5On    = _L5 ? '#FEF4D4' : 'rgba(56,189,248,.25)';
+  const _i5Off   = _L5 ? 'transparent' : 'rgba(56,189,248,.08)';
+  const _i5COn   = _L5 ? '#B66816' : '#fff';
+  const _i5COff  = _L5 ? '#637381' : '#7dd3fc';
+  const _i5BtnSt = act => `font-size:11px;padding:3px 10px;border-radius:5px;cursor:pointer;font-family:inherit;border:1px solid rgba(56,189,248,.35);background:${act?_i5On:_i5Off};color:${act?_i5COn:_i5COff};`;
+  if (i5FltEl) i5FltEl.innerHTML = [null, ...whKeys].map(wh => {
+    const act = _inC5WHFilter === wh;
+    const lbl = wh === null ? 'ทั้งหมด' : esc(wh);
+    const cmd = wh === null ? `_inC5WHFilter=null` : `_inC5WHFilter='${wh}'`;
+    return `<button onclick="${cmd};renderIn();" style="${_i5BtnSt(act)}">${lbl}</button>`;
+  }).join('');
+  const activeWHsI = _inC5WHFilter ? [_inC5WHFilter] : whKeys;
+  const allBrRaw   = [...new Set(f.map(r=>r['ชื่อย่อสาขา']||'').filter(Boolean))];
+  const allBr      = allBrRaw.map(br=>({ br, total:activeWHsI.reduce((s,wh)=>s+uniqCount((byWH[wh]||[]).filter(r=>r['ชื่อย่อสาขา']===br),'เลขที่ onetime'),0) })).sort((a,b)=>b.total-a.total).map(x=>x.br);
+  const i5Ds       = activeWHsI.map((wh,i)=>({ label:wh, backgroundColor:WH_COLORS[wh]||PALETTE[whKeys.indexOf(wh)], borderWidth:0, data:allBr.map(br=>{ const rows=(byWH[wh]||[]).filter(r=>r['ชื่อย่อสาขา']===br); return uniqCount(rows,'เลขที่ onetime'); }) }));
+  const c5El       = document.getElementById('i-c5');
+  c5El.style.width = Math.max(900, allBr.length * 55) + 'px';
   mkChart('i-c5','bar',{
     labels:allBr.map(br=>(BR_ABR_MAP[br]||br).replace(/^สาขา\s*/,'')),
-    datasets:whKeys.map((wh,i)=>({label:wh,backgroundColor:WH_COLORS[wh]||PALETTE[i],borderRadius:3,borderWidth:0,data:allBr.map(br=>{const rows=byWH[wh].filter(r=>r['ชื่อย่อสาขา']===br);return uniqCount(rows,'เลขที่ onetime');})}))
+    datasets:i5Ds
   },{
-    plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:10,padding:8}},datalabels:{display:false}},
-    scales:{x:{ticks:{font:{size:9},maxRotation:75,minRotation:45}},y:{beginAtZero:true,ticks:{font:{size:9}},title:{display:true,text:'เลขที่ Onetime (distinct)',font:{size:10}}}}
+    plugins:{
+      legend:{display:false},
+      tooltip:{ mode:'index', callbacks:{ footer: items=>'รวม: '+fmtN(items.reduce((s,i)=>s+(i.parsed.y||0),0)) } },
+      datalabels:{
+        anchor:ctx=>ctx.datasetIndex===i5Ds.length-1?'end':'center',
+        align: ctx=>ctx.datasetIndex===i5Ds.length-1?'top':'center',
+        font:{size:9,weight:'bold'},
+        formatter:(v,ctx)=>{ if(ctx.datasetIndex===i5Ds.length-1){ const tot=i5Ds.reduce((s,d)=>s+(d.data[ctx.dataIndex]||0),0); return tot>0?fmtN(tot):''; } return v>0?fmtN(v):''; },
+        color:ctx=>ctx.datasetIndex===i5Ds.length-1?(document.body.classList.contains('light')?'#1C252E':'#e2e8f0'):'#fff',
+        display:ctx=>ctx.dataset.data[ctx.dataIndex]>0
+      }
+    },
+    scales:{
+      x:{stacked:true,ticks:{font:{size:9},maxRotation:75,minRotation:45}},
+      y:{stacked:true,beginAtZero:true,ticks:{font:{size:9}},title:{display:true,text:'เลขที่ Onetime (distinct)',font:{size:9}}}
+    }
   });
+  if(i5LgEl) i5LgEl.innerHTML = activeWHsI.map((wh,i)=>`<span style="display:inline-flex;align-items:center;gap:3px;margin-right:10px;"><span style="width:10px;height:10px;border-radius:2px;background:${WH_COLORS[wh]||PALETTE[whKeys.indexOf(wh)]};display:inline-block;"></span><span style="font-size:10px;color:var(--muted);">${esc(wh)}</span></span>`).join('');
 
   // Table (paginated)
   if (inGrid) { try { inGrid.destroy(); } catch(e){} inGrid = null; }

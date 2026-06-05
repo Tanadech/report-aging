@@ -7,6 +7,13 @@ function _truckTypeSummary(rows) {
   return Object.entries(byType).sort((a, b) => b[1] - a[1]).map(([t, n]) => `${t}:${n}`).join(' · ').replace(/"/g, '&quot;');
 }
 
+function _truckTypeList(rows) {
+  if (!rows.length) return '';
+  const byType = {};
+  rows.forEach(r => { const t = (r['truck_info'] || '').trim() || 'อื่นๆ'; byType[t] = (byType[t] || 0) + 1; });
+  return Object.entries(byType).sort((a, b) => b[1] - a[1]).map(([t, n]) => `${t}:${n}`).join('|').replace(/"/g, '&quot;');
+}
+
 function renderCar() {
   let f         = getCarFiltered();
   const fdateEl = document.getElementById('c-fdate');
@@ -45,16 +52,16 @@ function renderCar() {
   const notoutRows   = f.filter(r => isDcDeparted(r['status_shipping']));
 
   document.getElementById('car-kpi').innerHTML = `
-    <stat-card variant="inf"  label="รถเข้าวันนี้"      value="${fmtN(todayRows.length)}"    unit="คัน" icon="https://img.icons8.com/color/96/loading-truck.png"    subtitle="${_truckTypeSummary(todayRows)}"></stat-card>
-    <stat-card                label="รถเข้าพรุ่งนี้"    value="${fmtN(tomorrowRows.length)}" unit="คัน" icon="https://img.icons8.com/isometric/96/truck.png"          subtitle="${_truckTypeSummary(tomorrowRows)}"></stat-card>
-    <stat-card variant="inf"  label="รถในมุมมอง"        value="${fmtN(f.length)}"            unit="คัน" icon="https://img.icons8.com/cotton/96/warehouse.png"         subtitle="${_truckTypeSummary(f)}"></stat-card>
+    <stat-card variant="inf"  label="รถเข้าวันนี้"      value="${fmtN(todayRows.length)}"    unit="คัน" icon="https://img.icons8.com/color/96/loading-truck.png"    list="${_truckTypeList(todayRows)}"></stat-card>
+    <stat-card                label="รถเข้าพรุ่งนี้"    value="${fmtN(tomorrowRows.length)}" unit="คัน" icon="https://img.icons8.com/isometric/96/truck.png"          list="${_truckTypeList(tomorrowRows)}"></stat-card>
+    <stat-card variant="inf"  label="รถในมุมมอง"        value="${fmtN(f.length)}"            unit="คัน" icon="https://img.icons8.com/cotton/96/warehouse.png"         list="${_truckTypeList(f)}"></stat-card>
     <stat-card variant="ok"   label="คลังที่ต้องเตรียม"  value="${fmtN(uniqCount(f,'port_id'))}"  unit="คลัง"></stat-card>
-    <stat-card variant="ok"   label="มาก่อนเวลา"        value="${fmtN(earlyRows.length)}"    unit="คัน" subtitle="${_truckTypeSummary(earlyRows)}"></stat-card>
-    <stat-card variant="warn" label="มาหลังเวลานัด"      value="${fmtN(lateRows.length)}"     unit="คัน" subtitle="${_truckTypeSummary(lateRows)}"></stat-card>
-    <stat-card variant="alr"  label="ยกเลิกรับงาน"      value="${fmtN(cancelRows.length)}"   unit="คัน" subtitle="${_truckTypeSummary(cancelRows)}"></stat-card>
-    <stat-card                label="ยังไม่มาลงคิว"      value="${fmtN(notqueueRows.length)}" unit="คัน" subtitle="${_truckTypeSummary(notqueueRows)}"></stat-card>
-    <stat-card variant="alr"  label="รถตกค้าง"          value="${fmtN(stuckRows.length)}"    unit="คัน" subtitle="${_truckTypeSummary(stuckRows)}"></stat-card>
-    <stat-card variant="warn" label="ยังไม่ออก DC"      value="${fmtN(notoutRows.length)}"   unit="คัน" subtitle="${_truckTypeSummary(notoutRows)}"></stat-card>
+    <stat-card variant="ok"   label="มาก่อนเวลา"        value="${fmtN(earlyRows.length)}"    unit="คัน" list="${_truckTypeList(earlyRows)}"></stat-card>
+    <stat-card variant="warn" label="มาหลังเวลานัด"      value="${fmtN(lateRows.length)}"     unit="คัน" list="${_truckTypeList(lateRows)}"></stat-card>
+    <stat-card variant="alr"  label="ยกเลิกรับงาน"      value="${fmtN(cancelRows.length)}"   unit="คัน" list="${_truckTypeList(cancelRows)}"></stat-card>
+    <stat-card                label="ยังไม่มาลงคิว"      value="${fmtN(notqueueRows.length)}" unit="คัน" list="${_truckTypeList(notqueueRows)}"></stat-card>
+    <stat-card variant="alr"  label="รถตกค้าง"          value="${fmtN(stuckRows.length)}"    unit="คัน" list="${_truckTypeList(stuckRows)}"></stat-card>
+    <stat-card variant="warn" label="ยังไม่ออก DC"      value="${fmtN(notoutRows.length)}"   unit="คัน" list="${_truckTypeList(notoutRows)}"></stat-card>
   `;
 
   // Timeline chart
@@ -70,6 +77,7 @@ function renderCar() {
   }, {
     plugins: {
       legend: { position:'bottom', labels:{ font:{size:11}, boxWidth:10, padding:8 } },
+      tooltip: { mode:'index', callbacks:{ footer: items => 'รวม: ' + fmtN(items.reduce((s,i) => s + (i.parsed.y||0), 0)) } },
       datalabels: { anchor:'center', align:'center', font:{size:11,weight:'bold'}, color:'#fff', formatter: v => v > 0 ? v : '', display: ctx => ctx.dataset.data[ctx.dataIndex] > 0 }
     },
     scales: {

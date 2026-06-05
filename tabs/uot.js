@@ -2,7 +2,7 @@
 
 const UOT_PAGE_SIZE = 50;
 let uotFiltered = [], uotPage = 0;
-let _uotC5View = 'branch';
+let _uotC5WHFilter = null;
 
 // ── Filter ──
 function getUotFiltered() {
@@ -138,53 +138,79 @@ function renderUot() {
   const c4El = document.getElementById('u-c4');
   c4El.style.width = Math.max(600, zoneKeys.length * 45) + 'px';
   mkChart('u-c4', 'bar', { labels:zoneKeys, datasets:ds4 }, {
-    plugins: { legend:{display:false}, datalabels:{anchor:'end',align:'top',font:{size:9,weight:'bold'},formatter:(v,ctx)=>{if(ctx.datasetIndex===ds4.length-1){const tot=ds4.reduce((s,d)=>s+(d.data[ctx.dataIndex]||0),0);return tot>0?fmtN(tot):'';} return v>0?fmtN(v):'';},color:ctx=>ctx.datasetIndex===ds4.length-1?(document.body.classList.contains('light')?'#1C252E':'#e2e8f0'):'#fff',anchor:ctx=>ctx.datasetIndex===ds4.length-1?'end':'center',align:ctx=>ctx.datasetIndex===ds4.length-1?'top':'center',display:ctx=>ctx.dataset.data[ctx.dataIndex]>0} },
+    plugins: {
+      legend: {display:false},
+      tooltip: { mode:'index', callbacks:{ footer: items=>'รวม: '+fmtN(items.reduce((s,i)=>s+(i.parsed.y||0),0)) } },
+      datalabels: {anchor:ctx=>ctx.datasetIndex===ds4.length-1?'end':'center',align:ctx=>ctx.datasetIndex===ds4.length-1?'top':'center',font:{size:9,weight:'bold'},formatter:(v,ctx)=>{if(ctx.datasetIndex===ds4.length-1){const tot=ds4.reduce((s,d)=>s+(d.data[ctx.dataIndex]||0),0);return tot>0?fmtN(tot):'';} return v>0?fmtN(v):'';},color:ctx=>ctx.datasetIndex===ds4.length-1?(document.body.classList.contains('light')?'#1C252E':'#e2e8f0'):'#fff',display:ctx=>ctx.dataset.data[ctx.dataIndex]>0}
+    },
     scales: { x:{stacked:true,ticks:{font:{size:9}}}, y:{stacked:true,beginAtZero:true,ticks:{font:{size:9}},title:{display:true,text:'จำนวนรหัสสินค้า (distinct)',font:{size:9}}} }
   });
   const lgHtml = allStats.filter(st=>ds4.some(d=>d.label===st))
     .map(st=>`<span style="display:inline-flex;align-items:center;gap:3px;margin-right:10px;"><span style="width:10px;height:10px;border-radius:2px;background:${statusCol(st)};display:inline-block;"></span><span style="font-size:10px;color:var(--muted);">${st}</span></span>`).join('');
   document.getElementById('u-legend4').innerHTML = lgHtml;
 
-  // Bar 5: สาขา / คลัง — toggle view (branch / warehouse)
+  // Bar 5: สาขา / คลัง — stacked bar with WH filter
   const uotByWH      = groupBy(uotFiltered, 'คลังสินค้า');
   const uotAllWHKeys = [...new Set(dataUot.map(r=>r['คลังสินค้า']||'').filter(Boolean))].sort();
   const UOT_WH_COLOR = Object.fromEntries(uotAllWHKeys.map((wh,i)=>[wh,PALETTE[i%PALETTE.length]]));
   const c5El         = document.getElementById('u-c5');
-  const c5BrBtn      = document.getElementById('u-c5-branch-btn');
-  const c5WhBtn      = document.getElementById('u-c5-wh-btn');
-  const _L = document.body.classList.contains('light');
-  const _btnOn  = _L ? '#FEF4D4'           : 'rgba(56,189,248,.25)';
-  const _btnOff = _L ? 'transparent'        : 'rgba(56,189,248,.08)';
-  const _clrOn  = _L ? '#B66816'            : '#fff';
-  const _clrOff = _L ? '#637381'            : '#7dd3fc';
-  if (c5BrBtn) { c5BrBtn.style.background = _uotC5View==='branch'?_btnOn:_btnOff; c5BrBtn.style.color = _uotC5View==='branch'?_clrOn:_clrOff; }
-  if (c5WhBtn) { c5WhBtn.style.background = _uotC5View==='wh'?_btnOn:_btnOff;     c5WhBtn.style.color = _uotC5View==='wh'?_clrOn:_clrOff; }
+  const u5LgEl       = document.getElementById('u-legend5');
+  const u5FltEl      = document.getElementById('u-c5-wh-filter');
+  const _L           = document.body.classList.contains('light');
+  const uotWHKeys    = uotAllWHKeys.filter(wh => uotByWH[wh]);
 
-  if (_uotC5View === 'wh') {
-    c5El.style.width = '';
-    const whViewData = uotAllWHKeys.map(wh => uniqCount(uotByWH[wh]||[], 'เลขที่เอกสารขอโอน'));
-    mkChart('u-c5', 'bar', {
-      labels: uotAllWHKeys,
-      datasets: [{ label:'จำนวนเอกสาร', data:whViewData, backgroundColor:uotAllWHKeys.map((_,i)=>PALETTE[i%PALETTE.length]), borderRadius:8, borderWidth:0 }]
-    }, {
-      plugins: { legend:{display:false}, datalabels:{anchor:'end',align:'top',font:{size:14,weight:'bold'},formatter:v=>v>0?fmtN(v):''} },
-      scales: { y:{beginAtZero:true,ticks:{font:{size:10}},title:{display:true,text:'จำนวนเอกสาร (distinct)',font:{size:10}}}, x:{ticks:{font:{size:13}}} }
-    });
-  } else {
-    const uotWHKeys   = uotAllWHKeys.filter(wh => uotByWH[wh]);
-    const uotAllBrRaw = [...new Set(uotFiltered.map(r=>r['ชื่อสาขา']||'').filter(Boolean))];
-    const uotAllBr    = uotAllBrRaw.map(br => ({
-      br, total:uotWHKeys.reduce((s,wh)=>s+uniqCount((uotByWH[wh]||[]).filter(r=>r['ชื่อสาขา']===br),'เลขที่เอกสารขอโอน'),0)
-    })).sort((a,b) => b.total - a.total).map(x => x.br);
-    c5El.style.width = Math.max(900, uotAllBr.length * 55) + 'px';
-    mkChart('u-c5', 'bar', {
-      labels: uotAllBr.map(br => br.replace(/^สาขา\s*/, '')),
-      datasets: uotWHKeys.map(wh => ({ label:wh||'(ไม่ระบุ)', data:uotAllBr.map(br=>uniqCount((uotByWH[wh]||[]).filter(r=>r['ชื่อสาขา']===br),'เลขที่เอกสารขอโอน')), backgroundColor:UOT_WH_COLOR[wh]||'#94a3b8', borderRadius:3, borderWidth:0 }))
-    }, {
-      plugins: { legend:{position:'bottom',labels:{font:{size:11},boxWidth:10,padding:8}}, datalabels:{display:false} },
-      scales: { x:{ticks:{font:{size:9},maxRotation:75,minRotation:45}}, y:{beginAtZero:true,ticks:{font:{size:9}},title:{display:true,text:'จำนวนเอกสาร (distinct)',font:{size:10}}} }
-    });
+  // WH filter buttons
+  if (u5FltEl) {
+    const _on  = _L ? '#FEF4D4' : 'rgba(56,189,248,.25)';
+    const _off = _L ? 'transparent' : 'rgba(56,189,248,.08)';
+    const _cOn = _L ? '#B66816' : '#fff';
+    const _cOff= _L ? '#637381' : '#7dd3fc';
+    const _st  = act => `font-size:11px;padding:3px 10px;border-radius:5px;cursor:pointer;font-family:inherit;border:1px solid rgba(56,189,248,.35);background:${act?_on:_off};color:${act?_cOn:_cOff};`;
+    u5FltEl.innerHTML = [null, ...uotWHKeys].map(wh => {
+      const act = _uotC5WHFilter === wh;
+      const lbl = wh === null ? 'ทั้งหมด' : esc(wh);
+      const cmd = wh === null ? `_uotC5WHFilter=null` : `_uotC5WHFilter='${wh}'`;
+      return `<button onclick="${cmd};renderUot();" style="${_st(act)}">${lbl}</button>`;
+    }).join('');
   }
+
+  // Apply WH filter to datasets
+  const activeWHs   = _uotC5WHFilter ? [_uotC5WHFilter] : uotWHKeys;
+  const uotAllBrRaw = [...new Set(uotFiltered.map(r=>r['ชื่อสาขา']||'').filter(Boolean))];
+  const uotAllBr    = uotAllBrRaw.map(br => ({
+    br, total:activeWHs.reduce((s,wh)=>s+uniqCount((uotByWH[wh]||[]).filter(r=>r['ชื่อสาขา']===br),'เลขที่เอกสารขอโอน'),0)
+  })).sort((a,b) => b.total - a.total).map(x => x.br);
+  const u5Ds = activeWHs.map(wh => ({
+    label: wh||'(ไม่ระบุ)',
+    data:  uotAllBr.map(br => uniqCount((uotByWH[wh]||[]).filter(r=>r['ชื่อสาขา']===br),'เลขที่เอกสารขอโอน')),
+    backgroundColor: UOT_WH_COLOR[wh]||'#94a3b8', borderWidth:0
+  }));
+  c5El.style.width = Math.max(900, uotAllBr.length * 55) + 'px';
+  mkChart('u-c5', 'bar', {
+    labels: uotAllBr.map(br => br.replace(/^สาขา\s*/, '')),
+    datasets: u5Ds
+  }, {
+    plugins: {
+      legend: { display:false },
+      tooltip: { mode:'index', callbacks:{ footer: items => 'รวม: ' + fmtN(items.reduce((s,i)=>s+(i.parsed.y||0),0)) } },
+      datalabels: {
+        anchor: ctx => ctx.datasetIndex===u5Ds.length-1?'end':'center',
+        align:  ctx => ctx.datasetIndex===u5Ds.length-1?'top':'center',
+        font:   {size:9,weight:'bold'},
+        formatter: (v,ctx) => {
+          if (ctx.datasetIndex===u5Ds.length-1) { const tot=u5Ds.reduce((s,d)=>s+(d.data[ctx.dataIndex]||0),0); return tot>0?fmtN(tot):''; }
+          return v>0?fmtN(v):'';
+        },
+        color:   ctx => ctx.datasetIndex===u5Ds.length-1?(document.body.classList.contains('light')?'#1C252E':'#e2e8f0'):'#fff',
+        display: ctx => ctx.dataset.data[ctx.dataIndex]>0
+      }
+    },
+    scales: {
+      x: { stacked:true, ticks:{font:{size:9},maxRotation:75,minRotation:45} },
+      y: { stacked:true, beginAtZero:true, ticks:{font:{size:9}}, title:{display:true,text:'จำนวนเอกสาร (distinct)',font:{size:9}} }
+    }
+  });
+  if (u5LgEl) u5LgEl.innerHTML = activeWHs.map(wh=>`<span style="display:inline-flex;align-items:center;gap:3px;margin-right:10px;"><span style="width:10px;height:10px;border-radius:2px;background:${UOT_WH_COLOR[wh]||'#94a3b8'};display:inline-block;"></span><span style="font-size:10px;color:var(--muted);">${esc(wh)}</span></span>`).join('');
 
   populateUotTblFilters();
   renderUotTable();
@@ -316,7 +342,7 @@ function renderUotTags() {
   });
 }
 
-// ── Internal: rank top-5 branches ──
+// ── Internal: rank top-10 branches ──
 function _rankBranches(rows) {
   return Object.entries(groupBy(rows, 'ชื่อสาขา'))
     .map(([k,v]) => ({
@@ -331,7 +357,7 @@ function _rankBranches(rows) {
       if (b.docs!==a.docs) return b.docs-a.docs;
       if (b.skus!==a.skus) return b.skus-a.skus;
       return a.fullName.localeCompare(b.fullName,'th');
-    }).slice(0,5);
+    }).slice(0,10);
 }
 
 // ── Pagination buttons (bound after DOM ready in app.js) ──
