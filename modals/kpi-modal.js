@@ -92,8 +92,3 @@ document.getElementById('km-close').addEventListener('click', closeKpiDetail);
 document.getElementById('kpi-modal').addEventListener('click', e => { if (e.target.id === 'kpi-modal') closeKpiDetail(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.getElementById('kpi-modal').classList.contains('show')) closeKpiDetail(); });
 
-// Delegated click on KPI cards
-document.getElementById('car-kpi').addEventListener('click', e => {
-  const card = e.target.closest('[data-kpi]');
-  if (card) openKpiDetail(card.getAttribute('data-kpi'));
-});

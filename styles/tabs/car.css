@@ -10,8 +10,7 @@
 
 /* KPI row override for CAR tab */
 #tc-car .kpi-row { grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); }
-#tc-car .kpi     { cursor:pointer; transition:transform .12s,border-color .15s,box-shadow .15s; }
-#tc-car .kpi:hover { transform:translateY(-2px); border-color:rgba(56,189,248,.4); box-shadow:0 4px 14px rgba(0,0,0,.4); }
+#tc-car .kpi     { transition:border-color .15s; }
 
 /* Time slot grouping */
 .tslot          { margin-bottom:14px; }
@@ -66,7 +65,6 @@
 body.light .cstat.in-dc    { background:rgba(255,171,0,.12);  color:#FFAB00; }
 body.light .cstat.dc-out   { background:rgba(34,197,94,.13);  color:#22C55E; }
 body.light .cstat.dc-other { background:rgba(145,158,171,.13);color:#637381; }
-body.light #tc-car .kpi:hover { box-shadow:0 0 2px 0 rgba(145,158,171,.2),0 12px 24px -4px rgba(145,158,171,.2); border-color:rgba(253,169,45,.4); }
 body.light .car-toolbar       { background:#F4F6F8; border-color:rgba(145,158,171,.2); }
 body.light .view-toggle       { background:#fff; border-color:rgba(145,158,171,.2); }
 body.light .view-toggle button { color:#637381; }

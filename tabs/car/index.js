@@ -45,18 +45,17 @@ function renderCar() {
   const notoutRows   = f.filter(r => isDcDeparted(r['status_shipping']));
 
   document.getElementById('car-kpi').innerHTML = `
-    <stat-card variant="inf"  data-kpi="today"    label="รถเข้าวันนี้"      value="${fmtN(todayRows.length)}"    unit="คัน" icon="https://img.icons8.com/color/96/loading-truck.png"    subtitle="${_truckTypeSummary(todayRows)}"></stat-card>
-    <stat-card                data-kpi="tomorrow" label="รถเข้าพรุ่งนี้"    value="${fmtN(tomorrowRows.length)}" unit="คัน" icon="https://img.icons8.com/isometric/96/truck.png"          subtitle="${_truckTypeSummary(tomorrowRows)}"></stat-card>
-    <stat-card variant="inf"  data-kpi="view"     label="รถในมุมมอง"        value="${fmtN(f.length)}"            unit="คัน" icon="https://img.icons8.com/cotton/96/warehouse.png"         subtitle="${_truckTypeSummary(f)}"></stat-card>
-    <stat-card variant="ok"   data-kpi="wh"       label="คลังที่ต้องเตรียม"  value="${fmtN(uniqCount(f,'port_id'))}"  unit="คลัง"></stat-card>
-    <stat-card variant="ok"   data-kpi="early"    label="มาก่อนเวลา"        value="${fmtN(earlyRows.length)}"    unit="คัน" subtitle="${_truckTypeSummary(earlyRows)}"></stat-card>
-    <stat-card variant="warn" data-kpi="late"     label="มาหลังเวลานัด"      value="${fmtN(lateRows.length)}"     unit="คัน" subtitle="${_truckTypeSummary(lateRows)}"></stat-card>
-    <stat-card variant="alr"  data-kpi="cancel"   label="ยกเลิกรับงาน"      value="${fmtN(cancelRows.length)}"   unit="คัน" subtitle="${_truckTypeSummary(cancelRows)}"></stat-card>
-    <stat-card                data-kpi="notqueue" label="ยังไม่มาลงคิว"      value="${fmtN(notqueueRows.length)}" unit="คัน" subtitle="${_truckTypeSummary(notqueueRows)}"></stat-card>
-    <stat-card variant="alr"  data-kpi="stuck"    label="รถตกค้าง"          value="${fmtN(stuckRows.length)}"    unit="คัน" subtitle="${_truckTypeSummary(stuckRows)}"></stat-card>
-    <stat-card variant="warn" data-kpi="notout"   label="ยังไม่ออก DC"      value="${fmtN(notoutRows.length)}"   unit="คัน" subtitle="${_truckTypeSummary(notoutRows)}"></stat-card>
+    <stat-card variant="inf"  label="รถเข้าวันนี้"      value="${fmtN(todayRows.length)}"    unit="คัน" icon="https://img.icons8.com/color/96/loading-truck.png"    subtitle="${_truckTypeSummary(todayRows)}"></stat-card>
+    <stat-card                label="รถเข้าพรุ่งนี้"    value="${fmtN(tomorrowRows.length)}" unit="คัน" icon="https://img.icons8.com/isometric/96/truck.png"          subtitle="${_truckTypeSummary(tomorrowRows)}"></stat-card>
+    <stat-card variant="inf"  label="รถในมุมมอง"        value="${fmtN(f.length)}"            unit="คัน" icon="https://img.icons8.com/cotton/96/warehouse.png"         subtitle="${_truckTypeSummary(f)}"></stat-card>
+    <stat-card variant="ok"   label="คลังที่ต้องเตรียม"  value="${fmtN(uniqCount(f,'port_id'))}"  unit="คลัง"></stat-card>
+    <stat-card variant="ok"   label="มาก่อนเวลา"        value="${fmtN(earlyRows.length)}"    unit="คัน" subtitle="${_truckTypeSummary(earlyRows)}"></stat-card>
+    <stat-card variant="warn" label="มาหลังเวลานัด"      value="${fmtN(lateRows.length)}"     unit="คัน" subtitle="${_truckTypeSummary(lateRows)}"></stat-card>
+    <stat-card variant="alr"  label="ยกเลิกรับงาน"      value="${fmtN(cancelRows.length)}"   unit="คัน" subtitle="${_truckTypeSummary(cancelRows)}"></stat-card>
+    <stat-card                label="ยังไม่มาลงคิว"      value="${fmtN(notqueueRows.length)}" unit="คัน" subtitle="${_truckTypeSummary(notqueueRows)}"></stat-card>
+    <stat-card variant="alr"  label="รถตกค้าง"          value="${fmtN(stuckRows.length)}"    unit="คัน" subtitle="${_truckTypeSummary(stuckRows)}"></stat-card>
+    <stat-card variant="warn" label="ยังไม่ออก DC"      value="${fmtN(notoutRows.length)}"   unit="คัน" subtitle="${_truckTypeSummary(notoutRows)}"></stat-card>
   `;
-  document.querySelectorAll('#car-kpi stat-card[data-kpi]').forEach(el => { el.dataset.kpi = el.getAttribute('data-kpi'); });
 
   // Timeline chart
   const slots  = [...new Set(f.map(r => r['zone_time'] || '').filter(Boolean))].sort((a,b) => timeSlotStart(a) - timeSlotStart(b));
