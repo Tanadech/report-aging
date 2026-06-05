@@ -26,12 +26,18 @@ body.light .zone-scroll::-webkit-scrollbar-thumb { background:#cbd5e1; }
 /* ── Sidebar app shell ── */
 .app-shell { display:flex; flex:1; min-height:0; }
 
-/* Sidebar — pure white, WMS enterprise style */
+/*
+ * Sidebar — WMS design tokens
+ * primary-main:#fda92d  primary-lighter:#FEF4D4  primary-dark:#B66816
+ * text-secondary:#637381  text-primary:#1C252E
+ * grey-300:#DFE3E8  grey-500:#919EAB
+ * action-hover:rgba(145 158 171/.08)  divider:rgba(145 158 171/.2)
+ */
 .sidebar {
   width:240px; flex-shrink:0;
-  background:#ffffff;
-  border-right:1px solid #e8ecf0;
-  box-shadow:2px 0 8px rgba(0,0,0,.05);
+  background:#FFFFFF;
+  border-right:1px solid rgba(145,158,171,.2);
+  box-shadow:0 4px 8px 0 rgba(145,158,171,.16);
   display:flex; flex-direction:column;
   overflow:hidden;
 }
@@ -39,56 +45,56 @@ body.light .zone-scroll::-webkit-scrollbar-thumb { background:#cbd5e1; }
 /* Brand / Logo */
 .sb-logo {
   padding:16px 16px 14px;
-  border-bottom:1px solid #f0f2f5;
+  border-bottom:1px solid rgba(145,158,171,.2);
   flex-shrink:0;
 }
 .sb-logo-brand { display:flex; align-items:center; gap:10px; }
 .sb-brand-icon {
   width:38px; height:38px;
-  background:linear-gradient(135deg,#f59e0b 0%,#f97316 100%);
+  background:linear-gradient(135deg,#fda92d 0%,#B66816 100%);
   border-radius:10px;
   display:flex; align-items:center; justify-content:center;
   font-size:18px; flex-shrink:0;
-  box-shadow:0 3px 10px rgba(245,158,11,.35);
+  box-shadow:0 8px 16px 0 rgba(253,169,45,.24);
 }
-.sb-logo-title { font-size:15px; font-weight:800; color:#f59e0b; letter-spacing:.2px; line-height:1.2; }
-.sb-logo-sub   { font-size:9px; color:#9ca3af; letter-spacing:.5px; text-transform:uppercase; margin-top:2px; }
+.sb-logo-title { font-size:15px; font-weight:800; color:#fda92d; letter-spacing:.2px; line-height:1.2; }
+.sb-logo-sub   { font-size:9px; color:#919EAB; letter-spacing:.5px; text-transform:uppercase; margin-top:2px; }
 
-/* "รายงาน" parent item — orange pill (like active section in WMS) */
+/* "รายงาน" parent item — WMS active-section pill */
 .sb-parent-item {
   display:flex; align-items:center; gap:10px;
   margin:10px 10px 4px;
   padding:10px 14px;
-  background:rgba(245,158,11,.1);
-  border:1px solid rgba(245,158,11,.2);
+  background:#FEF4D4;
+  border:1px solid #FED680;
   border-radius:8px;
   flex-shrink:0; cursor:default;
 }
 .sb-p-icon    { font-size:16px; }
-.sb-p-label   { flex:1; font-size:13px; font-weight:700; color:#ea580c; }
-.sb-p-chevron { font-size:11px; color:#f59e0b; }
+.sb-p-label   { flex:1; font-size:13px; font-weight:700; color:#fda92d; }
+.sb-p-chevron { font-size:11px; color:#fda92d; }
 
 /* Sub-tree container */
 .sb-subtree { flex:1; overflow-y:auto; padding-bottom:8px; }
 
-/* Group label: orange dot + orange text */
+/* Group label: primary dot + primary text */
 .sb-group-lbl {
   display:flex; align-items:flex-start; gap:8px;
   padding:8px 12px 6px 16px;
 }
 .sb-group-dot {
   width:8px; height:8px; border-radius:50%;
-  background:#f59e0b; flex-shrink:0; margin-top:3px;
+  background:#fda92d; flex-shrink:0; margin-top:3px;
 }
 .sb-group-text {
   font-size:11px; font-weight:700;
-  color:#ea580c; line-height:1.4;
+  color:#B66816; line-height:1.4;
 }
 
-/* Tree line wrap */
+/* Tree line — grey-300 */
 .sb-tree-wrap {
   margin-left:20px;
-  border-left:1.5px solid #e5e7eb;
+  border-left:1.5px solid #DFE3E8;
 }
 
 /* Nav */
@@ -103,16 +109,16 @@ body.light .zone-scroll::-webkit-scrollbar-thumb { background:#cbd5e1; }
 /* Footer */
 .sb-foot {
   padding:10px 12px;
-  border-top:1px solid #f0f2f5;
+  border-top:1px solid rgba(145,158,171,.2);
   flex-shrink:0;
 }
 .sb-foot .btn-rf {
   width:100%; justify-content:center;
-  background:#f5f5f5 !important; color:#6b7280 !important;
-  border-color:#e5e7eb !important; font-size:13px;
-  border-radius:7px;
+  background:#F4F6F8 !important; color:#637381 !important;
+  border-color:#DFE3E8 !important; font-size:13px;
+  border-radius:8px;
 }
-.sb-foot .btn-rf:hover { background:#e8e8e8 !important; color:#374151 !important; }
+.sb-foot .btn-rf:hover { background:#DFE3E8 !important; color:#1C252E !important; }
 
 /* Main content area (right of sidebar) */
 .app-main { flex:1; min-width:0; display:flex; flex-direction:column; overflow:hidden; }

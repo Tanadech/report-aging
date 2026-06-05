@@ -22,26 +22,31 @@
 .btn-rf:hover  { background:rgba(56,189,248,.2); }
 .btn-rf:disabled { opacity:.4; cursor:wait; }
 
-/* Sidebar tab buttons — WMS tree-item style */
+/*
+ * Sidebar tab buttons — WMS design tokens
+ * text-secondary:#637381  text-primary:#1C252E
+ * primary-main:#fda92d  primary-dark:#B66816  primary-lighter:#FEF4D4
+ * action-hover:rgba(145 158 171/.08)
+ */
 .tb {
   display:flex; align-items:center; gap:9px;
   width:calc(100% - 4px);
   padding:9px 12px 9px 16px;
   background:transparent; border:none;
-  color:#4b5563;
+  color:#637381;
   font-size:13px; font-weight:500;
   cursor:pointer; font-family:inherit;
   text-align:left;
-  border-radius:0 6px 6px 0;
-  transition:background .14s ease, color .14s ease;
+  border-radius:0 8px 8px 0;
+  transition:background .15s ease, color .15s ease;
 }
 .tb:hover {
-  color:#374151;
-  background:rgba(0,0,0,.04);
+  color:#1C252E;
+  background:rgba(145,158,171,.08);
 }
 .tb.act {
-  color:#ea580c;
-  background:rgba(245,158,11,.12);
+  color:#B66816;
+  background:#FEF4D4;
   font-weight:700;
 }
 
@@ -51,10 +56,10 @@ body.light .hdr       { background:linear-gradient(135deg,#1e3a5f 0%,#1e40af 60%
 body.light .hdr h1    { color:#fff; }
 body.light .hdr-sub   { color:rgba(255,255,255,.7); }
 body.light .hdr-sep   { background:rgba(255,255,255,.25); }
-/* Sidebar always white — same in light mode */
-body.light .tb        { color:#4b5563; }
-body.light .tb:hover  { color:#374151; background:rgba(0,0,0,.04); }
-body.light .tb.act    { color:#ea580c; background:rgba(245,158,11,.12); }
+/* Sidebar always white — same tokens in light mode */
+body.light .tb        { color:#637381; }
+body.light .tb:hover  { color:#1C252E; background:rgba(145,158,171,.08); }
+body.light .tb.act    { color:#B66816; background:#FEF4D4; }
 body.light .sbadge.snap { background:rgba(37,99,235,.12);  color:#2563eb; border-color:rgba(37,99,235,.25); }
 body.light .sbadge.live { background:rgba(5,150,105,.12);  color:#059669; border-color:rgba(5,150,105,.25); }
 body.light .sbadge.err  { background:rgba(220,38,38,.12);  color:#dc2626; border-color:rgba(220,38,38,.25); }
