@@ -69,7 +69,7 @@ function renderUot() {
   mkDonut('u-pie1',
     ['จำนวนขอโอน', 'จำนวนโอนออก'],
     [totalReq, totalOut],
-    ['#22d3ee', '#10b981']
+    ['#00B8D9', '#22C55E']
   );
 
   // Bar: สถานะ / SKU แยกตามคลัง → stacked bar
@@ -91,16 +91,16 @@ function renderUot() {
   mkChart('u-c2', 'bar', {
     labels: brData.map(d => d.name),
     datasets: [
-      { type:'line', label:'วันค้างสูงสุด', data:brData.map(d=>d.max), yAxisID:'y1', borderColor:'#22d3ee', backgroundColor:'rgba(34,211,238,.1)', fill:false, tension:0.3, pointRadius:5, pointBackgroundColor:'#22d3ee', borderWidth:2, order:0 },
-      { label:'จำนวนเอกสารค้าง', data:brData.map(d=>d.docs),            yAxisID:'y', backgroundColor:'#10b981', borderRadius:3, order:1 },
-      { label:'จำนวนสินค้า',     data:brData.map(d=>d.skus),            yAxisID:'y', backgroundColor:'#a78bfa', borderRadius:3, order:1 },
-      { label:'พาเลทคงค้าง',     data:brData.map(d=>+d.pal.toFixed(2)), yAxisID:'y', backgroundColor:'#fbbf24', borderRadius:3, order:1 }
+      { type:'line', label:'วันค้างสูงสุด', data:brData.map(d=>d.max), yAxisID:'y1', borderColor:'#00B8D9', backgroundColor:'rgba(0,184,217,.1)', fill:false, tension:0.3, pointRadius:5, pointBackgroundColor:'#00B8D9', borderWidth:2, order:0 },
+      { label:'จำนวนเอกสารค้าง', data:brData.map(d=>d.docs),            yAxisID:'y', backgroundColor:'#22C55E', borderRadius:3, order:1 },
+      { label:'จำนวนสินค้า',     data:brData.map(d=>d.skus),            yAxisID:'y', backgroundColor:'#7C3AED', borderRadius:3, order:1 },
+      { label:'พาเลทคงค้าง',     data:brData.map(d=>+d.pal.toFixed(2)), yAxisID:'y', backgroundColor:'#FFAB00', borderRadius:3, order:1 }
     ]
   }, {
-    plugins: { legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,padding:6}}, datalabels:{anchor:'end',align:'top',font:{size:9,weight:'bold'},formatter:(v,ctx)=>v>0?(ctx.datasetIndex===3?fmtP(v):fmtN(v)):'',color:ctx=>ctx.datasetIndex===0?'#22d3ee':'#e2e8f0'} },
+    plugins: { legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,padding:6}}, datalabels:{anchor:'end',align:'top',font:{size:9,weight:'bold'},formatter:(v,ctx)=>v>0?(ctx.datasetIndex===3?fmtP(v):fmtN(v)):'',color:ctx=>ctx.datasetIndex===0?'#00B8D9':(document.body.classList.contains('light')?'#1C252E':'#e2e8f0')} },
     scales: {
-      y:  { beginAtZero:true, ticks:{stepSize:50,font:{size:9}}, grid:{color:'rgba(255,255,255,.05)'}, title:{display:true,text:'จำนวน',font:{size:9}} },
-      y1: { type:'linear', position:'right', beginAtZero:true, ticks:{font:{size:9},color:'#22d3ee'}, grid:{drawOnChartArea:false}, title:{display:true,text:'วันค้างสูงสุด',font:{size:9},color:'#22d3ee'} },
+      y:  { beginAtZero:true, ticks:{stepSize:50,font:{size:9}}, title:{display:true,text:'จำนวน',font:{size:9}} },
+      y1: { type:'linear', position:'right', beginAtZero:true, ticks:{font:{size:9},color:'#00B8D9'}, grid:{drawOnChartArea:false}, title:{display:true,text:'วันค้างสูงสุด',font:{size:9},color:'#00B8D9'} },
       x:  { ticks:{font:{size:10}} }
     }
   });
@@ -117,13 +117,13 @@ function renderUot() {
   mkChart('u-c3', 'bar', {
     labels: tb3.map(b => b.lbl),
     datasets: [
-      { label:'จำนวนรหัสสินค้า', data:tb3.map(b=>b.skus),     backgroundColor:'#22d3ee', borderRadius:3 },
-      { label:'จำนวนเอกสาร',    data:tb3.map(b=>b.docs),     backgroundColor:'#3b82f6', borderRadius:3 },
-      { label:'จำนวนสาขาจ่าย', data:tb3.map(b=>b.branches), backgroundColor:'#a78bfa', borderRadius:3 }
+      { label:'จำนวนรหัสสินค้า', data:tb3.map(b=>b.skus),     backgroundColor:'#00B8D9', borderRadius:3 },
+      { label:'จำนวนเอกสาร',    data:tb3.map(b=>b.docs),     backgroundColor:'#fda92d', borderRadius:3 },
+      { label:'จำนวนสาขาจ่าย', data:tb3.map(b=>b.branches), backgroundColor:'#7C3AED', borderRadius:3 }
     ]
   }, {
-    plugins: { legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,padding:6}}, datalabels:{anchor:'end',align:'top',font:{size:9,weight:'bold'},formatter:v=>v>0?fmtN(v):'',color:'#e2e8f0'} },
-    scales: { y:{beginAtZero:true,ticks:{stepSize:50,font:{size:9}},grid:{color:'rgba(255,255,255,.05)'}}, x:{ticks:{font:{size:9}}} }
+    plugins: { legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,padding:6}}, datalabels:{anchor:'end',align:'top',font:{size:9,weight:'bold'},formatter:v=>v>0?fmtN(v):''} },
+    scales: { y:{beginAtZero:true,ticks:{stepSize:50,font:{size:9}}}, x:{ticks:{font:{size:9}}} }
   });
 
   // Bar 3: Zone stacked by status
@@ -138,8 +138,8 @@ function renderUot() {
   const c4El = document.getElementById('u-c4');
   c4El.style.width = Math.max(600, zoneKeys.length * 45) + 'px';
   mkChart('u-c4', 'bar', { labels:zoneKeys, datasets:ds4 }, {
-    plugins: { legend:{display:false}, datalabels:{anchor:'end',align:'top',font:{size:9,weight:'bold'},formatter:(v,ctx)=>{if(ctx.datasetIndex===ds4.length-1){const tot=ds4.reduce((s,d)=>s+(d.data[ctx.dataIndex]||0),0);return tot>0?fmtN(tot):'';} return v>0?fmtN(v):'';},color:ctx=>ctx.datasetIndex===ds4.length-1?'#e2e8f0':'#fff',anchor:ctx=>ctx.datasetIndex===ds4.length-1?'end':'center',align:ctx=>ctx.datasetIndex===ds4.length-1?'top':'center',display:ctx=>ctx.dataset.data[ctx.dataIndex]>0} },
-    scales: { x:{stacked:true,ticks:{font:{size:9}},grid:{color:'rgba(255,255,255,.04)'}}, y:{stacked:true,beginAtZero:true,ticks:{font:{size:9}},grid:{color:'rgba(255,255,255,.05)'},title:{display:true,text:'จำนวนรหัสสินค้า (distinct)',font:{size:9}}} }
+    plugins: { legend:{display:false}, datalabels:{anchor:'end',align:'top',font:{size:9,weight:'bold'},formatter:(v,ctx)=>{if(ctx.datasetIndex===ds4.length-1){const tot=ds4.reduce((s,d)=>s+(d.data[ctx.dataIndex]||0),0);return tot>0?fmtN(tot):'';} return v>0?fmtN(v):'';},color:ctx=>ctx.datasetIndex===ds4.length-1?(document.body.classList.contains('light')?'#1C252E':'#e2e8f0'):'#fff',anchor:ctx=>ctx.datasetIndex===ds4.length-1?'end':'center',align:ctx=>ctx.datasetIndex===ds4.length-1?'top':'center',display:ctx=>ctx.dataset.data[ctx.dataIndex]>0} },
+    scales: { x:{stacked:true,ticks:{font:{size:9}}}, y:{stacked:true,beginAtZero:true,ticks:{font:{size:9}},title:{display:true,text:'จำนวนรหัสสินค้า (distinct)',font:{size:9}}} }
   });
   const lgHtml = allStats.filter(st=>ds4.some(d=>d.label===st))
     .map(st=>`<span style="display:inline-flex;align-items:center;gap:3px;margin-right:10px;"><span style="width:10px;height:10px;border-radius:2px;background:${statusCol(st)};display:inline-block;"></span><span style="font-size:10px;color:var(--muted);">${st}</span></span>`).join('');
@@ -152,8 +152,11 @@ function renderUot() {
   const c5El         = document.getElementById('u-c5');
   const c5BrBtn      = document.getElementById('u-c5-branch-btn');
   const c5WhBtn      = document.getElementById('u-c5-wh-btn');
-  const _btnOn  = 'rgba(56,189,248,.25)', _btnOff = 'rgba(56,189,248,.08)';
-  const _clrOn  = '#fff',                 _clrOff = '#7dd3fc';
+  const _L = document.body.classList.contains('light');
+  const _btnOn  = _L ? '#FEF4D4'           : 'rgba(56,189,248,.25)';
+  const _btnOff = _L ? 'transparent'        : 'rgba(56,189,248,.08)';
+  const _clrOn  = _L ? '#B66816'            : '#fff';
+  const _clrOff = _L ? '#637381'            : '#7dd3fc';
   if (c5BrBtn) { c5BrBtn.style.background = _uotC5View==='branch'?_btnOn:_btnOff; c5BrBtn.style.color = _uotC5View==='branch'?_clrOn:_clrOff; }
   if (c5WhBtn) { c5WhBtn.style.background = _uotC5View==='wh'?_btnOn:_btnOff;     c5WhBtn.style.color = _uotC5View==='wh'?_clrOn:_clrOff; }
 
@@ -164,8 +167,8 @@ function renderUot() {
       labels: uotAllWHKeys,
       datasets: [{ label:'จำนวนเอกสาร', data:whViewData, backgroundColor:uotAllWHKeys.map((_,i)=>PALETTE[i%PALETTE.length]), borderRadius:8, borderWidth:0 }]
     }, {
-      plugins: { legend:{display:false}, datalabels:{anchor:'end',align:'top',font:{size:14,weight:'bold'},formatter:v=>v>0?fmtN(v):'',color:'#e2e8f0'} },
-      scales: { y:{beginAtZero:true,ticks:{font:{size:10}},grid:{color:'rgba(255,255,255,.05)'},title:{display:true,text:'จำนวนเอกสาร (distinct)',font:{size:10}}}, x:{ticks:{font:{size:13}}} }
+      plugins: { legend:{display:false}, datalabels:{anchor:'end',align:'top',font:{size:14,weight:'bold'},formatter:v=>v>0?fmtN(v):''} },
+      scales: { y:{beginAtZero:true,ticks:{font:{size:10}},title:{display:true,text:'จำนวนเอกสาร (distinct)',font:{size:10}}}, x:{ticks:{font:{size:13}}} }
     });
   } else {
     const uotWHKeys   = uotAllWHKeys.filter(wh => uotByWH[wh]);
@@ -179,7 +182,7 @@ function renderUot() {
       datasets: uotWHKeys.map(wh => ({ label:wh||'(ไม่ระบุ)', data:uotAllBr.map(br=>uniqCount((uotByWH[wh]||[]).filter(r=>r['ชื่อสาขา']===br),'เลขที่เอกสารขอโอน')), backgroundColor:UOT_WH_COLOR[wh]||'#94a3b8', borderRadius:3, borderWidth:0 }))
     }, {
       plugins: { legend:{position:'bottom',labels:{font:{size:11},boxWidth:10,padding:8}}, datalabels:{display:false} },
-      scales: { x:{ticks:{font:{size:9},maxRotation:75,minRotation:45},grid:{color:'rgba(255,255,255,.04)'}}, y:{beginAtZero:true,ticks:{font:{size:9}},grid:{color:'rgba(255,255,255,.05)'},title:{display:true,text:'จำนวนเอกสาร (distinct)',font:{size:10}}} }
+      scales: { x:{ticks:{font:{size:9},maxRotation:75,minRotation:45}}, y:{beginAtZero:true,ticks:{font:{size:9}},title:{display:true,text:'จำนวนเอกสาร (distinct)',font:{size:10}}} }
     });
   }
 

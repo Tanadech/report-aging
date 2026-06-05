@@ -5,17 +5,17 @@ const SHEET_IN_NAME  = 'POI IN';
 const SHEET_UOT_NAME = 'POI OUT';
 
 const PALETTE = [
-  '#22d3ee','#3b82f6','#10b981','#f59e0b',
-  '#a78bfa','#fb923c','#e879f9','#34d399',
-  '#60a5fa','#fbbf24','#4ade80','#f472b6'
+  '#00B8D9','#22C55E','#fda92d','#FFAB00',
+  '#7C3AED','#FF5630','#e879f9','#1677ff',
+  '#4ade80','#B66816','#a78bfa','#f472b6'
 ];
 
 const STATUS_MAP = {
-  'รอจัดสินค้า':        { cls:'s0', col:'#f87171' },
-  'จัดสินค้าเรียบร้อย': { cls:'s1', col:'#60a5fa' },
-  'ประมวลผลผ่าน':       { cls:'s2', col:'#34d399' },
-  'รอประมวลผล':         { cls:'s3', col:'#fbbf24' },
-  'ประมวลผลผิดพลาด':    { cls:'s4', col:'#c4b5fd' }
+  'รอจัดสินค้า':        { cls:'s0', col:'#FF5630' },
+  'จัดสินค้าเรียบร้อย': { cls:'s1', col:'#00B8D9' },
+  'ประมวลผลผ่าน':       { cls:'s2', col:'#22C55E' },
+  'รอประมวลผล':         { cls:'s3', col:'#FFAB00' },
+  'ประมวลผลผิดพลาด':    { cls:'s4', col:'#7C3AED' }
 };
 
 const SNAPSHOT = { POI_IN: [], POI_UOT: [] };
