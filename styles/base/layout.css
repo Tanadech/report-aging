@@ -26,85 +26,93 @@ body.light .zone-scroll::-webkit-scrollbar-thumb { background:#cbd5e1; }
 /* ── Sidebar app shell ── */
 .app-shell { display:flex; flex:1; min-height:0; }
 
-/* Sidebar — light warm theme (Enterprise WMS style, always light) */
+/* Sidebar — pure white, WMS enterprise style */
 .sidebar {
-  width:220px; flex-shrink:0;
-  background:#f5f7fa;
-  border-right:1px solid #dde4ed;
-  box-shadow:2px 0 12px rgba(0,0,0,.07);
+  width:240px; flex-shrink:0;
+  background:#ffffff;
+  border-right:1px solid #e8ecf0;
+  box-shadow:2px 0 8px rgba(0,0,0,.05);
   display:flex; flex-direction:column;
   overflow:hidden;
 }
 
 /* Brand / Logo */
 .sb-logo {
-  padding:15px 16px 13px;
-  border-bottom:1px solid #e5eaf1;
-  display:flex; align-items:center; gap:10px;
-  flex-shrink:0; background:#fff;
+  padding:16px 16px 14px;
+  border-bottom:1px solid #f0f2f5;
+  flex-shrink:0;
 }
-.sb-logo-icon {
-  width:36px; height:36px;
+.sb-logo-brand { display:flex; align-items:center; gap:10px; }
+.sb-brand-icon {
+  width:38px; height:38px;
   background:linear-gradient(135deg,#f59e0b 0%,#f97316 100%);
   border-radius:10px;
   display:flex; align-items:center; justify-content:center;
   font-size:18px; flex-shrink:0;
-  box-shadow:0 3px 10px rgba(245,158,11,.38);
+  box-shadow:0 3px 10px rgba(245,158,11,.35);
 }
-.sb-logo-text  { min-width:0; }
-.sb-logo-title { font-size:14px; font-weight:800; color:#1e293b; white-space:nowrap; letter-spacing:.2px; }
-.sb-logo-sub   { font-size:9px; color:#94a3b8; white-space:nowrap; letter-spacing:.5px; text-transform:uppercase; margin-top:1px; }
+.sb-logo-title { font-size:15px; font-weight:800; color:#f59e0b; letter-spacing:.2px; line-height:1.2; }
+.sb-logo-sub   { font-size:9px; color:#9ca3af; letter-spacing:.5px; text-transform:uppercase; margin-top:2px; }
 
-/* Section parent — dark pill header (like "แดชบอร์ด" in WMS) */
-.sb-section-hdr {
+/* "รายงาน" parent item — orange pill (like active section in WMS) */
+.sb-parent-item {
+  display:flex; align-items:center; gap:10px;
   margin:10px 10px 4px;
-  padding:9px 13px;
-  background:linear-gradient(135deg,#1e293b 0%,#334155 100%);
+  padding:10px 14px;
+  background:rgba(245,158,11,.1);
+  border:1px solid rgba(245,158,11,.2);
   border-radius:8px;
-  display:flex; align-items:center; gap:8px;
-  flex-shrink:0;
-  box-shadow:0 2px 8px rgba(0,0,0,.18);
+  flex-shrink:0; cursor:default;
 }
-.sb-section-icon  { font-size:13px; }
-.sb-section-label { font-size:12px; font-weight:700; color:#e2e8f0; letter-spacing:.3px; flex:1; }
-.sb-section-arrow { font-size:11px; color:#7b93b0; }
+.sb-p-icon    { font-size:16px; }
+.sb-p-label   { flex:1; font-size:13px; font-weight:700; color:#ea580c; }
+.sb-p-chevron { font-size:11px; color:#f59e0b; }
 
-/* Nav list */
-.sb-nav {
-  flex:1; padding:4px 0 8px;
-  display:flex; flex-direction:column;
-  overflow-y:auto;
+/* Sub-tree container */
+.sb-subtree { flex:1; overflow-y:auto; padding-bottom:8px; }
+
+/* Group label: orange dot + orange text */
+.sb-group-lbl {
+  display:flex; align-items:flex-start; gap:8px;
+  padding:8px 12px 6px 16px;
+}
+.sb-group-dot {
+  width:8px; height:8px; border-radius:50%;
+  background:#f59e0b; flex-shrink:0; margin-top:3px;
+}
+.sb-group-text {
+  font-size:11px; font-weight:700;
+  color:#ea580c; line-height:1.4;
 }
 
-/* Tree-line dot indicator */
-.sb-item-dot {
-  width:5px; height:5px;
-  border-radius:50%;
-  background:#cbd5e1;
-  flex-shrink:0;
-  transition:background .18s ease, transform .18s ease;
+/* Tree line wrap */
+.sb-tree-wrap {
+  margin-left:20px;
+  border-left:1.5px solid #e5e7eb;
 }
-.tb.act  .sb-item-dot { background:#f59e0b; transform:scale(1.4); }
-.tb:hover .sb-item-dot { background:#94a3b8; }
 
-.sb-ico { font-size:15px; flex-shrink:0; line-height:1; }
-.sb-lbl { display:flex; flex-direction:column; line-height:1.3; min-width:0; }
-.sb-lbl b     { font-size:12px; font-weight:700; white-space:nowrap; }
-.sb-lbl small { font-size:10px; font-weight:400; opacity:.6; }
+/* Nav */
+.sb-nav { display:flex; flex-direction:column; padding:2px 0; }
+
+.sb-ico { font-size:14px; flex-shrink:0; line-height:1; }
+.sb-lbl {
+  font-size:13px; font-weight:500;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
 
 /* Footer */
 .sb-foot {
   padding:10px 12px;
-  border-top:1px solid #e5eaf1;
-  flex-shrink:0; background:#fff;
+  border-top:1px solid #f0f2f5;
+  flex-shrink:0;
 }
 .sb-foot .btn-rf {
   width:100%; justify-content:center;
-  background:#f1f5f9; color:#475569;
-  border-color:#e2e8f0; font-size:13px;
+  background:#f5f5f5 !important; color:#6b7280 !important;
+  border-color:#e5e7eb !important; font-size:13px;
   border-radius:7px;
 }
-.sb-foot .btn-rf:hover { background:#e2e8f0 !important; color:#1e293b !important; }
+.sb-foot .btn-rf:hover { background:#e8e8e8 !important; color:#374151 !important; }
 
 /* Main content area (right of sidebar) */
 .app-main { flex:1; min-width:0; display:flex; flex-direction:column; overflow:hidden; }
@@ -121,7 +129,7 @@ body.light .zone-scroll::-webkit-scrollbar-thumb { background:#cbd5e1; }
 .top-bar-ttl { font-size:16px; font-weight:700; color:#e2e8f0; letter-spacing:.2px; }
 .top-bar-r   { display:flex; align-items:center; gap:8px; }
 
-/* ── Light mode — sidebar already light; top-bar goes blue ── */
+/* Light mode — top-bar goes blue; sidebar stays white */
 body.light .top-bar {
   background:linear-gradient(135deg,#1e3a5f 0%,#1e40af 60%,#1d4ed8 100%);
   box-shadow:0 2px 12px rgba(0,0,0,.15);
