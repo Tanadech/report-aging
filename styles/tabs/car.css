@@ -9,7 +9,7 @@
 .car-toolbar-hint { font-size:11px; color:var(--muted); }
 
 /* KPI row override for CAR tab */
-#tc-car .kpi-row { grid-template-columns:repeat(auto-fit,minmax(118px,1fr)); }
+#tc-car .kpi-row { grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); }
 #tc-car .kpi     { cursor:pointer; transition:transform .12s,border-color .15s,box-shadow .15s; }
 #tc-car .kpi:hover { transform:translateY(-2px); border-color:rgba(56,189,248,.4); box-shadow:0 4px 14px rgba(0,0,0,.4); }
 

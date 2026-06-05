@@ -61,7 +61,7 @@ function renderCar() {
   // Timeline chart
   const slots  = [...new Set(f.map(r => r['zone_time'] || '').filter(Boolean))].sort((a,b) => timeSlotStart(a) - timeSlotStart(b));
   const whKeys = [...new Set(f.map(r => r['port_id'] || '').filter(Boolean))].sort();
-  const wPal   = ['#22d3ee','#10b981','#a78bfa','#fb923c','#f87171','#3b82f6','#fbbf24'];
+  const wPal   = ['#00B8D9','#22C55E','#7C3AED','#fda92d','#FF5630','#1677ff','#FFAB00'];
   mkChart('c-c1', 'bar', {
     labels: slots,
     datasets: whKeys.map((wh, i) => ({
@@ -74,8 +74,8 @@ function renderCar() {
       datalabels: { anchor:'center', align:'center', font:{size:11,weight:'bold'}, color:'#fff', formatter: v => v > 0 ? v : '', display: ctx => ctx.dataset.data[ctx.dataIndex] > 0 }
     },
     scales: {
-      x: { stacked:true, ticks:{font:{size:11}}, grid:{color:'rgba(255,255,255,.04)'} },
-      y: { stacked:true, beginAtZero:true, ticks:{stepSize:1,font:{size:10}}, grid:{color:'rgba(255,255,255,.05)'}, title:{display:true,text:'จำนวนรถ',font:{size:10}} }
+      x: { stacked:true, ticks:{font:{size:11}} },
+      y: { stacked:true, beginAtZero:true, ticks:{stepSize:1,font:{size:10}}, title:{display:true,text:'จำนวนรถ',font:{size:10}} }
     }
   });
 
