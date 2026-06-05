@@ -112,9 +112,9 @@ document.addEventListener('click', () => {
     btn.textContent = mode === 'light' ? '🌙 Dark' : '☀️ Light';
     localStorage.setItem('theme', mode);
     if (mode === 'light') {
-      Chart.defaults.color                          = '#475569';
-      Chart.defaults.borderColor                    = 'rgba(0,0,0,.08)';
-      Chart.defaults.plugins.legend.labels.color    = '#1d4ed8';
+      Chart.defaults.color                          = '#637381';
+      Chart.defaults.borderColor                    = 'rgba(145,158,171,.2)';
+      Chart.defaults.plugins.legend.labels.color    = '#1C252E';
     } else {
       Chart.defaults.color                          = '#7b93b0';
       Chart.defaults.borderColor                    = 'rgba(255,255,255,.06)';
@@ -123,7 +123,7 @@ document.addEventListener('click', () => {
     if (rerender && (dataIn.length || dataUot.length)) rebuild();
   };
   btn.addEventListener('click', () => apply(document.body.classList.contains('light') ? 'dark' : 'light', true));
-  apply(localStorage.getItem('theme') || 'dark', false);
+  apply(localStorage.getItem('theme') || 'light', false);
 })();
 
 

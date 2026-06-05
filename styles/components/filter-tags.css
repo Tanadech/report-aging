@@ -20,13 +20,13 @@
 }
 
 /* ── Light mode ── */
-body.light .fb-tags     { background:#f8fafc; border-color:#e2e8f0; }
-body.light .ftag        { background:rgba(37,99,235,.08); border-color:rgba(37,99,235,.25); color:#1d4ed8; }
-body.light .ftag:hover  { background:rgba(37,99,235,.18); border-color:rgba(37,99,235,.5); }
-body.light .ftag-lbl    { color:rgba(29,78,216,.5); }
-body.light .ftag-sep    { color:rgba(29,78,216,.25); }
-body.light .ftag-val    { color:#1e40af; }
-body.light .ftag-x      { background:rgba(37,99,235,.12); color:#3b82f6; }
-body.light .ftag-x:hover { background:#dc2626; color:#fff; }
-body.light .ftag-clrall { background:rgba(220,38,38,.07); border-color:rgba(220,38,38,.22); color:#dc2626; }
-body.light .ftag-clrall:hover { background:rgba(220,38,38,.16); border-color:rgba(220,38,38,.4); }
+body.light .fb-tags     { background:#F4F6F8; border-color:rgba(145,158,171,.2); }
+body.light .ftag        { background:#FEF4D4; border-color:#FED680; color:#B66816; }
+body.light .ftag:hover  { background:#FED680; border-color:#fda92d; }
+body.light .ftag-lbl    { color:rgba(182,104,22,.55); }
+body.light .ftag-sep    { color:rgba(182,104,22,.3); }
+body.light .ftag-val    { color:#B66816; }
+body.light .ftag-x      { background:rgba(253,169,45,.18); color:#B66816; }
+body.light .ftag-x:hover { background:#FF5630; color:#fff; }
+body.light .ftag-clrall { background:rgba(255,86,48,.07); border-color:rgba(255,86,48,.22); color:#FF5630; }
+body.light .ftag-clrall:hover { background:rgba(255,86,48,.16); border-color:rgba(255,86,48,.4); }

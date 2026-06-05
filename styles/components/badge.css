@@ -20,11 +20,11 @@ table.gtbl .spill { max-width:110px; overflow:hidden; text-overflow:ellipsis; ve
 .spin { display:inline-block; width:12px; height:12px; border:2px solid rgba(255,255,255,.15); border-top-color:#38bdf8; border-radius:50%; animation:spin .8s linear infinite; }
 
 /* ── Light mode ── */
-body.light .spill.s0 { background:rgba(239,68,68,.1);   color:#dc2626; }
-body.light .spill.s1 { background:rgba(29,78,216,.1);   color:#1d4ed8; }
-body.light .spill.s2 { background:rgba(5,150,105,.1);   color:#059669; }
-body.light .spill.s3 { background:rgba(217,119,6,.1);   color:#d97706; }
+body.light .spill.s0 { background:rgba(255,86,48,.12);  color:#FF5630; }
+body.light .spill.s1 { background:rgba(0,184,217,.12);  color:#00B8D9; }
+body.light .spill.s2 { background:rgba(34,197,94,.12);  color:#22C55E; }
+body.light .spill.s3 { background:rgba(255,171,0,.12);  color:#FFAB00; }
 body.light .spill.s4 { background:rgba(109,40,217,.1);  color:#7c3aed; }
-body.light .db.lo    { background:rgba(5,150,105,.1);   color:#059669; }
-body.light .db.mi    { background:rgba(217,119,6,.1);   color:#d97706; }
-body.light .db.hi    { background:rgba(239,68,68,.1);   color:#dc2626; }
+body.light .db.lo    { background:rgba(34,197,94,.12);  color:#22C55E; }
+body.light .db.mi    { background:rgba(255,171,0,.12);  color:#FFAB00; }
+body.light .db.hi    { background:rgba(255,86,48,.12);  color:#FF5630; }

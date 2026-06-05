@@ -20,15 +20,15 @@
 .pay-car-kpi-row .kpi-val{ font-size:18px; }
 
 /* ── Light mode ── */
-body.light .pay-car-kpi-lbl::after { background:rgba(0,0,0,.08); }
-body.light .p-search-wrap { background:#fff; border-color:#cbd5e1; }
-body.light .p-search-wrap input { color:#1e293b; }
-body.light .p-search-wrap input::placeholder { color:#94a3b8; }
-body.light .p-search-ico { color:#94a3b8; }
-body.light .pay-type { background:rgba(100,116,139,.12); color:#64748b; }
-body.light .pay-type.hip { background:rgba(8,145,178,.12); color:#0891b2; }
-body.light .pay-type.dc  { background:rgba(124,58,237,.12); color:#7c3aed; }
+body.light .pay-car-kpi-lbl::after { background:rgba(145,158,171,.16); }
+body.light .p-search-wrap { background:#fff; border-color:rgba(145,158,171,.2); }
+body.light .p-search-wrap input { color:#1C252E; }
+body.light .p-search-wrap input::placeholder { color:#919EAB; }
+body.light .p-search-ico { color:#919EAB; }
+body.light .pay-type { background:rgba(145,158,171,.12); color:#637381; }
+body.light .pay-type.hip { background:rgba(0,184,217,.12); color:#006C9C; }
+body.light .pay-type.dc  { background:#FEF4D4; color:#B66816; }
 
 /* Date range inputs — light mode */
 body.light #p-fdate-from,
-body.light #p-fdate-to { background:#fff; border-color:#cbd5e1; color:#1e293b; }
+body.light #p-fdate-to { background:#fff; border-color:rgba(145,158,171,.2); color:#1C252E; }

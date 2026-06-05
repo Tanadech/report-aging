@@ -8,8 +8,10 @@
   color-scheme:dark;
 }
 body.light {
-  --bg:#f1f5f9; --card:rgba(255,255,255,.95); --border:rgba(0,0,0,.08);
-  --text:#1e293b; --muted:#475569; --subtle:#94a3b8;
+  --bg:#F4F6F8; --card:#FFFFFF; --border:rgba(145,158,171,.2);
+  --text:#1C252E; --muted:#637381; --subtle:#919EAB;
+  --ok:#22C55E; --warn:#FFAB00; --danger:#FF5630; --info:#00B8D9;
+  --accent:#fda92d;
   color-scheme:light;
 }
 

@@ -77,54 +77,54 @@
 .pcm-sec-imp      { font-size:11px; font-weight:700; color:#ddd6fe; padding:10px 0 6px; letter-spacing:.5px; border-bottom:1px solid rgba(167,139,250,.3); margin-bottom:8px; }
 
 /* ── Light mode ── */
-body.light .modal           { background:#fff; border-color:rgba(0,0,0,.1); }
-body.light .modal-hdr       { background:linear-gradient(135deg,#dbeafe,#f1f5f9); border-color:#e2e8f0; }
-body.light .modal-title     { color:#1d4ed8; }
-body.light .modal-close     { background:#f1f5f9; color:#1e293b; }
-body.light .modal-close:hover { background:#fee2e2; color:#dc2626; }
-body.light .modal-tabs      { background:#f8fafc; border-color:#e2e8f0; }
-body.light .mtab            { color:#475569; }
-body.light .mtab:hover      { color:#1e293b; }
-body.light .mtab.act        { color:#1d4ed8; border-bottom-color:#1d4ed8; }
-body.light .mtab-cnt        { background:rgba(37,99,235,.12); color:#1d4ed8; }
-body.light .mtbl thead th   { background:#f1f5f9; color:#1d4ed8; border-color:#cbd5e1; }
-body.light .mtbl tbody td   { color:#1e293b; border-color:rgba(0,0,0,.05); }
-body.light .mtbl tbody tr:hover td { background:#eff6ff; }
-body.light .mtbl tbody tr:nth-child(even) td { background:#f8fafc; }
-body.light .mdoc            { color:#2563eb; }
-body.light .modal-sum-item  { background:#eff6ff; border-color:#cbd5e1; color:#475569; }
-body.light .modal-sum-item b { color:#1e293b; }
+body.light .modal           { background:#fff; border-color:rgba(145,158,171,.2); }
+body.light .modal-hdr       { background:linear-gradient(135deg,#FEF4D4,#F4F6F8); border-color:#FED680; }
+body.light .modal-title     { color:#B66816; }
+body.light .modal-close     { background:#F4F6F8; color:#1C252E; }
+body.light .modal-close:hover { background:rgba(255,86,48,.12); color:#FF5630; }
+body.light .modal-tabs      { background:#F4F6F8; border-color:rgba(145,158,171,.2); }
+body.light .mtab            { color:#637381; }
+body.light .mtab:hover      { color:#1C252E; }
+body.light .mtab.act        { color:#fda92d; border-bottom-color:#fda92d; }
+body.light .mtab-cnt        { background:#FEF4D4; color:#B66816; }
+body.light .mtbl thead th   { background:#F4F6F8; color:#1C252E; border-color:rgba(145,158,171,.2); }
+body.light .mtbl tbody td   { color:#1C252E; border-color:rgba(145,158,171,.12); }
+body.light .mtbl tbody tr:hover td { background:rgba(145,158,171,.08); }
+body.light .mtbl tbody tr:nth-child(even) td { background:#F4F6F8; }
+body.light .mdoc            { color:#B66816; }
+body.light .modal-sum-item  { background:#FEF4D4; border-color:#FED680; color:#637381; }
+body.light .modal-sum-item b { color:#1C252E; }
 body.light .dtag.dom { background:rgba(8,145,178,.13); color:#0891b2; border-color:rgba(8,145,178,.35); }
 body.light .dtag.imp { background:rgba(124,58,237,.13);color:#7c3aed; border-color:rgba(124,58,237,.35); }
-body.light .kpi-sec-hdr.today { background:rgba(5,150,105,.1);   color:#059669; border-color:rgba(5,150,105,.3); }
-body.light .kpi-sec-hdr.tmr   { background:rgba(217,119,6,.1);   color:#d97706; border-color:rgba(217,119,6,.3); }
-body.light .kpi-sec-hdr.other { background:rgba(100,116,139,.1); color:#64748b; border-color:rgba(100,116,139,.25); }
-body.light .kpi-sec-total { background:rgba(0,0,0,.06); color:inherit; }
-body.light .kpi-sec li    { background:#f8fafc; border-color:#e2e8f0; }
-body.light .kpi-sec li:hover { background:#eff6ff; }
-body.light .kpi-sec li .lbl  { color:#1e293b; }
+body.light .kpi-sec-hdr.today { background:rgba(34,197,94,.1);  color:#22C55E; border-color:rgba(34,197,94,.3); }
+body.light .kpi-sec-hdr.tmr   { background:rgba(255,171,0,.1);  color:#FFAB00; border-color:rgba(255,171,0,.3); }
+body.light .kpi-sec-hdr.other { background:rgba(145,158,171,.1); color:#637381; border-color:rgba(145,158,171,.25); }
+body.light .kpi-sec-total { background:rgba(145,158,171,.1); color:inherit; }
+body.light .kpi-sec li    { background:#F4F6F8; border-color:rgba(145,158,171,.2); }
+body.light .kpi-sec li:hover { background:rgba(145,158,171,.08); }
+body.light .kpi-sec li .lbl  { color:#1C252E; }
 
 /* PCM light mode overrides */
-body.light .pcm-badge-dom  { background:rgba(8,145,178,.15);  border-color:rgba(8,145,178,.5);   color:#0e7490; }
-body.light .pcm-badge-doc  { background:rgba(37,99,235,.12);  border-color:rgba(37,99,235,.45);  color:#1d4ed8; }
-body.light .pcm-badge-poi  { background:rgba(194,65,12,.12);  border-color:rgba(194,65,12,.45);  color:#c2410c; }
-body.light .pcm-badge-bar  { background:rgba(5,150,105,.12);  border-color:rgba(5,150,105,.45);  color:#047857; }
-body.light .pcm-badge-box  { background:rgba(5,150,105,.12);  border-color:rgba(5,150,105,.45);  color:#047857; }
+body.light .pcm-badge-dom  { background:rgba(0,184,217,.12);  border-color:rgba(0,184,217,.45);  color:#006C9C; }
+body.light .pcm-badge-doc  { background:#FEF4D4;              border-color:#FED680;              color:#B66816; }
+body.light .pcm-badge-poi  { background:rgba(255,171,0,.12);  border-color:rgba(255,171,0,.45);  color:#FFAB00; }
+body.light .pcm-badge-bar  { background:rgba(34,197,94,.12);  border-color:rgba(34,197,94,.45);  color:#22C55E; }
+body.light .pcm-badge-box  { background:rgba(34,197,94,.12);  border-color:rgba(34,197,94,.45);  color:#22C55E; }
 body.light .pcm-badge-pcs  { background:rgba(109,40,217,.12); border-color:rgba(109,40,217,.45); color:#6d28d9; }
-body.light .pcm-badge-kwot { background:rgba(194,65,12,.12);  border-color:rgba(194,65,12,.45);  color:#c2410c; }
+body.light .pcm-badge-kwot { background:rgba(255,171,0,.12);  border-color:rgba(255,171,0,.45);  color:#FFAB00; }
 
-body.light .pcm-poi-hdr    { background:rgba(8,145,178,.1); border-color:rgba(8,145,178,.4); }
-body.light .pcm-poi-num    { color:#0369a1; }
-body.light .pcm-poi-vendor { color:#475569; }
-body.light .pcm-poi-date   { color:#64748b; }
-body.light .pcm-poi-cnt    { color:#047857; }
-body.light .pcm-bar-chip   { background:rgba(8,145,178,.1); border-color:rgba(8,145,178,.4); color:#0369a1; }
+body.light .pcm-poi-hdr    { background:#FEF4D4; border-color:#FED680; }
+body.light .pcm-poi-num    { color:#B66816; }
+body.light .pcm-poi-vendor { color:#637381; }
+body.light .pcm-poi-date   { color:#919EAB; }
+body.light .pcm-poi-cnt    { color:#22C55E; }
+body.light .pcm-bar-chip   { background:#FEF4D4; border-color:#FED680; color:#B66816; }
 
-body.light .pcm-grp-hdr    { background:rgba(109,40,217,.08); border-color:rgba(109,40,217,.35); }
-body.light .pcm-grp-num    { color:#5b21b6; }
-body.light .pcm-grp-box    { color:#047857; }
-body.light .pcm-grp-pcs    { color:#5b21b6; }
-body.light .pcm-grp-cnt    { color:#64748b; }
+body.light .pcm-grp-hdr    { background:rgba(145,158,171,.1); border-color:rgba(145,158,171,.3); }
+body.light .pcm-grp-num    { color:#1C252E; }
+body.light .pcm-grp-box    { color:#22C55E; }
+body.light .pcm-grp-pcs    { color:#637381; }
+body.light .pcm-grp-cnt    { color:#919EAB; }
 
-body.light .pcm-sec-dom    { color:#0369a1; border-bottom-color:rgba(8,145,178,.35); }
-body.light .pcm-sec-imp    { color:#5b21b6; border-bottom-color:rgba(109,40,217,.35); }
+body.light .pcm-sec-dom    { color:#006C9C; border-bottom-color:rgba(0,184,217,.35); }
+body.light .pcm-sec-imp    { color:#B66816; border-bottom-color:#FED680; }
