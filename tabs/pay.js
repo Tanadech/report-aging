@@ -541,33 +541,47 @@ function _buildPcmDomSection(domRows, docNo) {
     poiGroups[poi].push(x);
   });
 
+  const totalBarcodes = domRows.filter(r => r['onetimeBarcode']).length;
+
   let body = `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
     <span class="pcm-badge pcm-badge-dom">🏠 DOMESTIC</span>
     <span class="pcm-badge pcm-badge-doc">📄 ${esc(docNo)}</span>
     <span class="pcm-badge pcm-badge-poi">${poiOrder.length} เลขที่เอกสาร POI</span>
-    <span class="pcm-badge pcm-badge-bar">${domRows.length} Barcode</span>
+    ${totalBarcodes ? `<span class="pcm-badge pcm-badge-bar">${totalBarcodes} Barcode</span>` : ''}
   </div>`;
 
   poiOrder.forEach((poi, gi) => {
-    const items  = poiGroups[poi];
-    const gid    = `pcm-dom-grp-${gi}`;
-    const vendor  = items[0]?.['ชื่อผู้จำหน่าย'] || '';
-    const recDate = items[0]?.['วันที่รับสินค้า'] || '';
-    body += `<div style="margin-bottom:6px;border-radius:6px;overflow:hidden;">
-      <div onclick="(function(el){el.style.display=el.style.display==='none'?'block':'none'})(document.getElementById('${gid}'))"
-        class="pcm-poi-hdr">
-        <span class="pcm-poi-num">${esc(poi)}</span>
-        <span class="pcm-poi-vendor">${esc(vendor)}</span>
-        ${recDate ? `<span class="pcm-poi-date">${esc(recDate)}</span>` : ''}
-        <span class="pcm-poi-cnt">${items.length} barcodes ▼</span>
-      </div>
-      <div id="${gid}" style="display:none;padding:10px 12px;">
-        <div style="display:flex;flex-direction:column;gap:4px;">`;
-    items.forEach((x, bi) => {
-      const bar = x['onetimeBarcode'] || '';
-      body += `<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:12px;color:var(--muted);min-width:20px;text-align:right;">${bi + 1}.</span><span class="pcm-bar-chip">${esc(bar)}</span></div>`;
-    });
-    body += `</div></div></div>`;
+    const items    = poiGroups[poi];
+    const gid      = `pcm-dom-grp-${gi}`;
+    const vendor   = items[0]?.['ชื่อผู้จำหน่าย'] || '';
+    const recDate  = items[0]?.['วันที่รับสินค้า'] || '';
+    const barcodes = items.map(x => x['onetimeBarcode']).filter(Boolean);
+
+    if (barcodes.length) {
+      body += `<div style="margin-bottom:6px;border-radius:6px;overflow:hidden;">
+        <div onclick="(function(el){el.style.display=el.style.display==='none'?'block':'none'})(document.getElementById('${gid}'))"
+          class="pcm-poi-hdr">
+          <span class="pcm-poi-num">${esc(poi)}</span>
+          <span class="pcm-poi-vendor">${esc(vendor)}</span>
+          ${recDate ? `<span class="pcm-poi-date">${esc(recDate)}</span>` : ''}
+          <span class="pcm-poi-cnt">${barcodes.length} barcodes ▼</span>
+        </div>
+        <div id="${gid}" style="display:none;padding:10px 12px;">
+          <div style="display:flex;flex-direction:column;gap:4px;">`;
+      barcodes.forEach((bar, bi) => {
+        body += `<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:12px;color:var(--muted);min-width:20px;text-align:right;">${bi + 1}.</span><span class="pcm-bar-chip">${esc(bar)}</span></div>`;
+      });
+      body += `</div></div></div>`;
+    } else {
+      body += `<div style="margin-bottom:6px;border-radius:6px;overflow:hidden;">
+        <div class="pcm-poi-hdr" style="cursor:default;">
+          <span class="pcm-poi-num">${esc(poi)}</span>
+          <span class="pcm-poi-vendor">${esc(vendor)}</span>
+          ${recDate ? `<span class="pcm-poi-date">${esc(recDate)}</span>` : ''}
+          <span class="pcm-poi-cnt" style="color:var(--muted);font-weight:400;">${items.length} รายการ</span>
+        </div>
+      </div>`;
+    }
   });
 
   return body;
