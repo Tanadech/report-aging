@@ -88,6 +88,8 @@ document.querySelectorAll('.tb').forEach(btn => {
     document.querySelectorAll('.tc').forEach(c => c.classList.remove('act'));
     btn.classList.add('act');
     document.getElementById('tc-' + btn.dataset.tab).classList.add('act');
+    const ttl = document.getElementById('top-bar-ttl');
+    if (ttl) ttl.textContent = btn.dataset.title || '';
     setTimeout(() => {
       if (btn.dataset.tab === 'uot' && dataUot.length)      { renderUot(); }
       if (btn.dataset.tab === 'in'  && dataIn.length)       { renderIn();  }

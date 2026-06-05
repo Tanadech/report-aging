@@ -22,11 +22,10 @@
 .btn-rf:hover  { background:rgba(56,189,248,.2); }
 .btn-rf:disabled { opacity:.4; cursor:wait; }
 
-/* Tab navigation */
-.tabs    { background:#060e1b; display:flex; padding:0 16px; flex-shrink:0; border-bottom:1px solid rgba(49, 184, 241, 0.08); }
-.tb      { padding:8px 22px; background:transparent; border:none; border-bottom:3px solid transparent; color:rgba(255,255,255,.4); font-size:16px; font-weight:600; cursor:pointer; font-family:inherit; transition:all .2s; letter-spacing:.1px; }
-.tb:hover{ color:rgba(255,255,255,.8); }
-.tb.act  { color:#93c5fd; border-bottom-color:#38bdf8; }
+/* Sidebar tab buttons */
+.tb      { display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; background:transparent; border:none; border-left:3px solid transparent; color:rgba(255,255,255,.45); font-size:14px; font-weight:600; cursor:pointer; font-family:inherit; text-align:left; transition:all .2s; }
+.tb:hover{ color:rgba(255,255,255,.8); background:rgba(56,189,248,.05); }
+.tb.act  { color:#93c5fd; border-left-color:#38bdf8; background:rgba(56,189,248,.08); }
 
 
 /* ── Light mode ── */
@@ -34,10 +33,10 @@ body.light .hdr       { background:linear-gradient(135deg,#1e3a5f 0%,#1e40af 60%
 body.light .hdr h1    { color:#fff; }
 body.light .hdr-sub   { color:rgba(255,255,255,.7); }
 body.light .hdr-sep   { background:rgba(255,255,255,.25); }
-body.light .tabs      { background:#e2e8f0; border-bottom:1px solid #cbd5e1; }
-body.light .tb        { color:#475569; }
-body.light .tb:hover  { color:#1e293b; }
-body.light .tb.act    { color:#1d4ed8; border-bottom-color:#1d4ed8; }
+/* Sidebar stays dark in light mode — only override if needed */
+body.light .tb        { color:rgba(255,255,255,.5); }
+body.light .tb:hover  { color:rgba(255,255,255,.9); background:rgba(56,189,248,.07); }
+body.light .tb.act    { color:#93c5fd; border-left-color:#38bdf8; background:rgba(56,189,248,.12); }
 body.light .sbadge.snap { background:rgba(37,99,235,.12);  color:#2563eb; border-color:rgba(37,99,235,.25); }
 body.light .sbadge.live { background:rgba(5,150,105,.12);  color:#059669; border-color:rgba(5,150,105,.25); }
 body.light .sbadge.err  { background:rgba(220,38,38,.12);  color:#dc2626; border-color:rgba(220,38,38,.25); }

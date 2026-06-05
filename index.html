@@ -32,27 +32,48 @@
 </head>
 <body>
 
-<header class="hdr">
-  <div class="hdr-left">
-    <div class="hdr-icon">📦</div>
-    <div>
-      <h1>รายงานการติดตามเอกสารขอโอน IMPORTED & DOMESTIC</h1>
+<div class="app-shell">
+
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-icon">📦</div>
+    <div class="sb-logo-text">
+      <div class="sb-logo-title">Aging Report</div>
+      <div class="sb-logo-sub">IMPORTED &amp; DOMESTIC</div>
+    </div>
+  </div>
+  <nav class="sb-nav">
+    <button class="tb act" data-tab="uot" data-title="🌏 IMPORTED (ต่างประเทศ)">
+      <span class="sb-ico">🌏</span>
+      <div class="sb-lbl"><b>IMPORTED</b><small>ต่างประเทศ</small></div>
+    </button>
+    <button class="tb" data-tab="in" data-title="📦 DOMESTIC (ภายในประเทศ)">
+      <span class="sb-ico">📦</span>
+      <div class="sb-lbl"><b>DOMESTIC</b><small>ภายในประเทศ</small></div>
+    </button>
+    <button class="tb" data-tab="car" data-title="🚛 คิวรถ OUTBOUND">
+      <span class="sb-ico">🚛</span>
+      <div class="sb-lbl"><b>คิวรถ</b><small>OUTBOUND</small></div>
+    </button>
+    <button class="tb" data-tab="pay" data-title="🧾 เอกสารจ่าย OUTBOUND">
+      <span class="sb-ico">🧾</span>
+      <div class="sb-lbl"><b>เอกสารจ่าย</b><small>OUTBOUND</small></div>
+    </button>
+  </nav>
+  <div class="sb-foot">
+    <button class="btn-rf" id="btn-theme">☀️ Light</button>
+  </div>
+</aside>
+
+<div class="app-main">
+  <div class="top-bar">
+    <div class="top-bar-ttl" id="top-bar-ttl">🌏 IMPORTED (ต่างประเทศ)</div>
+    <div class="top-bar-r">
+      <span id="sbadge" class="sbadge snap"><span class="dot"></span>SNAPSHOT</span>
+      <div class="hdr-sep"></div>
       <div class="hdr-sub" id="meta">กำลังโหลดข้อมูล...</div>
     </div>
   </div>
-  <div class="hdr-right">
-    <span id="sbadge" class="sbadge snap"><span class="dot"></span>SNAPSHOT</span>
-    <div class="hdr-sep"></div>
-    <button class="btn-rf" id="btn-theme">☀️ Light</button>
-  </div>
-</header>
-
-<div class="tabs">
-  <button class="tb act" data-tab="uot">🌏 IMPORTED (ต่างประเทศ)</button>
-  <button class="tb" data-tab="in">📦 DOMESTIC (ภายในประเทศ)</button>
-  <button class="tb" data-tab="car">🚛 คิวรถ OUTBOUND</button>
-  <button class="tb" data-tab="pay">🧾 เอกสารจ่าย OUTBOUND</button>
-</div>
 
 <!-- ===== TAB UOT ===== -->
 <div class="tc act" id="tc-uot">
@@ -524,5 +545,7 @@
 <!-- 9. Auto-load จาก data.json (GitHub Pages เท่านั้น) -->
 <script src="loaders/autoload.js?v=20260605"></script>
 
+</div><!-- /.app-main -->
+</div><!-- /.app-shell -->
 </body>
 </html>

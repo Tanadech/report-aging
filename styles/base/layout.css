@@ -22,3 +22,69 @@
 .apexcharts-bar-area, .apexcharts-radialbar-area { cursor:pointer; }
 body.light .zone-scroll::-webkit-scrollbar-track { background:#f1f5f9; }
 body.light .zone-scroll::-webkit-scrollbar-thumb { background:#cbd5e1; }
+
+/* ── Sidebar app shell ── */
+.app-shell { display:flex; flex:1; min-height:0; }
+
+.sidebar {
+  width:200px; flex-shrink:0;
+  background:#060e1b;
+  border-right:1px solid rgba(56,189,248,.12);
+  display:flex; flex-direction:column;
+  overflow:hidden;
+}
+.sb-logo {
+  padding:14px 16px;
+  border-bottom:1px solid rgba(56,189,248,.1);
+  display:flex; align-items:center; gap:10px;
+  flex-shrink:0;
+}
+.sb-logo-icon {
+  width:32px; height:32px;
+  background:rgba(56,189,248,.12); border-radius:8px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:16px; flex-shrink:0;
+  box-shadow:0 0 8px rgba(56,189,248,.2);
+}
+.sb-logo-text  { min-width:0; }
+.sb-logo-title { font-size:13px; font-weight:700; color:#e2e8f0; white-space:nowrap; }
+.sb-logo-sub   { font-size:10px; color:#4d6580; white-space:nowrap; }
+.sb-nav {
+  flex:1; padding:8px 0;
+  display:flex; flex-direction:column; gap:2px;
+  overflow-y:auto;
+}
+.sb-ico { font-size:18px; flex-shrink:0; }
+.sb-lbl { display:flex; flex-direction:column; line-height:1.3; }
+.sb-lbl b     { font-size:13px; font-weight:700; }
+.sb-lbl small { font-size:10px; opacity:.65; font-weight:400; }
+.sb-foot {
+  padding:12px;
+  border-top:1px solid rgba(56,189,248,.1);
+  flex-shrink:0;
+}
+.sb-foot .btn-rf { width:100%; justify-content:center; }
+
+/* Main content area (right of sidebar) */
+.app-main { flex:1; min-width:0; display:flex; flex-direction:column; overflow:hidden; }
+
+/* Top bar */
+.top-bar {
+  background:linear-gradient(135deg,#020811 0%,#081829 60%,#0c2240 100%);
+  height:50px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 18px;
+  box-shadow:0 2px 20px rgba(0,0,0,.7);
+  border-bottom:1px solid rgba(56,189,248,.12);
+}
+.top-bar-ttl { font-size:16px; font-weight:700; color:#e2e8f0; letter-spacing:.2px; }
+.top-bar-r   { display:flex; align-items:center; gap:8px; }
+
+/* ── Light mode — sidebar stays dark, top-bar goes blue ── */
+body.light .top-bar {
+  background:linear-gradient(135deg,#1e3a5f 0%,#1e40af 60%,#1d4ed8 100%);
+  box-shadow:0 2px 12px rgba(0,0,0,.15);
+}
+body.light .top-bar-ttl   { color:#fff; }
+body.light .sb-foot .btn-rf       { background:rgba(56,189,248,.15); color:#bae6fd; border-color:rgba(56,189,248,.3); }
+body.light .sb-foot .btn-rf:hover { background:rgba(56,189,248,.25); }
