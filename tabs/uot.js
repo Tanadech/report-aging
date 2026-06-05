@@ -72,19 +72,39 @@ function renderUot() {
     ['#00B8D9', '#22C55E']
   );
 
-  // Bar: สถานะ / SKU แยกตามคลัง → stacked bar
-  const u2ByWH   = groupBy(uotFiltered, 'คลังสินค้า');
-  const u2WH     = [...new Set(uotFiltered.map(r => r['คลังสินค้า'] || '').filter(Boolean))].sort();
-  const u2Series = Object.entries(STATUS_MAP).map(([st]) => ({
-    name: st, color: statusCol(st),
-    data: u2WH.map(wh => uniqCount((u2ByWH[wh] || []).filter(r => r['สถานะประมวลผล'] === st), 'รหัสสินค้า'))
-  })).filter(s => s.data.some(v => v > 0));
-  try {
-    mkApexBar('u-pie2', u2WH, u2Series, {
-      stacked: true, yTitle: 'SKU (distinct)', tooltipShared: true,
-      onClick: (_wh, statusName) => { if (statusName) { setCBOnly(document.getElementById('u-fs-list'), statusName); renderUot(); } }
-    });
-  } catch(_) {}
+  // Bar: สถานะ / SKU แยกตามคลัง → stacked bar (Chart.js)
+  const u2ByWH  = groupBy(uotFiltered, 'คลังสินค้า');
+  const u2WH    = [...new Set(uotFiltered.map(r => r['คลังสินค้า'] || '').filter(Boolean))].sort();
+  const allStats2 = Object.keys(STATUS_MAP);
+  const u2Ds = allStats2.map(st => ({
+    label: st,
+    data: u2WH.map(wh => uniqCount((u2ByWH[wh] || []).filter(r => r['สถานะประมวลผล'] === st), 'รหัสสินค้า')),
+    backgroundColor: statusCol(st), borderWidth: 0, borderRadius: 1
+  })).filter(d => d.data.some(v => v > 0));
+  mkChart('u-pie2', 'bar', { labels: u2WH, datasets: u2Ds }, {
+    plugins: {
+      legend: { display: false },
+      tooltip: { mode:'index', callbacks:{ footer: items => 'รวม: ' + fmtN(items.reduce((s,i) => s+(i.parsed.y||0),0)) } },
+      datalabels: {
+        anchor: ctx => ctx.datasetIndex===u2Ds.length-1?'end':'center',
+        align:  ctx => ctx.datasetIndex===u2Ds.length-1?'top':'center',
+        font: {size:11,weight:'bold'},
+        formatter: (v,ctx) => {
+          if (ctx.datasetIndex===u2Ds.length-1) { const tot=u2Ds.reduce((s,d)=>s+(d.data[ctx.dataIndex]||0),0); return tot>0?fmtN(tot):''; }
+          return v>0?fmtN(v):'';
+        },
+        color: ctx => ctx.datasetIndex===u2Ds.length-1?(document.body.classList.contains('light')?'#1C252E':'#e2e8f0'):'#fff',
+        display: ctx => ctx.dataset.data[ctx.dataIndex]>0
+      }
+    },
+    scales: {
+      x: { stacked:true, ticks:{font:{size:11}} },
+      y: { stacked:true, beginAtZero:true, ticks:{font:{size:10}}, title:{display:true,text:'SKU (distinct)',font:{size:10}} }
+    }
+  });
+  const lgHtml2 = allStats2.filter(st => u2Ds.some(d => d.label===st))
+    .map(st => `<span style="display:inline-flex;align-items:center;gap:3px;margin-right:10px;"><span style="width:10px;height:10px;border-radius:2px;background:${statusCol(st)};display:inline-block;"></span><span style="font-size:10px;color:var(--muted);">${st}</span></span>`).join('');
+  document.getElementById('u-legend2').innerHTML = lgHtml2;
 
   // Bar 1: Top 5 สาขา (mixed: วันค้างสูงสุด = line บน y1, ที่เหลือ = bar บน y)
   const brData = _rankBranches(uotFiltered);
