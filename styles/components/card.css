@@ -1,7 +1,7 @@
 /* ============ styles/components/card.css — KPI cards + Chart cards ============ */
 
 /* KPI row */
-.kpi-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px; }
+.kpi-row { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; }
 
 /* ── KPI card base ── */
 .kpi {

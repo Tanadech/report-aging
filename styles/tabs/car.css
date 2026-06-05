@@ -9,7 +9,6 @@
 .car-toolbar-hint { font-size:11px; color:var(--muted); }
 
 /* KPI row override for CAR tab */
-#tc-car .kpi-row { grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); }
 #tc-car .kpi     { transition:border-color .15s; }
 
 /* Time slot grouping */
