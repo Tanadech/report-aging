@@ -334,8 +334,9 @@ function openInBranchDetail(abrName) {
     <div class="modal-sum-item"><b>${fmtN(totalOt)}</b>Onetime</div>
     <div class="modal-sum-item"><b>${fmtN(totalPal)}</b>พาเลท</div>
     <div class="modal-sum-item"><b>${fmtN(maxDays)}</b>วันคงค้างสูงสุด</div>
-  </div>
-  <table class="mtbl"><thead><tr>
+  </div>`;
+  html += _branchCarSection(BR_ABR_MAP[abrName] || '', abrName);
+  html += `<table class="mtbl"><thead><tr>
     <th>เลขที่เอกสาร POI</th>
     <th>คลัง</th>
     <th>Zone</th>

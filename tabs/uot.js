@@ -419,8 +419,9 @@ function openUotBranchDetail(branchFullName) {
     <div class="modal-sum-item"><b>${fmtN(totalSkus)}</b>SKU</div>
     <div class="modal-sum-item"><b>${fmtP(totalPal)}</b>พาเลท</div>
     <div class="modal-sum-item"><b>${fmtN(maxDays)}</b>วันค้างสูงสุด</div>
-  </div>
-  <table class="mtbl"><thead><tr>
+  </div>`;
+  html += _branchCarSection(branchFullName, '');
+  html += `<table class="mtbl"><thead><tr>
     <th>เลขที่เอกสารขอโอน</th>
     <th>วันที่ขอโอน</th>
     <th>คลัง</th>
