@@ -85,6 +85,7 @@ function renderIn() {
   // Chart 3: Top 10 สาขา
   const byBr2  = groupBy(f,'ชื่อย่อสาขา');
   const brD2   = Object.entries(byBr2).map(([k,v])=>({
+    abrName: k,
     name: BR_ABR_MAP[k]||k,
     max:  Math.max(...v.map(r=>num(r['วันคงค้าง']))),
     docs: uniqCount(v,'เลขที่เอกสาร POI'),
@@ -105,6 +106,13 @@ function renderIn() {
       y:  {beginAtZero:true,ticks:{stepSize:50,font:{size:9}},title:{display:true,text:'จำนวน',font:{size:9}}},
       y1: {type:'linear',position:'right',beginAtZero:true,ticks:{font:{size:9},color:'#00B8D9'},grid:{drawOnChartArea:false},title:{display:true,text:'วันค้างสูงสุด',font:{size:9},color:'#00B8D9'}},
       x:  {ticks:{font:{size:10}}}
+    },
+    onClick: (_evt, elements) => {
+      if (!elements.length) return;
+      openInBranchDetail(brD2[elements[0].index].abrName);
+    },
+    onHover: (_evt, el, chart) => {
+      chart.canvas.style.cursor = el.length ? 'pointer' : 'default';
     }
   });
 
@@ -294,6 +302,64 @@ function renderInTable() {
   });
   html += '</tbody></table>';
   document.getElementById('i-tbl').innerHTML = html;
+}
+
+// ── Branch detail popup (คลิกแท่งกราฟ i-c3) ──
+function openInBranchDetail(abrName) {
+  const rows = inFiltered.filter(r => r['ชื่อย่อสาขา'] === abrName);
+  if (!rows.length) return;
+
+  const docGrp = groupBy(rows, 'เลขที่เอกสาร POI');
+  const docs = Object.entries(docGrp).map(([doc, rws]) => ({
+    doc,
+    maxDays:  Math.max(...rws.map(r => num(r['วันคงค้าง']))),
+    onetimes: uniqCount(rws, 'เลขที่ onetime'),
+    pal:      palletForRows(rws),
+    wh:       getWH(rws[0]),
+    zone:     rws[0]['Zone Name'] || '',
+    vendor:   rws[0]['ชื่อผู้จำหน่าย'] || ''
+  })).sort((a, b) => b.maxDays - a.maxDays);
+
+  const totalOt  = uniqCount(rows, 'เลขที่ onetime');
+  const totalPal = palletForRows(rows);
+  const maxDays  = docs.length ? docs[0].maxDays : 0;
+  const dispName = (BR_ABR_MAP[abrName] || abrName).replace(/^สาขา\s*/, '');
+
+  document.getElementById('bm-title').innerHTML = `📦 DOMESTIC — ${esc(dispName)}`;
+  document.getElementById('bm-sub').textContent  =
+    `${docs.length} เอกสาร • ${totalOt} Onetime • พาเลทรวม ${totalPal} • วันคงค้างสูงสุด ${maxDays} วัน`;
+
+  let html = `<div class="modal-sum">
+    <div class="modal-sum-item"><b>${fmtN(docs.length)}</b>เอกสาร</div>
+    <div class="modal-sum-item"><b>${fmtN(totalOt)}</b>Onetime</div>
+    <div class="modal-sum-item"><b>${fmtN(totalPal)}</b>พาเลท</div>
+    <div class="modal-sum-item"><b>${fmtN(maxDays)}</b>วันคงค้างสูงสุด</div>
+  </div>
+  <table class="mtbl"><thead><tr>
+    <th>เลขที่เอกสาร POI</th>
+    <th>คลัง</th>
+    <th>Zone</th>
+    <th style="text-align:center;">วันคงค้าง</th>
+    <th style="text-align:center;">Onetime</th>
+    <th style="text-align:center;">พาเลท</th>
+    <th>ผู้จำหน่าย</th>
+  </tr></thead><tbody>`;
+
+  docs.forEach(d => {
+    html += `<tr>
+      <td class="mdoc">${esc(d.doc)}</td>
+      <td style="text-align:center;font-weight:700;">${esc(d.wh)}</td>
+      <td style="font-size:11px;">${esc(d.zone)}</td>
+      <td style="text-align:center;">${db(d.maxDays)}</td>
+      <td style="text-align:center;">${fmtN(d.onetimes)}</td>
+      <td style="text-align:center;">${d.pal > 0 ? `<b style="color:#fbbf24;">${fmtN(d.pal)}</b>` : '-'}</td>
+      <td style="font-size:11px;">${esc(d.vendor)}</td>
+    </tr>`;
+  });
+
+  html += '</tbody></table>';
+  document.getElementById('bm-content').innerHTML = html;
+  document.getElementById('branch-modal').classList.add('show');
 }
 
 // ── Pagination buttons ──

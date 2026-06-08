@@ -106,7 +106,7 @@ function renderUot() {
     .map(st => `<span style="display:inline-flex;align-items:center;gap:3px;margin-right:10px;"><span style="width:10px;height:10px;border-radius:2px;background:${statusCol(st)};display:inline-block;"></span><span style="font-size:10px;color:var(--muted);">${st}</span></span>`).join('');
   document.getElementById('u-legend2').innerHTML = lgHtml2;
 
-  // Bar 1: Top 5 สาขา (mixed: วันค้างสูงสุด = line บน y1, ที่เหลือ = bar บน y)
+  // Bar 1: Top 10 สาขา (mixed: วันค้างสูงสุด = line บน y1, ที่เหลือ = bar บน y)
   const brData = _rankBranches(uotFiltered);
   mkChart('u-c2', 'bar', {
     labels: brData.map(d => d.name),
@@ -122,6 +122,13 @@ function renderUot() {
       y:  { beginAtZero:true, ticks:{stepSize:50,font:{size:9}}, title:{display:true,text:'จำนวน',font:{size:9}} },
       y1: { type:'linear', position:'right', beginAtZero:true, ticks:{font:{size:9},color:'#00B8D9'}, grid:{drawOnChartArea:false}, title:{display:true,text:'วันค้างสูงสุด',font:{size:9},color:'#00B8D9'} },
       x:  { ticks:{font:{size:10}} }
+    },
+    onClick: (_evt, elements) => {
+      if (!elements.length) return;
+      openUotBranchDetail(brData[elements[0].index].fullName);
+    },
+    onHover: (_evt, el, chart) => {
+      chart.canvas.style.cursor = el.length ? 'pointer' : 'default';
     }
   });
 
@@ -378,6 +385,71 @@ function _rankBranches(rows) {
       if (b.skus!==a.skus) return b.skus-a.skus;
       return a.fullName.localeCompare(b.fullName,'th');
     }).slice(0,10);
+}
+
+// ── Branch detail popup (คลิกแท่งกราฟ u-c2) ──
+function openUotBranchDetail(branchFullName) {
+  const rows = uotFiltered.filter(r => r['ชื่อสาขา'] === branchFullName);
+  if (!rows.length) return;
+
+  const docGrp = groupBy(rows, 'เลขที่เอกสารขอโอน');
+  const docs = Object.entries(docGrp).map(([doc, rws]) => ({
+    doc,
+    maxDays: Math.max(...rws.map(r => num(r['วันค้างส่ง']))),
+    skus:    uniqCount(rws, 'รหัสสินค้า'),
+    pal:     rws.reduce((s, r) => s + num(r['จำนวนคงค้างพาเลท']), 0),
+    boxes:   rws.reduce((s, r) => s + num(r['จำนวนคงค้างกล่อง']), 0),
+    statuses:[...new Set(rws.map(r => r['สถานะประมวลผล'] || '').filter(Boolean))],
+    wh:      rws[0]['คลังสินค้า'] || '',
+    zone:    rws[0]['Zone ID'] || '',
+    reqDate: rws[0]['วันที่ขอโอน'] || ''
+  })).sort((a, b) => b.maxDays - a.maxDays);
+
+  const totalSkus = uniqCount(rows, 'รหัสสินค้า');
+  const totalPal  = rows.reduce((s, r) => s + num(r['จำนวนคงค้างพาเลท']), 0);
+  const maxDays   = docs.length ? docs[0].maxDays : 0;
+  const dispName  = branchFullName.replace(/^สาขา\s*/, '');
+
+  document.getElementById('bm-title').innerHTML = `🌏 IMPORTED — ${esc(dispName)}`;
+  document.getElementById('bm-sub').textContent  =
+    `${docs.length} เอกสาร • ${totalSkus} SKU • พาเลทรวม ${fmtP(totalPal)} • วันค้างสูงสุด ${maxDays} วัน`;
+
+  let html = `<div class="modal-sum">
+    <div class="modal-sum-item"><b>${fmtN(docs.length)}</b>เอกสาร</div>
+    <div class="modal-sum-item"><b>${fmtN(totalSkus)}</b>SKU</div>
+    <div class="modal-sum-item"><b>${fmtP(totalPal)}</b>พาเลท</div>
+    <div class="modal-sum-item"><b>${fmtN(maxDays)}</b>วันค้างสูงสุด</div>
+  </div>
+  <table class="mtbl"><thead><tr>
+    <th>เลขที่เอกสารขอโอน</th>
+    <th>วันที่ขอโอน</th>
+    <th>คลัง</th>
+    <th>Zone</th>
+    <th style="text-align:center;">วันค้างส่ง</th>
+    <th style="text-align:center;">SKU</th>
+    <th style="text-align:right;">พาเลทค้าง</th>
+    <th style="text-align:right;">กล่อง</th>
+    <th>สถานะประมวลผล</th>
+  </tr></thead><tbody>`;
+
+  docs.forEach(d => {
+    const pills = d.statuses.map(st => `<span class="spill ${statusCls(st)}">${esc(st)}</span>`).join(' ');
+    html += `<tr>
+      <td class="mdoc">${esc(d.doc)}</td>
+      <td style="font-size:11px;color:var(--muted);white-space:nowrap;">${esc(d.reqDate)}</td>
+      <td style="text-align:center;font-weight:700;">${esc(d.wh)}</td>
+      <td style="font-size:11px;">${esc(d.zone)}</td>
+      <td style="text-align:center;">${db(d.maxDays)}</td>
+      <td style="text-align:center;">${fmtN(d.skus)}</td>
+      <td style="text-align:right;font-weight:600;">${fmtP(d.pal)}</td>
+      <td style="text-align:right;">${fmtN(d.boxes)}</td>
+      <td>${pills || '-'}</td>
+    </tr>`;
+  });
+
+  html += '</tbody></table>';
+  document.getElementById('bm-content').innerHTML = html;
+  document.getElementById('branch-modal').classList.add('show');
 }
 
 // ── Pagination buttons (bound after DOM ready in app.js) ──
