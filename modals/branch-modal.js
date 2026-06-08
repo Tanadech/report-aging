@@ -76,7 +76,7 @@ function _branchCarSection(fullName, abrCode) {
       <span style="font-weight:700;color:#00B8D9;white-space:nowrap;min-width:130px;">⏰ ${esc(c.slot)}</span>
       <span style="background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.2);padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;color:#7dd3fc;">${esc(c.wh || '—')}</span>
       <span style="color:var(--muted);">🚚 ${esc(c.truck)}</span>
-      <span style="font-family:monospace;color:#e2e8f0;font-weight:600;">${esc(c.reg)}</span>
+      <span style="font-family:monospace;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);padding:2px 10px;border-radius:4px;color:#ffffff;font-weight:800;font-size:12px;letter-spacing:.5px;">${esc(c.reg)}</span>
       <span style="color:var(--muted);font-size:11px;">${esc(c.driver)}</span>
       ${stBadge}
     </div>`;
