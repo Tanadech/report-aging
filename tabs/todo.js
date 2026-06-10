@@ -302,13 +302,12 @@ function _renderTodoDom() {
         <th style="font-size:13px;">สาขา</th>
         <th style="text-align:center;font-size:13px;">คลัง</th>
         <th style="text-align:center;font-size:13px;">Zone</th>
-        <th style="font-size:13px;">ผู้จำหน่าย</th>
         <th style="text-align:center;width:80px;font-size:13px;">Onetime</th>
         <th style="text-align:center;width:90px;font-size:13px;">วันคงค้าง</th>
       </tr></thead><tbody>`;
 
   if (!filtered.length) {
-    html += `<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:24px;">ไม่มีข้อมูล</td></tr>`;
+    html += `<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px;">ไม่มีข้อมูล</td></tr>`;
   } else {
     filtered.forEach((r, i) => {
       html += `<tr style="cursor:pointer;" onclick="openTodoDomDetail('${esc(r.docNo).replace(/'/g,'\\\'')}')"
@@ -318,7 +317,6 @@ function _renderTodoDom() {
         <td style="font-size:13px;">${esc(r.branch)}</td>
         <td style="text-align:center;"><span style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);padding:2px 9px;border-radius:5px;font-size:12px;font-weight:700;color:#4ade80;">${esc(r.wh || '—')}</span></td>
         <td style="text-align:center;"><span style="background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);padding:2px 9px;border-radius:5px;font-size:12px;font-weight:700;color:#7dd3fc;">${esc(r.zone || '—')}</span></td>
-        <td style="font-size:12px;color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(r.vendor)}">${esc(r.vendor || '—')}</td>
         <td style="text-align:center;">${_numBadgeDom(r.onetimes.size, 'rgba(253,169,45,.15)', 'rgba(253,169,45,.4)', '#fda92d')}</td>
         <td style="text-align:center;">${_dayBadgeTd(r.maxDays)}</td>
       </tr>`;
@@ -349,18 +347,15 @@ function openTodoDomDetail(docNo) {
   let html = `<div class="modal-sum">
     <div class="modal-sum-item"><b>${fmtN(rows.length)}</b> รายการ</div>
     <div class="modal-sum-item"><b>${fmtN(doc.onetimes.size)}</b> Onetime</div>
-    <div class="modal-sum-item"><b>${fmtN(doc.vendors.size)}</b> ผู้จำหน่าย</div>
   </div>`;
 
   html += `<div style="overflow:auto;max-height:520px;border-radius:6px;border:1px solid rgba(56,189,248,.1);">
-    <table class="mtbl" style="width:100%;min-width:860px;font-size:13px;">
+    <table class="mtbl" style="width:100%;min-width:600px;font-size:13px;">
       <thead><tr>
         <th style="width:36px;text-align:center;white-space:nowrap;">#</th>
         <th style="white-space:nowrap;min-width:150px;">เลขที่ Onetime</th>
         <th style="white-space:nowrap;min-width:190px;">บาร์โค้ดพาเลท</th>
         <th style="white-space:nowrap;min-width:110px;">วันที่ Onetime</th>
-        <th style="min-width:200px;">ผู้จำหน่าย</th>
-        <th style="white-space:nowrap;min-width:110px;">ประตูลงสินค้า</th>
         <th style="white-space:nowrap;min-width:60px;">หน่วย</th>
         <th style="text-align:center;white-space:nowrap;min-width:90px;">วันคงค้าง</th>
       </tr></thead><tbody>`;
@@ -371,8 +366,6 @@ function openTodoDomDetail(docNo) {
       <td style="font-family:monospace;font-size:12px;font-weight:700;color:#93c5fd;white-space:nowrap;">${esc(r['เลขที่ onetime'] || '—')}</td>
       <td style="font-size:12px;color:var(--muted);white-space:nowrap;">${esc(r['บาร์โค้ดพาเลท'] || '—')}</td>
       <td style="font-size:12px;white-space:nowrap;">${esc(r['วันที่ onetime'] || '—')}</td>
-      <td style="font-size:12px;">${esc(r['ชื่อผู้จำหน่าย'] || '—')}</td>
-      <td style="text-align:center;white-space:nowrap;"><span style="background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);padding:3px 10px;border-radius:5px;font-size:12px;font-weight:700;color:#7dd3fc;">${esc(r['ประตูลงสินค้า'] || '—')}</span></td>
       <td style="text-align:center;color:var(--muted);font-size:12px;white-space:nowrap;">${esc(r['หน่วยนับ'] || '—')}</td>
       <td style="text-align:center;white-space:nowrap;">${_dayBadgeTd(r['วันคงค้าง'])}</td>
     </tr>`;
