@@ -220,11 +220,12 @@ function _renderTodoOverview() {
 
   // ── 8. Render table ──
   const carCell = (bKey, day, carDetail, total) => {
-    if (!dataCar.length || total === 0) return `<span style="color:var(--muted);font-size:12px;">—</span>`;
+    if (!dataCar.length) return `<span style="color:var(--muted);font-size:12px;">—</span>`;
     const bkE = esc(bKey).replace(/'/g, "\\'");
-    const whRows = allWhs.filter(wh => (carDetail[wh]?.total || 0) > 0).map(wh => {
-      const d = carDetail[wh];
-      return `<div style="display:flex;align-items:center;gap:6px;padding:3px 6px;border-radius:5px;background:rgba(14,165,233,.07);border:1px solid rgba(14,165,233,.2);margin-bottom:3px;">
+    const whRows = allWhs.map(wh => {
+      const d = carDetail[wh] || { total: 0, arrived: 0, departed: 0 };
+      const dimmed = d.total === 0 ? 'opacity:.45;' : '';
+      return `<div style="display:flex;align-items:center;gap:6px;padding:3px 6px;border-radius:5px;background:rgba(14,165,233,.07);border:1px solid rgba(14,165,233,.2);margin-bottom:3px;${dimmed}">
         <span style="color:#0ea5e9;font-weight:700;font-size:11px;min-width:28px;">${esc(wh)}</span>
         <span style="color:var(--text);font-size:11px;font-weight:800;">รวม ${d.total}</span>
         <span style="color:var(--muted);font-size:10px;">|</span>
@@ -232,9 +233,9 @@ function _renderTodoOverview() {
         <span style="font-size:10.5px;color:#f59e0b;font-weight:600;">ออก <b>${d.departed}</b></span>
       </div>`;
     }).join('');
-    return `<div style="cursor:pointer;padding:2px 4px;border-radius:6px;"
-      onclick="openTodoBranchCars('${bkE}','${day}')"
-      onmouseover="this.style.background='rgba(56,189,248,.07)'" onmouseout="this.style.background=''">
+    const clickable = total > 0;
+    return `<div style="padding:2px 4px;border-radius:6px;${clickable ? 'cursor:pointer;' : ''}"
+      ${clickable ? `onclick="openTodoBranchCars('${bkE}','${day}')" onmouseover="this.style.background='rgba(56,189,248,.07)'" onmouseout="this.style.background=''"` : ''}>
       ${whRows}
     </div>`;
   };
