@@ -14,6 +14,65 @@ function _truckTypeList(rows) {
   return Object.entries(byType).sort((a, b) => b[1] - a[1]).map(([t, n]) => `${t}:${n}`).join('|').replace(/"/g, '&quot;');
 }
 
+// ── ตารางสินค้าตกเที่ยว OUTBOUND ──
+function _renderStuckDocs(rows) {
+  const tblEl = document.getElementById('c-stuck-tbl');
+  const cntEl = document.getElementById('c-stuck-cnt');
+  if (!tblEl) return;
+
+  const stuck = rows.filter(r => isChecked(r['รถตกค้าง']));
+  if (cntEl) cntEl.textContent = stuck.length ? `(${fmtN(stuck.length)} คัน)` : '';
+
+  if (!stuck.length) {
+    tblEl.innerHTML = `<div style="padding:30px;text-align:center;color:var(--muted);font-size:13px;">
+      <span style="font-size:26px;display:block;margin-bottom:6px;opacity:.4;">✅</span>ไม่มีรถตกค้างในมุมมองนี้
+    </div>`;
+    return;
+  }
+
+  const sorted = [...stuck].sort((a, b) => {
+    const da = parseCarDate(a['search_date']), db = parseCarDate(b['search_date']);
+    if (da && db && da.getTime() !== db.getTime()) return db - da;
+    return timeSlotStart(a['zone_time'] || '') - timeSlotStart(b['zone_time'] || '');
+  });
+
+  const ST_CLS = { 'มาก่อนเวลา':'s2','มาหลังเวลานัด':'s0','ยกเลิกรับงาน':'s0','ยังไม่มาลงคิว':'s3' };
+
+  let html = `<div class="tbl-wrap"><table class="gtbl"><thead><tr>
+    <th>เลขที่เอกสาร OUTBOUND</th>
+    <th>สาขาปลายทาง</th>
+    <th>คลัง</th>
+    <th>วันที่คิวงาน</th>
+    <th>ช่วงเวลา</th>
+    <th>ประเภทงาน</th>
+    <th>ประเภทรถ</th>
+    <th>ทะเบียน</th>
+    <th>สถานะลงคิว</th>
+  </tr></thead><tbody>`;
+
+  sorted.forEach(r => {
+    const st    = r['สถานะลงคิว'] || '';
+    const stCls = ST_CLS[st] || 's5';
+    const rcChip = r['rc_type_product']
+      ? `<span style="background:rgba(253,169,45,.15);border:1px solid rgba(253,169,45,.3);padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;color:#fda92d;">${esc(r['rc_type_product'])}</span>`
+      : '-';
+    html += `<tr>
+      <td class="doc-cell" style="white-space:nowrap;">${esc(r['doc_no'] || '-')}</td>
+      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc((r['source_name'] || '').replace(/^สาขา\s*/, ''))}</td>
+      <td style="text-align:center;font-weight:700;">${esc(r['port_id'] || '-')}</td>
+      <td style="font-size:11px;color:var(--muted);white-space:nowrap;">${esc(r['search_date'] || '-')}</td>
+      <td style="font-weight:700;color:#00B8D9;white-space:nowrap;">${esc(r['zone_time'] || '-')}</td>
+      <td>${rcChip}</td>
+      <td style="font-size:11px;">${esc(r['truck_info'] || '-')}</td>
+      <td style="font-family:monospace;font-size:11.5px;font-weight:700;background:#1e293b;border:1px solid #475569;padding:2px 8px;border-radius:4px;color:#f1f5f9;">${esc(r['truck_registration'] || '-')}</td>
+      <td>${st ? `<span class="spill ${stCls}">${esc(st)}</span>` : '-'}</td>
+    </tr>`;
+  });
+
+  html += '</tbody></table></div>';
+  tblEl.innerHTML = html;
+}
+
 function renderCar() {
   let f         = getCarFiltered();
   const fdateEl = document.getElementById('c-fdate');
@@ -64,27 +123,8 @@ function renderCar() {
     <stat-card variant="warn" label="ยังไม่ออก DC"      value="${fmtN(notoutRows.length)}"   unit="คัน" list="${_truckTypeList(notoutRows)}"></stat-card>
   `;
 
-  // Timeline chart
-  const slots  = [...new Set(f.map(r => r['zone_time'] || '').filter(Boolean))].sort((a,b) => timeSlotStart(a) - timeSlotStart(b));
-  const whKeys = [...new Set(f.map(r => r['port_id'] || '').filter(Boolean))].sort();
-  const wPal   = ['#00B8D9','#22C55E','#7C3AED','#fda92d','#FF5630','#1677ff','#FFAB00'];
-  mkChart('c-c1', 'bar', {
-    labels: slots,
-    datasets: whKeys.map((wh, i) => ({
-      label: wh, backgroundColor: wPal[i % wPal.length], borderRadius: 4, borderWidth: 0,
-      data: slots.map(s => f.filter(r => r['zone_time'] === s && r['port_id'] === wh).length)
-    }))
-  }, {
-    plugins: {
-      legend: { position:'bottom', labels:{ font:{size:11}, boxWidth:10, padding:8 } },
-      tooltip: { mode:'index', callbacks:{ footer: items => 'รวม: ' + fmtN(items.reduce((s,i) => s + (i.parsed.y||0), 0)) } },
-      datalabels: { anchor:'center', align:'center', font:{size:11,weight:'bold'}, color:'#fff', formatter: v => v > 0 ? v : '', display: ctx => ctx.dataset.data[ctx.dataIndex] > 0 }
-    },
-    scales: {
-      x: { stacked:true, ticks:{font:{size:11}} },
-      y: { stacked:true, beginAtZero:true, ticks:{stepSize:1,font:{size:10}}, title:{display:true,text:'จำนวนรถ',font:{size:10}} }
-    }
-  });
+  // ตารางสินค้าตกเที่ยว (แทน Timeline chart)
+  _renderStuckDocs(f);
 
   // เสริม aging + sort แล้ว dispatch ให้ view ที่เลือก
   const enriched = f.map(r => ({ ...r, _slot: timeSlotStart(r['zone_time'] || ''), _aging: getAgingForBranch(r['source_code'] || '', r['source_name'] || '', r['port_id'] || '') }));

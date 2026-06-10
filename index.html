@@ -432,8 +432,14 @@
     <div class="kpi-row" id="car-kpi"></div>
 
     <div class="card">
-      <div class="card-title"><span class="dot" style="background:#00B8D9"></span>Timeline แผนคิวรถ OUTBOUND ตามช่วงเวลา</div>
-      <div class="cw" style="height:220px;"><canvas id="c-c1"></canvas></div>
+      <div class="card-title" style="justify-content:space-between;">
+        <span style="display:flex;align-items:center;gap:6px;">
+          <span class="dot" style="background:#FF5630"></span>
+          สินค้าตกเที่ยว — เอกสาร OUTBOUND ที่รถตกค้าง
+        </span>
+        <span class="tbl-cnt" id="c-stuck-cnt"></span>
+      </div>
+      <div id="c-stuck-tbl"></div>
     </div>
 
     <div class="card" style="padding:0;overflow:hidden;">
