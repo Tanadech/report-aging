@@ -30,6 +30,7 @@ function rebuild() {
   if (dataCar.length)      renderCar();
   // refresh Pay car table เมื่อ aging data เปลี่ยน
   if (dataAgingOut.length) renderPayCarTable();
+  if (dataUot.length || dataIn.length) renderTodo();
 }
 
 // ============ Filter events — UOT ============
@@ -91,10 +92,11 @@ document.querySelectorAll('.tb').forEach(btn => {
     const ttl = document.getElementById('top-bar-ttl');
     if (ttl) ttl.textContent = btn.dataset.title || '';
     setTimeout(() => {
-      if (btn.dataset.tab === 'uot' && dataUot.length)      { renderUot(); }
-      if (btn.dataset.tab === 'in'  && dataIn.length)       { renderIn();  }
-      if (btn.dataset.tab === 'car' && dataCar.length)      { renderCar(); }
-      if (btn.dataset.tab === 'pay' && dataAgingOut.length) { renderPay(); }
+      if (btn.dataset.tab === 'uot'  && dataUot.length)                        { renderUot();  }
+      if (btn.dataset.tab === 'in'   && dataIn.length)                         { renderIn();   }
+      if (btn.dataset.tab === 'car'  && dataCar.length)                        { renderCar();  }
+      if (btn.dataset.tab === 'pay'  && dataAgingOut.length)                   { renderPay();  }
+      if (btn.dataset.tab === 'todo' && (dataUot.length || dataIn.length))     { renderTodo(); }
     }, 80);
   });
 });
@@ -131,6 +133,12 @@ document.addEventListener('click', () => {
 document.getElementById('u-fsearch').addEventListener('input', () => { uotPage = 0; renderUotTable(); });
 // Search in DOMESTIC table
 document.getElementById('i-fsearch')?.addEventListener('input', () => { inPage = 0; renderInTable(); });
+// Search in Todo tab
+document.getElementById('todo-search')?.addEventListener('input', renderTodo);
+document.getElementById('todo-clr')?.addEventListener('click', () => {
+  document.getElementById('todo-search').value = '';
+  renderTodo();
+});
 
 // ============ Init ============
 initChartDefaults();

@@ -77,6 +77,10 @@
           <span class="sb-ico">🧾</span>
           <span class="sb-lbl">เอกสารจ่าย OUTBOUND</span>
         </button>
+        <button class="tb" data-tab="todo" data-title="📋 Todo ติดตามสินค้าตกค้าง">
+          <span class="sb-ico">📋</span>
+          <span class="sb-lbl">Todo ติดตามสินค้าตกค้าง</span>
+        </button>
       </nav>
     </div>
   </div>
@@ -535,6 +539,45 @@
   </div>
 </div>
 
+<!-- ===== TAB TODO ===== -->
+<div class="tc" id="tc-todo">
+  <div class="fb">
+    <div class="fb-item">
+      <span class="fb-lbl">ค้นหา</span>
+      <div class="p-search-wrap">
+        <span class="p-search-ico">🔍</span>
+        <input type="text" id="todo-search" placeholder="เลขที่เอกสาร / สาขา / ผู้จำหน่าย">
+      </div>
+    </div>
+    <div class="fb-sep"></div>
+    <button class="btn-clr" id="todo-clr">✕ Clear</button>
+  </div>
+
+  <div class="main">
+  <div class="main-inner">
+    <div class="card">
+      <div class="card-title" style="display:flex;align-items:center;">
+        <span class="dot" style="background:#7C3AED"></span>
+        🌏 IMPORTED — สินค้าต่างประเทศคงค้าง
+        <span id="todo-imp-cnt" style="margin-left:auto;font-size:11px;font-weight:400;color:var(--muted);"></span>
+      </div>
+      <div id="todo-imp-kpi"></div>
+      <div id="todo-imp-tbl"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="display:flex;align-items:center;">
+        <span class="dot" style="background:#22C55E"></span>
+        📦 DOMESTIC — สินค้าภายในประเทศคงค้าง
+        <span id="todo-dom-cnt" style="margin-left:auto;font-size:11px;font-weight:400;color:var(--muted);"></span>
+      </div>
+      <div id="todo-dom-kpi"></div>
+      <div id="todo-dom-tbl"></div>
+    </div>
+  </div>
+  </div>
+</div>
+
 <!-- ============================================================ -->
 <!-- Scripts — โหลดเรียงลำดับ: config → state → lib → loaders → components → tabs → modals → app -->
 <!-- ============================================================ -->
@@ -569,6 +612,7 @@
 <script src="tabs/car/views.js?v=20260610"></script>
 <script src="tabs/car/index.js?v=20260610"></script>
 <script src="tabs/pay.js?v=20260610"></script>
+<script src="tabs/todo.js?v=20260610"></script>
 
 <!-- 7. Modals -->
 <script src="modals/kpi-modal.js?v=20260610"></script>
