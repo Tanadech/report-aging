@@ -140,8 +140,6 @@ function _renderTodoImp() {
     html += `<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:24px;">ไม่มีข้อมูล</td></tr>`;
   } else {
     filtered.forEach((r, i) => {
-      const locStr   = _joinUniq(r.locs, 2);
-      const locIdStr = _joinUniq(r.locIds, 1);
       html += `<tr style="cursor:pointer;" onclick="openTodoDocDetail('${esc(r.docNo).replace(/'/g,'\\\'')}')"
         onmouseover="this.style.background='rgba(56,189,248,.09)'" onmouseout="this.style.background=''">
         <td style="text-align:center;color:var(--muted);font-size:11px;">${i + 1}</td>
@@ -149,8 +147,8 @@ function _renderTodoImp() {
         <td style="font-size:12px;">${esc(r.branch)}</td>
         <td style="text-align:center;"><span style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;color:#4ade80;">${esc(r.wh || '—')}</span></td>
         <td style="text-align:center;"><span style="background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;color:#7dd3fc;">${esc(r.zone || '—')}</span></td>
-        <td style="font-size:11px;color:#e2e8f0;">${esc(locStr)}</td>
-        <td style="font-size:10.5px;color:var(--muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc([...r.locIds].join(', '))}">${esc(locIdStr)}</td>
+        <td style="text-align:center;font-weight:700;color:#e2e8f0;">${r.locs.size}</td>
+        <td style="text-align:center;font-weight:700;color:#e2e8f0;">${r.locIds.size}</td>
         <td style="text-align:center;font-weight:700;color:#7dd3fc;">${r.skus.size}</td>
         <td style="text-align:center;font-weight:700;color:#e2e8f0;">${fmtN(Math.round(r.totalQty))}</td>
         <td style="text-align:center;">${_dayBadgeTd(r.maxDays)}</td>
