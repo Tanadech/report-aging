@@ -299,7 +299,7 @@ function _renderTodoDocsSection() {
         </tr></thead><tbody>`;
     impRows.forEach((r, i) => {
       impHtml += `<tr style="cursor:pointer;"
-        onclick="window._todoCurBranchKey=null; openTodoBranchImpDoc('${esc(r.docNo).replace(/'/g,"\\'")}'); document.getElementById('td-doc-modal').classList.add('show');"
+        onclick="window._todoBackState=null; openTodoBranchImpDoc('${esc(r.docNo).replace(/'/g,"\\'")}'); document.getElementById('td-doc-modal').classList.add('show');"
         onmouseover="this.style.background='rgba(56,189,248,.08)'" onmouseout="this.style.background=''">
         <td style="text-align:center;color:var(--muted);font-size:12px;">${i + 1}</td>
         <td style="color:#0284c7;font-weight:700;font-size:13px;">${esc(r.docNo)}</td>
@@ -345,7 +345,7 @@ function _renderTodoDocsSection() {
         </tr></thead><tbody>`;
     domRows.forEach((r, i) => {
       domHtml += `<tr style="cursor:pointer;"
-        onclick="window._todoCurBranchKey=null; openTodoBranchDomDoc('${esc(r.docNo).replace(/'/g,"\\'")}'); document.getElementById('td-doc-modal').classList.add('show');"
+        onclick="window._todoBackState=null; openTodoBranchDomDoc('${esc(r.docNo).replace(/'/g,"\\'")}'); document.getElementById('td-doc-modal').classList.add('show');"
         onmouseover="this.style.background='rgba(56,189,248,.08)'" onmouseout="this.style.background=''">
         <td style="text-align:center;color:var(--muted);font-size:12px;">${i + 1}</td>
         <td style="color:#0284c7;font-weight:700;font-size:13px;">${esc(r.docNo)}</td>
@@ -372,7 +372,7 @@ function _renderTodoDocsSection() {
 function openTodoBranchDocs(bKey) {
   const b = (window._todoOvMap || {})[bKey];
   if (!b) return;
-  window._todoCurBranchKey = bKey;
+  window._todoBackState = { type: 'docs', bKey };
 
   document.getElementById('td-doc-title').innerHTML = `📋 เอกสารตกค้าง — ${esc(b.fullName)}`;
   document.getElementById('td-doc-sub').textContent =
@@ -458,11 +458,24 @@ function openTodoBranchDocs(bKey) {
 
 // ── Back button helper ──
 function _backBtn() {
-  const hasParent = !!window._todoCurBranchKey;
-  if (!hasParent) return '';
-  return `<button onclick="openTodoBranchDocs(window._todoCurBranchKey)"
+  const s = window._todoBackState;
+  if (!s) return '';
+  let call;
+  if (s.type === 'filter') {
+    const bkE = s.bKey.replace(/'/g, "\\'");
+    const ftE = s.ft.replace(/'/g, "\\'");
+    call = s.fv
+      ? `openTodoBranchFilter('${bkE}','${ftE}','${s.fv.replace(/'/g, "\\'")}')`
+      : `openTodoBranchFilter('${bkE}','${ftE}')`;
+  } else {
+    call = `openTodoBranchDocs('${s.bKey.replace(/'/g, "\\'")}')`;
+  }
+  const label = s.type === 'filter'
+    ? (s.ft === 'imp' ? '← กลับรายการ IMPORTED' : s.ft === 'dom' ? '← กลับรายการ DOMESTIC' : `← กลับรายการ ${s.fv || ''}`)
+    : '← กลับรายการเอกสาร';
+  return `<button onclick="${call}"
     style="display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:6px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);color:#0ea5e9;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:12px;font-family:inherit;">
-    ← กลับรายการเอกสาร
+    ${label}
   </button>`;
 }
 
@@ -638,7 +651,7 @@ function openTodoBranchCars(bKey, day) {
 function openTodoBranchFilter(bKey, filterType, filterVal) {
   const b = (window._todoOvMap || {})[bKey];
   if (!b) return;
-  window._todoCurBranchKey = bKey;
+  window._todoBackState = { type: 'filter', bKey, ft: filterType, fv: filterVal || null };
 
   const impAll = Object.values(window._todoImpByDoc || {}).filter(d => d.branch === b.fullName);
   const domAll = Object.values(window._todoDomByDoc || {}).filter(d => d.branch === b.fullName);
