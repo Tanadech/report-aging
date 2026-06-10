@@ -106,27 +106,10 @@ document.addEventListener('click', () => {
   document.querySelectorAll('.cb-drop.open').forEach(d => d.classList.remove('open'));
 });
 
-// ============ Dark / Light Mode ============
-(function () {
-  const btn = document.getElementById('btn-theme');
-  const apply = (mode, rerender) => {
-    document.body.classList.toggle('light', mode === 'light');
-    btn.textContent = mode === 'light' ? '🌙 Dark' : '☀️ Light';
-    localStorage.setItem('theme', mode);
-    if (mode === 'light') {
-      Chart.defaults.color                          = '#637381';
-      Chart.defaults.borderColor                    = 'rgba(145,158,171,.2)';
-      Chart.defaults.plugins.legend.labels.color    = '#1C252E';
-    } else {
-      Chart.defaults.color                          = '#7b93b0';
-      Chart.defaults.borderColor                    = 'rgba(255,255,255,.06)';
-      Chart.defaults.plugins.legend.labels.color    = '#93c5fd';
-    }
-    if (rerender && (dataIn.length || dataUot.length)) rebuild();
-  };
-  btn.addEventListener('click', () => apply(document.body.classList.contains('light') ? 'dark' : 'light', true));
-  apply(localStorage.getItem('theme') || 'light', false);
-})();
+// ============ Light Mode (fixed) ============
+Chart.defaults.color                       = '#637381';
+Chart.defaults.borderColor                 = 'rgba(145,158,171,.2)';
+Chart.defaults.plugins.legend.labels.color = '#1C252E';
 
 
 // Search in IMPORTED table
