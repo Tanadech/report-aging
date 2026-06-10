@@ -179,8 +179,8 @@ function _renderTodoOverview() {
     const b  = normLookup[norm(r['source_name'])] || normLookup[norm(r['source_code'])];
     if (!b) return;
     const wh      = (r['port_id'] || '').trim();
-    const arrived  = r['สถานะ T1'] === 'Checked';
-    const departed = r['สถานะ T4'] === 'Checked';
+    const departed = r['สถานะ T3'] === 'Checked' || r['สถานะ T4'] === 'Checked';
+    const arrived  = !departed && (r['สถานะ T1'] === 'Checked' || r['สถานะ T2'] === 'Checked');
     if (isToday) {
       if (!b.todayCarDetail[wh]) b.todayCarDetail[wh] = { total: 0, arrived: 0, departed: 0 };
       b.todayCarDetail[wh].total++;
