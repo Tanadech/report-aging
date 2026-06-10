@@ -184,15 +184,17 @@ function _renderTodoOverview() {
   if (cntEl) cntEl.textContent = `${rows.length} สาขา`;
 
   // ── 8. Render table ──
-  const whBadge = (n, wh) => n > 0
-    ? `<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:4px;background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.2);font-size:11px;font-weight:700;color:#7dd3fc;white-space:nowrap;">${esc(wh)} <b style="color:#fff;">${n}</b></span>`
-    : `<span style="padding:2px 7px;border-radius:4px;background:rgba(100,116,139,.06);font-size:11px;color:rgba(100,116,139,.4);white-space:nowrap;">${esc(wh)} 0</span>`;
+  const whBadge = (n, wh) =>
+    `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:5px;background:rgba(14,165,233,.15);border:1px solid rgba(14,165,233,.5);font-size:12px;white-space:nowrap;">
+      <span style="color:#0ea5e9;font-weight:600;">${esc(wh)}</span>
+      <b style="color:var(--text);font-size:13px;">${n}</b>
+    </span>`;
 
   const carCell = (bKey, day, carMap, total) => {
     if (!dataCar.length) return `<span style="color:var(--muted);font-size:12px;">—</span>`;
     const badges     = allWhs.filter(wh => (carMap[wh] || 0) > 0).map(wh => whBadge(carMap[wh], wh)).join(' ');
     const totalBadge = total > 0
-      ? `<span style="padding:3px 10px;border-radius:5px;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);font-size:12px;font-weight:800;color:#4ade80;white-space:nowrap;">รวม ${total}</span>`
+      ? `<span style="padding:3px 10px;border-radius:5px;background:rgba(22,163,74,.15);border:1px solid rgba(22,163,74,.45);font-size:12px;font-weight:800;color:#16a34a;white-space:nowrap;">รวม ${total}</span>`
       : `<span style="color:var(--muted);font-size:12px;">—</span>`;
     const clickable = total > 0;
     return `<div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;padding:4px 6px;border-radius:6px;${clickable ? 'cursor:pointer;' : ''}"
