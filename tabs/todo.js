@@ -245,7 +245,7 @@ function _renderTodoOverview() {
     <table class="mtbl mtbl-sm" style="width:100%;font-size:12px;">
       <thead><tr>
         <th style="width:30px;text-align:center;">#</th>
-        <th>สาขา</th>
+        <th style="white-space:nowrap;">สาขา</th>
         <th style="text-align:center;min-width:55px;">ชื่อย่อ</th>
         <th style="text-align:center;min-width:68px;">รหัส</th>
         <th style="text-align:center;min-width:70px;">ผู้โดยสาร</th>
@@ -282,7 +282,7 @@ function _renderTodoOverview() {
 
       html += `<tr>
         <td style="text-align:center;color:var(--muted);font-size:12px;">${i + 1}</td>
-        <td style="font-size:13px;font-weight:600;">${esc(r.fullName)}</td>
+        <td style="font-size:13px;font-weight:600;white-space:nowrap;">${esc(r.fullName)}</td>
         <td style="text-align:center;font-size:12px;color:#0891b2;font-weight:700;">${esc(r.branchCode || '—')}</td>
         <td style="text-align:center;font-size:12px;color:#0ea5e9;font-weight:700;">${esc(r.abrCode || '—')}</td>
         <td style="text-align:center;">${totalBadge}</td>
