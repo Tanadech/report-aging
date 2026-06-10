@@ -120,6 +120,7 @@ function _renderTodoOverview() {
       key, fullName: key, abrCode: abrCode || '',
       impDocs: new Set(), domDocs: new Set(),
       impMaxDays: 0, domMaxDays: 0,
+      whDocs: {},
       todayCars: {}, tomorrowCars: {}
     };
     if (abrCode && !bmap[key].abrCode) bmap[key].abrCode = abrCode;
@@ -130,11 +131,13 @@ function _renderTodoOverview() {
     const b = getOrMake(doc.branch, fullToAbr[doc.branch] || '');
     b.impDocs.add(doc.docNo);
     if (doc.maxDays > b.impMaxDays) b.impMaxDays = doc.maxDays;
+    if (doc.wh) b.whDocs[doc.wh] = (b.whDocs[doc.wh] || 0) + 1;
   });
   Object.values(domByDoc).forEach(doc => {
     const b = getOrMake(doc.branch, fullToAbr[doc.branch] || '');
     b.domDocs.add(doc.docNo);
     if (doc.maxDays > b.domMaxDays) b.domMaxDays = doc.maxDays;
+    if (doc.wh) b.whDocs[doc.wh] = (b.whDocs[doc.wh] || 0) + 1;
   });
 
   Object.values(bmap).forEach(b => {
@@ -220,11 +223,14 @@ function _renderTodoOverview() {
     html += `<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:28px;">ไม่มีข้อมูล</td></tr>`;
   } else {
     rows.forEach((r, i) => {
-      const docBadge = `<span style="display:inline-block;padding:4px 14px;border-radius:7px;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.45);color:#7c3aed;font-size:14px;font-weight:800;cursor:pointer;text-align:center;line-height:1.5;"
+      const whDocBadges = Object.entries(r.whDocs).sort((a,b) => a[0].localeCompare(b[0]))
+        .map(([wh, n]) => `<span style="display:inline-flex;align-items:center;gap:3px;padding:1px 6px;border-radius:4px;background:rgba(14,165,233,.12);border:1px solid rgba(14,165,233,.35);font-size:10px;font-weight:600;color:#0284c7;white-space:nowrap;">${esc(wh)}<b style="color:var(--text)">${n}</b></span>`).join(' ');
+      const docBadge = `<span style="display:inline-block;padding:5px 14px;border-radius:7px;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.45);color:#7c3aed;font-size:14px;font-weight:800;cursor:pointer;text-align:center;line-height:1.6;"
         onclick="openTodoBranchDocs('${esc(r.key).replace(/'/g, "\\'")}')"
         onmouseover="this.style.background='rgba(124,58,237,.25)'" onmouseout="this.style.background='rgba(124,58,237,.15)'">
         ${r.totalDocs}
         <div style="font-size:9.5px;font-weight:600;color:var(--muted);margin-top:1px;">IMP:${r.impDocs.size} · DOM:${r.domDocs.size}</div>
+        ${whDocBadges ? `<div style="display:flex;flex-wrap:wrap;gap:3px;justify-content:center;margin-top:4px;">${whDocBadges}</div>` : ''}
       </span>`;
 
       html += `<tr>
