@@ -219,11 +219,11 @@ function _renderTodoOverview() {
     html += `<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:28px;">ไม่มีข้อมูล</td></tr>`;
   } else {
     rows.forEach((r, i) => {
-      const docBadge = `<span style="display:inline-block;padding:4px 14px;border-radius:7px;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.35);color:#c4b5fd;font-size:14px;font-weight:800;cursor:pointer;text-align:center;line-height:1.5;"
+      const docBadge = `<span style="display:inline-block;padding:4px 14px;border-radius:7px;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.45);color:#7c3aed;font-size:14px;font-weight:800;cursor:pointer;text-align:center;line-height:1.5;"
         onclick="openTodoBranchDocs('${esc(r.key).replace(/'/g, "\\'")}')"
-        onmouseover="this.style.background='rgba(124,58,237,.28)'" onmouseout="this.style.background='rgba(124,58,237,.15)'">
+        onmouseover="this.style.background='rgba(124,58,237,.25)'" onmouseout="this.style.background='rgba(124,58,237,.15)'">
         ${r.totalDocs}
-        <div style="font-size:9.5px;font-weight:400;color:rgba(196,181,253,.7);margin-top:1px;">IMP:${r.impDocs.size} · DOM:${r.domDocs.size}</div>
+        <div style="font-size:9.5px;font-weight:600;color:var(--muted);margin-top:1px;">IMP:${r.impDocs.size} · DOM:${r.domDocs.size}</div>
       </span>`;
 
       html += `<tr>
