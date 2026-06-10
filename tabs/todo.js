@@ -245,7 +245,7 @@ function _renderTodoOverview() {
     <table class="mtbl mtbl-sm" style="width:100%;font-size:12px;">
       <thead><tr>
         <th style="width:30px;text-align:center;">#</th>
-        <th style="min-width:150px;">สาขา</th>
+        <th>สาขา</th>
         <th style="text-align:center;min-width:55px;">ชื่อย่อ</th>
         <th style="text-align:center;min-width:68px;">รหัส</th>
         <th style="text-align:center;min-width:70px;">ผู้โดยสาร</th>
