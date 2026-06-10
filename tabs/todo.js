@@ -225,12 +225,12 @@ function _renderTodoOverview() {
     const whRows = allWhs.map(wh => {
       const d = carDetail[wh] || { total: 0, arrived: 0, departed: 0 };
       const dimmed = d.total === 0 ? 'opacity:.45;' : '';
-      return `<div style="display:flex;align-items:center;gap:6px;padding:3px 6px;border-radius:5px;background:rgba(14,165,233,.07);border:1px solid rgba(14,165,233,.2);margin-bottom:3px;${dimmed}">
-        <span style="color:#0ea5e9;font-weight:700;font-size:11px;min-width:28px;">${esc(wh)}</span>
-        <span style="color:var(--text);font-size:11px;font-weight:800;">รวม ${d.total}</span>
-        <span style="color:var(--muted);font-size:10px;">|</span>
-        <span style="font-size:10.5px;color:#16a34a;font-weight:600;">เข้า <b>${d.arrived}</b></span>
-        <span style="font-size:10.5px;color:#f59e0b;font-weight:600;">ออก <b>${d.departed}</b></span>
+      return `<div style="display:flex;align-items:center;gap:4px;padding:1px 5px;border-radius:4px;background:rgba(14,165,233,.07);border:1px solid rgba(14,165,233,.2);margin-bottom:2px;${dimmed}">
+        <span style="color:#0ea5e9;font-weight:700;font-size:10.5px;min-width:26px;">${esc(wh)}</span>
+        <span style="color:var(--text);font-size:10.5px;font-weight:800;">รวม ${d.total}</span>
+        <span style="color:var(--muted);font-size:9px;">|</span>
+        <span style="font-size:10px;color:#16a34a;font-weight:600;">เข้า <b>${d.arrived}</b></span>
+        <span style="font-size:10px;color:#f59e0b;font-weight:600;">ออก <b>${d.departed}</b></span>
       </div>`;
     }).join('');
     const clickable = total > 0;
@@ -242,12 +242,12 @@ function _renderTodoOverview() {
 
   const totalCols = 7 + allDocWhs.length;
   let html = `<div style="overflow:auto;max-height:560px;border-radius:6px;border:1px solid rgba(56,189,248,.1);">
-    <table class="mtbl" style="width:100%;font-size:13px;">
+    <table class="mtbl mtbl-sm" style="width:100%;font-size:12px;">
       <thead><tr>
-        <th style="width:36px;text-align:center;">#</th>
-        <th style="min-width:160px;">สาขา</th>
-        <th style="text-align:center;min-width:60px;">ชื่อย่อ</th>
-        <th style="text-align:center;min-width:60px;">รหัส</th>
+        <th style="width:30px;text-align:center;">#</th>
+        <th style="min-width:150px;">สาขา</th>
+        <th style="text-align:center;min-width:55px;">ชื่อย่อ</th>
+        <th style="text-align:center;min-width:68px;">รหัส</th>
         <th style="text-align:center;min-width:70px;">ผู้โดยสาร</th>
         <th style="text-align:center;min-width:90px;">วันตกค้างสูงสุด</th>
         <th style="text-align:center;min-width:55px;">IMP</th>

@@ -22,6 +22,10 @@
 .mtbl             { width:100%; border-collapse:collapse; font-size:12px; }
 .mtbl thead th    { background:#071422; color:#7dd3fc; font-weight:700; font-size:11.5px; padding:7px 10px; position:sticky; top:0; z-index:1; white-space:nowrap; border-bottom:1px solid rgba(56,189,248,.2); text-align:left; }
 .mtbl tbody td    { padding:6px 10px; border-bottom:1px solid rgba(255,255,255,.04); color:#f1f5f9; vertical-align:middle; }
+
+/* Compact variant — overview tables */
+.mtbl-sm thead th { padding:5px 8px; font-size:11px; }
+.mtbl-sm tbody td { padding:4px 6px; vertical-align:top; }
 .mtbl tbody tr:hover td { background:rgba(56,189,248,.06); }
 .mtbl tbody tr:nth-child(even) td { background:rgba(255,255,255,.02); }
 .mtbl tbody tr:nth-child(even):hover td { background:rgba(56,189,248,.06); }
