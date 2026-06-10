@@ -267,14 +267,14 @@ function _renderTodoOverview() {
     html += `<tr><td colspan="${totalCols + 4}" style="text-align:center;color:var(--muted);padding:28px;">ไม่มีข้อมูล</td></tr>`;
   } else {
     rows.forEach((r, i) => {
-      const totalBadge = `<span style="display:inline-block;padding:4px 12px;border-radius:7px;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.45);color:#7c3aed;font-size:14px;font-weight:800;cursor:pointer;"
+      const totalBadge = `<span style="display:inline-block;padding:4px 12px;border-radius:7px;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.45);color:#7c3aed;font-size:16px;font-weight:800;cursor:pointer;"
         onclick="openTodoBranchDocs('${esc(r.key).replace(/'/g, "\\'")}')"
         onmouseover="this.style.background='rgba(124,58,237,.25)'" onmouseout="this.style.background='rgba(124,58,237,.15)'">${r.totalDocs}</span>`;
 
       const numCell = (n, color, onclick) => n > 0
-        ? `<span style="font-size:13px;font-weight:800;color:${color};${onclick ? 'cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px;' : ''}"
+        ? `<span style="font-size:15px;font-weight:800;color:${color};${onclick ? 'cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px;' : ''}"
             ${onclick ? `onclick="${onclick}" onmouseover="this.style.opacity='.65'" onmouseout="this.style.opacity='1'"` : ''}>${n}</span>`
-        : `<span style="color:var(--muted);font-size:12px;">—</span>`;
+        : `<span style="color:var(--muted);font-size:13px;">—</span>`;
 
       const bk = esc(r.key).replace(/'/g, "\\'");
       const whCells = allDocWhs.map(wh => {
@@ -282,7 +282,7 @@ function _renderTodoOverview() {
         const md  = r.whMaxDays[wh] || 0;
         const whEsc = esc(wh).replace(/'/g, "\\'");
         const cnt = numCell(n, '#0284c7', n > 0 ? `openTodoBranchFilter('${bk}','wh','${whEsc}')` : '');
-        const dayBadge = n > 0 ? `<br><span style="font-size:10px;color:var(--muted);">⏱${md}วัน</span>` : '';
+        const dayBadge = n > 0 ? `<br><span style="font-size:12px;color:var(--muted);">⏱${md}วัน</span>` : '';
         return `<td style="text-align:center;">${cnt}${dayBadge}</td>`;
       }).join('');
 
@@ -293,8 +293,8 @@ function _renderTodoOverview() {
         <td style="text-align:center;font-size:12px;color:#0ea5e9;font-weight:700;">${esc(r.abrCode || '—')}</td>
         <td style="text-align:center;">${totalBadge}</td>
         <td style="text-align:center;">${_dayBadgeTd(r.maxDays)}</td>
-        <td style="text-align:center;">${numCell(r.impDocs.size, '#7c3aed', r.impDocs.size > 0 ? `openTodoBranchFilter('${bk}','imp')` : '')}${r.impDocs.size > 0 ? `<br><span style="font-size:10px;color:var(--muted);">⏱${r.impMaxDays}วัน</span>` : ''}</td>
-        <td style="text-align:center;">${numCell(r.domDocs.size, '#16a34a', r.domDocs.size > 0 ? `openTodoBranchFilter('${bk}','dom')` : '')}${r.domDocs.size > 0 ? `<br><span style="font-size:10px;color:var(--muted);">⏱${r.domMaxDays}วัน</span>` : ''}</td>
+        <td style="text-align:center;">${numCell(r.impDocs.size, '#7c3aed', r.impDocs.size > 0 ? `openTodoBranchFilter('${bk}','imp')` : '')}${r.impDocs.size > 0 ? `<br><span style="font-size:12px;color:var(--muted);">⏱${r.impMaxDays}วัน</span>` : ''}</td>
+        <td style="text-align:center;">${numCell(r.domDocs.size, '#16a34a', r.domDocs.size > 0 ? `openTodoBranchFilter('${bk}','dom')` : '')}${r.domDocs.size > 0 ? `<br><span style="font-size:12px;color:var(--muted);">⏱${r.domMaxDays}วัน</span>` : ''}</td>
         ${whCells}
         <td>${carCell(r.key, 'today',    r.todayCarDetail,    r.todayTotal)}</td>
         <td>${carCell(r.key, 'tomorrow', r.tomorrowCarDetail, r.tomorrowTotal)}</td>

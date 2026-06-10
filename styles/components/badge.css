@@ -11,7 +11,7 @@ table.gtbl .spill { max-width:110px; overflow:hidden; text-overflow:ellipsis; ve
 .spill.s5 { background:rgba(100,116,139,.15);color:#94a3b8; }
 
 /* Day badge */
-.db      { display:inline-block; padding:2px 7px; border-radius:5px; font-weight:700; font-size:13px; min-width:24px; text-align:center; }
+.db      { display:inline-block; padding:3px 9px; border-radius:5px; font-weight:700; font-size:15px; min-width:28px; text-align:center; }
 .db.lo   { background:rgba(16,185,129,.15); color:#34d399; }
 .db.mi   { background:rgba(245,158,11,.15); color:#fbbf24; }
 .db.hi   { background:rgba(239,68,68,.15);  color:#f87171; }
