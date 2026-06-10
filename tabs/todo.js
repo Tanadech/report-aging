@@ -190,7 +190,7 @@ function _renderTodoOverview() {
 
   const carCell = (bKey, day, carMap, total) => {
     if (!dataCar.length) return `<span style="color:var(--muted);font-size:12px;">—</span>`;
-    const badges     = allWhs.map(wh => whBadge(carMap[wh] || 0, wh)).join(' ');
+    const badges     = allWhs.filter(wh => (carMap[wh] || 0) > 0).map(wh => whBadge(carMap[wh], wh)).join(' ');
     const totalBadge = total > 0
       ? `<span style="padding:3px 10px;border-radius:5px;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);font-size:12px;font-weight:800;color:#4ade80;white-space:nowrap;">รวม ${total}</span>`
       : `<span style="color:var(--muted);font-size:12px;">—</span>`;
