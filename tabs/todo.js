@@ -14,7 +14,6 @@ function fillTodoFilters() {
   const curFw = fwEl.value;
   const curFb = fbEl.value;
 
-  // คลังสินค้า: รวมจาก IMPORTED (คลังสินค้า) + DOMESTIC (getWH)
   const whs = [...new Set([
     ...dataUot.map(r => r['คลังสินค้า'] || '').filter(Boolean),
     ...dataIn.map(r => getWH(r)).filter(v => v && v !== '(อื่นๆ)')
@@ -22,7 +21,6 @@ function fillTodoFilters() {
   fwEl.innerHTML = '<option value="">ทั้งหมด</option>' +
     whs.map(w => `<option${w === curFw ? ' selected' : ''}>${esc(w)}</option>`).join('');
 
-  // สาขา: รวมจาก IMPORTED (ชื่อสาขา) + DOMESTIC (BR_ABR_MAP[ชื่อย่อสาขา])
   const brs = [...new Set([
     ...dataUot.map(r => r['ชื่อสาขา'] || '').filter(Boolean),
     ...dataIn.map(r => BR_ABR_MAP[r['ชื่อย่อสาขา'] || ''] || r['ชื่อย่อสาขา'] || '').filter(Boolean)
@@ -56,33 +54,48 @@ function _getTodoFilters() {
   };
 }
 
+// จำกัดความยาวของ joined string
+function _joinUniq(set, maxShow) {
+  const arr = [...set].filter(Boolean).sort();
+  if (!arr.length) return '—';
+  if (arr.length <= maxShow) return arr.join(', ');
+  return arr.slice(0, maxShow).join(', ') + ` +${arr.length - maxShow}`;
+}
+
 // ── IMPORTED ──
 function _renderTodoImp() {
   if (typeof dataUot === 'undefined') return;
   const { fw, fb, fd1, fd2, q } = _getTodoFilters();
 
+  // group by เลขที่เอกสารขอโอน
   const byDoc = {};
   dataUot.forEach(r => {
     const key = r['เลขที่เอกสารขอโอน'] || '(ไม่ระบุ)';
     if (!byDoc[key]) {
       byDoc[key] = {
-        docNo:   key,
-        branch:  r['ชื่อสาขา']      || '',
-        zone:    r['Zone ID']       || '',
-        wh:      r['คลังสินค้า']    || '',
-        status:  r['สถานะประมวลผล'] || '',
-        maxDays: 0,
-        skus:    new Set()
+        docNo:      key,
+        branch:     r['ชื่อสาขา']      || '',
+        wh:         r['คลังสินค้า']    || '',
+        zone:       r['Zone ID']       || '',
+        locs:       new Set(),
+        locIds:     new Set(),
+        skus:       new Set(),
+        totalQty:   0,
+        maxDays:    0,
+        rows:       []
       };
     }
     const d = +r['วันค้างส่ง'] || 0;
     if (d > byDoc[key].maxDays) byDoc[key].maxDays = d;
+    if (r['Location'])    byDoc[key].locs.add(r['Location']);
+    if (r['Location ID']) r['Location ID'].split(',').forEach(s => { const t = s.trim(); if (t) byDoc[key].locIds.add(t); });
     if (r['รหัสสินค้า']) byDoc[key].skus.add(r['รหัสสินค้า']);
+    byDoc[key].totalQty += +(r['จำนวนขอโอน'] || 0);
+    byDoc[key].rows.push(r);
   });
 
   const allRows = Object.values(byDoc).sort((a, b) => b.maxDays - a.maxDays);
 
-  // apply filters
   let filtered = allRows;
   if (fw) filtered = filtered.filter(r => r.wh === fw);
   if (fb) filtered = filtered.filter(r => r.branch === fb);
@@ -91,7 +104,7 @@ function _renderTodoImp() {
   if (q)  filtered = filtered.filter(r =>
     r.docNo.toLowerCase().includes(q) ||
     r.branch.toLowerCase().includes(q) ||
-    r.zone.toLowerCase().includes(q));
+    [...r.locs].some(l => l.toLowerCase().includes(q)));
 
   const maxDays  = filtered.length ? filtered[0].maxDays : 0;
   const over30   = filtered.filter(r => r.maxDays > 30).length;
@@ -104,42 +117,121 @@ function _renderTodoImp() {
     { val: over30,          unit: 'ค้างเกิน 30 วัน', color: '#f87171', bg: 'rgba(239,68,68,.1)',  border: 'rgba(239,68,68,.25)' },
   ]);
 
-  const cntEl = document.getElementById('todo-imp-cnt');
   const isFiltered = fw || fb || fd1 > 0 || fd2 < Infinity || q;
+  const cntEl = document.getElementById('todo-imp-cnt');
   if (cntEl) cntEl.textContent = `${fmtN(filtered.length)} รายการ${isFiltered ? ' (กรอง)' : ''}`;
 
-  let html = `<div style="overflow:auto;max-height:440px;border-radius:6px;border:1px solid rgba(56,189,248,.1);">
+  let html = `<div style="overflow:auto;max-height:480px;border-radius:6px;border:1px solid rgba(56,189,248,.1);">
     <table class="mtbl" style="width:100%;">
       <thead><tr>
         <th style="width:36px;text-align:center;">#</th>
         <th>เลขที่เอกสาร</th>
         <th>สาขา</th>
-        <th>Zone</th>
-        <th>คลัง</th>
-        <th>สถานะ</th>
-        <th style="text-align:center;width:60px;">SKU</th>
+        <th style="text-align:center;">คลัง</th>
+        <th style="text-align:center;">Zone</th>
+        <th>Location</th>
+        <th>Location ID</th>
+        <th style="text-align:center;width:60px;">Product</th>
+        <th style="text-align:center;width:90px;">จำนวน</th>
         <th style="text-align:center;width:85px;">วันค้างส่ง</th>
       </tr></thead><tbody>`;
 
   if (!filtered.length) {
-    html += `<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:24px;">ไม่มีข้อมูล</td></tr>`;
+    html += `<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:24px;">ไม่มีข้อมูล</td></tr>`;
   } else {
     filtered.forEach((r, i) => {
-      html += `<tr>
+      const locStr   = _joinUniq(r.locs, 2);
+      const locIdStr = _joinUniq(r.locIds, 1);
+      html += `<tr style="cursor:pointer;" onclick="openTodoDocDetail('${esc(r.docNo).replace(/'/g,'\\\'')}')"
+        onmouseover="this.style.background='rgba(56,189,248,.09)'" onmouseout="this.style.background=''">
         <td style="text-align:center;color:var(--muted);font-size:11px;">${i + 1}</td>
-        <td class="mdoc">${esc(r.docNo)}</td>
+        <td class="mdoc" style="color:#38bdf8;">${esc(r.docNo)}</td>
         <td style="font-size:12px;">${esc(r.branch)}</td>
-        <td><span style="background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;color:#7dd3fc;">${esc(r.zone || '—')}</span></td>
-        <td><span style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;color:#4ade80;">${esc(r.wh || '—')}</span></td>
-        <td><span class="spill ${statusCls(r.status)}">${esc(r.status || '—')}</span></td>
+        <td style="text-align:center;"><span style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;color:#4ade80;">${esc(r.wh || '—')}</span></td>
+        <td style="text-align:center;"><span style="background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;color:#7dd3fc;">${esc(r.zone || '—')}</span></td>
+        <td style="font-size:11px;color:#e2e8f0;">${esc(locStr)}</td>
+        <td style="font-size:10.5px;color:var(--muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc([...r.locIds].join(', '))}">${esc(locIdStr)}</td>
         <td style="text-align:center;font-weight:700;color:#7dd3fc;">${r.skus.size}</td>
+        <td style="text-align:center;font-weight:700;color:#e2e8f0;">${fmtN(Math.round(r.totalQty))}</td>
         <td style="text-align:center;">${_dayBadgeTd(r.maxDays)}</td>
       </tr>`;
     });
   }
 
   html += '</tbody></table></div>';
+  html += `<div style="font-size:10.5px;color:var(--muted);margin-top:6px;padding-left:4px;">💡 คลิกที่แถวเพื่อดูรายละเอียดสินค้าทุกรายการในเอกสารนั้น</div>`;
   document.getElementById('todo-imp-tbl').innerHTML = html;
+
+  // เก็บ byDoc ไว้สำหรับ popup
+  window._todoImpByDoc = byDoc;
+}
+
+// ── Popup: รายละเอียดสินค้าใน IMPORTED document ──
+function openTodoDocDetail(docNo) {
+  const doc = (window._todoImpByDoc || {})[docNo];
+  if (!doc) return;
+
+  document.getElementById('td-doc-title').textContent = docNo;
+  document.getElementById('td-doc-sub').textContent =
+    `${doc.branch}  ·  ${doc.wh}  ·  Zone ${doc.zone}  ·  วันค้างสูงสุด ${doc.maxDays} วัน`;
+
+  const rows = doc.rows.slice().sort((a, b) => {
+    const la = a['Location'] || '', lb = b['Location'] || '';
+    return la < lb ? -1 : la > lb ? 1 : 0;
+  });
+
+  let html = `<div class="modal-sum">
+    <div class="modal-sum-item"><b>${fmtN(rows.length)}</b> รายการสินค้า</div>
+    <div class="modal-sum-item"><b>${fmtN(doc.skus.size)}</b> SKU</div>
+    <div class="modal-sum-item"><b>${fmtN(Math.round(doc.totalQty))}</b> จำนวนรวม</div>
+    <div class="modal-sum-item"><b>${fmtN(doc.locs.size)}</b> Location</div>
+  </div>`;
+
+  html += `<div style="overflow:auto;max-height:480px;border-radius:6px;border:1px solid rgba(56,189,248,.1);">
+    <table class="mtbl" style="width:100%;">
+      <thead><tr>
+        <th style="width:32px;text-align:center;">#</th>
+        <th>รหัสสินค้า</th>
+        <th>ชื่อสินค้า</th>
+        <th style="text-align:center;">Location</th>
+        <th>Location ID</th>
+        <th style="text-align:center;width:70px;">จำนวน</th>
+        <th style="text-align:center;width:55px;">หน่วย</th>
+        <th>สถานะ</th>
+        <th style="text-align:center;width:75px;">วันค้างส่ง</th>
+      </tr></thead><tbody>`;
+
+  rows.forEach((r, i) => {
+    const locIds = (r['Location ID'] || '').split(',').map(s => s.trim()).filter(Boolean).join(', ');
+    html += `<tr>
+      <td style="text-align:center;color:var(--muted);font-size:11px;">${i + 1}</td>
+      <td style="font-family:monospace;font-size:11px;font-weight:700;color:#93c5fd;">${esc(r['รหัสสินค้า'] || '—')}</td>
+      <td style="font-size:11.5px;">${esc(r['ชื้อสินค้า'] || r['ชื่อสินค้า'] || '—')}</td>
+      <td style="text-align:center;"><span style="background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;color:#7dd3fc;">${esc(r['Location'] || '—')}</span></td>
+      <td style="font-size:10px;color:var(--muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(locIds)}">${esc(locIds || '—')}</td>
+      <td style="text-align:center;font-weight:700;color:#e2e8f0;">${fmtN(+(r['จำนวนขอโอน'] || 0))}</td>
+      <td style="text-align:center;color:var(--muted);font-size:11px;">${esc(r['หน่วยนับ'] || '')}</td>
+      <td><span class="spill ${statusCls(r['สถานะประมวลผล'] || '')}">${esc(r['สถานะประมวลผล'] || '—')}</span></td>
+      <td style="text-align:center;">${_dayBadgeTd(r['วันค้างส่ง'])}</td>
+    </tr>`;
+  });
+
+  html += '</tbody></table></div>';
+  document.getElementById('td-doc-content').innerHTML = html;
+  document.getElementById('td-doc-modal').classList.add('show');
+}
+
+// ── Close modal ──
+document.getElementById('td-doc-close').addEventListener('click', _closeTodoDocModal);
+document.getElementById('td-doc-modal').addEventListener('click', e => {
+  if (e.target.id === 'td-doc-modal') _closeTodoDocModal();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.getElementById('td-doc-modal').classList.contains('show'))
+    _closeTodoDocModal();
+});
+function _closeTodoDocModal() {
+  document.getElementById('td-doc-modal').classList.remove('show');
 }
 
 // ── DOMESTIC ──
@@ -169,7 +261,6 @@ function _renderTodoDom() {
 
   const allRows = Object.values(byDoc).sort((a, b) => b.maxDays - a.maxDays);
 
-  // apply filters
   let filtered = allRows;
   if (fw) filtered = filtered.filter(r => r.wh === fw);
   if (fb) filtered = filtered.filter(r => r.branch === fb);
@@ -191,8 +282,8 @@ function _renderTodoDom() {
     { val: over30,          unit: 'ค้างเกิน 30 วัน',  color: '#f87171', bg: 'rgba(239,68,68,.1)',  border: 'rgba(239,68,68,.25)' },
   ]);
 
-  const cntEl = document.getElementById('todo-dom-cnt');
   const isFiltered = fw || fb || fd1 > 0 || fd2 < Infinity || q;
+  const cntEl = document.getElementById('todo-dom-cnt');
   if (cntEl) cntEl.textContent = `${fmtN(filtered.length)} รายการ${isFiltered ? ' (กรอง)' : ''}`;
 
   let html = `<div style="overflow:auto;max-height:440px;border-radius:6px;border:1px solid rgba(56,189,248,.1);">
