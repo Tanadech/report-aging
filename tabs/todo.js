@@ -183,7 +183,7 @@ function _renderTodoOverview() {
   window._todoOvWhs = allWhs;
 
   // ── 6. Filter + sort ──
-  let rows = Object.values(bmap).sort((a, b) => b.maxDays - a.maxDays);
+  let rows = Object.values(bmap).filter(r => r.key !== '(ไม่ระบุ)').sort((a, b) => b.maxDays - a.maxDays);
   if (fb) rows = rows.filter(r => norm(r.fullName) === norm(fb) || norm(r.abrCode) === norm(fb));
   if (fd1 > 0)        rows = rows.filter(r => r.maxDays >= fd1);
   if (fd2 < Infinity) rows = rows.filter(r => r.maxDays <= fd2);
@@ -236,21 +236,24 @@ function _renderTodoOverview() {
         onclick="openTodoBranchDocs('${esc(r.key).replace(/'/g, "\\'")}')"
         onmouseover="this.style.background='rgba(124,58,237,.25)'" onmouseout="this.style.background='rgba(124,58,237,.15)'">${r.totalDocs}</span>`;
 
-      const numCell = (n, color) => n > 0
-        ? `<span style="font-size:13px;font-weight:800;color:${color};">${n}</span>`
+      const numCell = (n, color, onclick) => n > 0
+        ? `<span style="font-size:13px;font-weight:800;color:${color};${onclick ? 'cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px;' : ''}"
+            ${onclick ? `onclick="${onclick}" onmouseover="this.style.opacity='.65'" onmouseout="this.style.opacity='1'"` : ''}>${n}</span>`
         : `<span style="color:var(--muted);font-size:12px;">—</span>`;
 
+      const bk = esc(r.key).replace(/'/g, "\\'");
       const whCells = allDocWhs.map(wh => {
         const n = r.whDocs[wh] || 0;
-        return `<td style="text-align:center;">${numCell(n, '#0284c7')}</td>`;
+        const whEsc = esc(wh).replace(/'/g, "\\'");
+        return `<td style="text-align:center;">${numCell(n, '#0284c7', n > 0 ? `openTodoBranchFilter('${bk}','wh','${whEsc}')` : '')}</td>`;
       }).join('');
 
       html += `<tr>
         <td style="text-align:center;color:var(--muted);font-size:12px;">${i + 1}</td>
         <td style="font-size:13px;font-weight:600;">${esc(r.fullName)}</td>
         <td style="text-align:center;">${totalBadge}</td>
-        <td style="text-align:center;">${numCell(r.impDocs.size, '#7c3aed')}</td>
-        <td style="text-align:center;">${numCell(r.domDocs.size, '#16a34a')}</td>
+        <td style="text-align:center;">${numCell(r.impDocs.size, '#7c3aed', r.impDocs.size > 0 ? `openTodoBranchFilter('${bk}','imp')` : '')}</td>
+        <td style="text-align:center;">${numCell(r.domDocs.size, '#16a34a', r.domDocs.size > 0 ? `openTodoBranchFilter('${bk}','dom')` : '')}</td>
         ${whCells}
         <td style="text-align:center;">${_dayBadgeTd(r.maxDays)}</td>
         <td>${carCell(r.key, 'today',    r.todayCars,    r.todayTotal)}</td>
@@ -397,8 +400,7 @@ function openTodoBranchDocs(bKey) {
             <th style="text-align:center;">วันค้างส่ง</th>
           </tr></thead><tbody>`;
     impRows.forEach((d, i) => {
-      html += `<tr style="cursor:pointer;" onclick="openTodoBranchImpDoc('${esc(d.docNo).replace(/'/g,"\\'")}')""
-        onmouseover="this.style.background='rgba(56,189,248,.09)'" onmouseout="this.style.background=''">
+      html += `<tr style="cursor:pointer;" onclick="openTodoBranchImpDoc('${esc(d.docNo).replace(/'/g,"\\'")}') " onmouseover="this.style.background='rgba(56,189,248,.09)'" onmouseout="this.style.background=''">
         <td style="text-align:center;color:var(--muted);font-size:11px;">${i + 1}</td>
         <td style="color:#38bdf8;font-weight:700;">${esc(d.docNo)}</td>
         <td><span style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);padding:1px 7px;border-radius:4px;font-size:11px;font-weight:700;color:#4ade80;">${esc(d.wh || '—')}</span></td>
@@ -432,8 +434,7 @@ function openTodoBranchDocs(bKey) {
             <th style="text-align:center;">วันคงค้าง</th>
           </tr></thead><tbody>`;
     domRows.forEach((d, i) => {
-      html += `<tr style="cursor:pointer;" onclick="openTodoBranchDomDoc('${esc(d.docNo).replace(/'/g,"\\'")}')""
-        onmouseover="this.style.background='rgba(56,189,248,.09)'" onmouseout="this.style.background=''">
+      html += `<tr style="cursor:pointer;" onclick="openTodoBranchDomDoc('${esc(d.docNo).replace(/'/g,"\\'")}') " onmouseover="this.style.background='rgba(56,189,248,.09)'" onmouseout="this.style.background=''">
         <td style="text-align:center;color:var(--muted);font-size:11px;">${i + 1}</td>
         <td style="color:#38bdf8;font-weight:700;">${esc(d.docNo)}</td>
         <td><span style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);padding:1px 7px;border-radius:4px;font-size:11px;font-weight:700;color:#4ade80;">${esc(d.wh || '—')}</span></td>
@@ -629,6 +630,104 @@ function openTodoBranchCars(bKey, day) {
   }
 
   html += '</tbody></table></div>';
+  document.getElementById('td-doc-content').innerHTML = html;
+  document.getElementById('td-doc-modal').classList.add('show');
+}
+
+// ── Popup: filter by IMP / DOM / WH ──
+function openTodoBranchFilter(bKey, filterType, filterVal) {
+  const b = (window._todoOvMap || {})[bKey];
+  if (!b) return;
+  window._todoCurBranchKey = bKey;
+
+  const impAll = Object.values(window._todoImpByDoc || {}).filter(d => d.branch === b.fullName);
+  const domAll = Object.values(window._todoDomByDoc || {}).filter(d => d.branch === b.fullName);
+
+  let impRows = [], domRows = [];
+  if (filterType === 'imp') {
+    impRows = impAll.sort((a, c) => c.maxDays - a.maxDays);
+  } else if (filterType === 'dom') {
+    domRows = domAll.sort((a, c) => c.maxDays - a.maxDays);
+  } else if (filterType === 'wh') {
+    impRows = impAll.filter(d => d.wh === filterVal).sort((a, c) => c.maxDays - a.maxDays);
+    domRows = domAll.filter(d => d.wh === filterVal).sort((a, c) => c.maxDays - a.maxDays);
+  }
+
+  const total = impRows.length + domRows.length;
+  const allDays = [...impRows, ...domRows].map(d => d.maxDays);
+  const maxD = allDays.length ? Math.max(...allDays) : 0;
+
+  const titleMap = {
+    imp: `🌏 IMPORTED — ${esc(b.fullName)}`,
+    dom: `📦 DOMESTIC — ${esc(b.fullName)}`,
+    wh:  `🏭 ${esc(filterVal)} — ${esc(b.fullName)}`
+  };
+  document.getElementById('td-doc-title').innerHTML = titleMap[filterType];
+  document.getElementById('td-doc-sub').textContent = filterType === 'wh'
+    ? `${total} เอกสาร  ·  IMP:${impRows.length}  ·  DOM:${domRows.length}  ·  วันคงค้างสูงสุด ${maxD} วัน`
+    : `${total} เอกสาร  ·  วันคงค้างสูงสุด ${maxD} วัน`;
+
+  let html = _backBtn();
+
+  if (impRows.length) {
+    html += `<div style="margin-bottom:16px;">
+      <div style="font-size:12px;font-weight:700;color:#0ea5e9;margin-bottom:8px;padding:5px 10px;background:rgba(14,165,233,.08);border:1px solid rgba(14,165,233,.2);border-radius:5px;">
+        🌏 IMPORTED — ${impRows.length} เอกสาร
+      </div>
+      <div style="overflow:auto;max-height:260px;border-radius:6px;border:1px solid rgba(56,189,248,.1);">
+        <table class="mtbl" style="width:100%;font-size:12px;">
+          <thead><tr>
+            <th style="width:30px;text-align:center;">#</th>
+            <th>เลขที่เอกสาร</th><th>คลัง</th><th>Zone</th>
+            <th style="text-align:center;">Location</th><th style="text-align:center;">SKU</th>
+            <th style="text-align:center;">จำนวน</th><th style="text-align:center;">วันค้างส่ง</th>
+          </tr></thead><tbody>`;
+    impRows.forEach((d, i) => {
+      html += `<tr style="cursor:pointer;" onclick="openTodoBranchImpDoc('${esc(d.docNo).replace(/'/g,"\\'")}') " onmouseover="this.style.background='rgba(56,189,248,.09)'" onmouseout="this.style.background=''">
+        <td style="text-align:center;color:var(--muted);font-size:11px;">${i + 1}</td>
+        <td style="color:#38bdf8;font-weight:700;">${esc(d.docNo)}</td>
+        <td><span style="background:rgba(22,163,74,.1);border:1px solid rgba(22,163,74,.35);padding:1px 7px;border-radius:4px;font-size:11px;font-weight:700;color:#16a34a;">${esc(d.wh || '—')}</span></td>
+        <td style="font-size:11px;color:var(--muted);">${esc(d.zone || '—')}</td>
+        <td style="text-align:center;font-weight:700;color:#7c3aed;">${d.locs.size}</td>
+        <td style="text-align:center;font-weight:700;color:#0ea5e9;">${d.skus.size}</td>
+        <td style="text-align:center;font-weight:700;color:#16a34a;">${fmtN(Math.round(d.totalQty))}</td>
+        <td style="text-align:center;">${_dayBadgeTd(d.maxDays)}</td>
+      </tr>`;
+    });
+    html += `</tbody></table></div>
+      <div style="font-size:10.5px;color:var(--muted);margin-top:4px;padding-left:2px;">💡 คลิกที่แถวเพื่อดูรายละเอียดสินค้า</div></div>`;
+  }
+
+  if (domRows.length) {
+    html += `<div>
+      <div style="font-size:12px;font-weight:700;color:#16a34a;margin-bottom:8px;padding:5px 10px;background:rgba(22,163,74,.08);border:1px solid rgba(22,163,74,.2);border-radius:5px;">
+        📦 DOMESTIC — ${domRows.length} เอกสาร
+      </div>
+      <div style="overflow:auto;max-height:260px;border-radius:6px;border:1px solid rgba(56,189,248,.1);">
+        <table class="mtbl" style="width:100%;font-size:12px;">
+          <thead><tr>
+            <th style="width:30px;text-align:center;">#</th>
+            <th>เลขที่เอกสาร POI</th><th>คลัง</th><th>Zone</th>
+            <th style="text-align:center;">Onetime</th><th style="text-align:center;">วันคงค้าง</th>
+          </tr></thead><tbody>`;
+    domRows.forEach((d, i) => {
+      html += `<tr style="cursor:pointer;" onclick="openTodoBranchDomDoc('${esc(d.docNo).replace(/'/g,"\\'")}') " onmouseover="this.style.background='rgba(56,189,248,.09)'" onmouseout="this.style.background=''">
+        <td style="text-align:center;color:var(--muted);font-size:11px;">${i + 1}</td>
+        <td style="color:#38bdf8;font-weight:700;">${esc(d.docNo)}</td>
+        <td><span style="background:rgba(22,163,74,.1);border:1px solid rgba(22,163,74,.35);padding:1px 7px;border-radius:4px;font-size:11px;font-weight:700;color:#16a34a;">${esc(d.wh || '—')}</span></td>
+        <td style="font-size:11px;color:var(--muted);">${esc(d.zone || '—')}</td>
+        <td style="text-align:center;font-weight:700;color:#d97706;">${d.onetimes.size}</td>
+        <td style="text-align:center;">${_dayBadgeTd(d.maxDays)}</td>
+      </tr>`;
+    });
+    html += `</tbody></table></div>
+      <div style="font-size:10.5px;color:var(--muted);margin-top:4px;padding-left:2px;">💡 คลิกที่แถวเพื่อดูรายละเอียด Onetime</div></div>`;
+  }
+
+  if (!total) {
+    html += `<div style="text-align:center;color:var(--muted);padding:32px;">ไม่มีข้อมูล</div>`;
+  }
+
   document.getElementById('td-doc-content').innerHTML = html;
   document.getElementById('td-doc-modal').classList.add('show');
 }
