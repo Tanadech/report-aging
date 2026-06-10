@@ -121,19 +121,22 @@ function _renderTodoImp() {
   const cntEl = document.getElementById('todo-imp-cnt');
   if (cntEl) cntEl.textContent = `${fmtN(filtered.length)} รายการ${isFiltered ? ' (กรอง)' : ''}`;
 
+  const _numBadge = (n, bg, border, color) =>
+    `<span style="display:inline-block;min-width:32px;padding:3px 10px;border-radius:6px;background:${bg};border:1px solid ${border};color:${color};font-size:13px;font-weight:800;text-align:center;">${n}</span>`;
+
   let html = `<div style="overflow:auto;max-height:480px;border-radius:6px;border:1px solid rgba(56,189,248,.1);">
-    <table class="mtbl" style="width:100%;">
+    <table class="mtbl" style="width:100%;font-size:13px;">
       <thead><tr>
-        <th style="width:36px;text-align:center;">#</th>
-        <th>เลขที่เอกสาร</th>
-        <th>สาขา</th>
-        <th style="text-align:center;">คลัง</th>
-        <th style="text-align:center;">Zone</th>
-        <th>Location</th>
-        <th>Location ID</th>
-        <th style="text-align:center;width:60px;">Product</th>
-        <th style="text-align:center;width:90px;">จำนวน</th>
-        <th style="text-align:center;width:85px;">วันค้างส่ง</th>
+        <th style="width:36px;text-align:center;font-size:12px;">#</th>
+        <th style="font-size:13px;">เลขที่เอกสาร</th>
+        <th style="font-size:13px;">สาขา</th>
+        <th style="text-align:center;font-size:13px;">คลัง</th>
+        <th style="text-align:center;font-size:13px;">Zone</th>
+        <th style="text-align:center;font-size:13px;">Location</th>
+        <th style="text-align:center;font-size:13px;">Location ID</th>
+        <th style="text-align:center;width:70px;font-size:13px;">Product</th>
+        <th style="text-align:center;width:90px;font-size:13px;">จำนวน</th>
+        <th style="text-align:center;width:90px;font-size:13px;">วันค้างส่ง</th>
       </tr></thead><tbody>`;
 
   if (!filtered.length) {
@@ -142,15 +145,15 @@ function _renderTodoImp() {
     filtered.forEach((r, i) => {
       html += `<tr style="cursor:pointer;" onclick="openTodoDocDetail('${esc(r.docNo).replace(/'/g,'\\\'')}')"
         onmouseover="this.style.background='rgba(56,189,248,.09)'" onmouseout="this.style.background=''">
-        <td style="text-align:center;color:var(--muted);font-size:11px;">${i + 1}</td>
-        <td class="mdoc" style="color:#38bdf8;">${esc(r.docNo)}</td>
-        <td style="font-size:12px;">${esc(r.branch)}</td>
-        <td style="text-align:center;"><span style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;color:#4ade80;">${esc(r.wh || '—')}</span></td>
-        <td style="text-align:center;"><span style="background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;color:#7dd3fc;">${esc(r.zone || '—')}</span></td>
-        <td style="text-align:center;font-weight:700;color:#e2e8f0;">${r.locs.size}</td>
-        <td style="text-align:center;font-weight:700;color:#e2e8f0;">${r.locIds.size}</td>
-        <td style="text-align:center;font-weight:700;color:#7dd3fc;">${r.skus.size}</td>
-        <td style="text-align:center;font-weight:700;color:#e2e8f0;">${fmtN(Math.round(r.totalQty))}</td>
+        <td style="text-align:center;color:var(--muted);font-size:12px;">${i + 1}</td>
+        <td class="mdoc" style="color:#38bdf8;font-size:13px;">${esc(r.docNo)}</td>
+        <td style="font-size:13px;">${esc(r.branch)}</td>
+        <td style="text-align:center;"><span style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);padding:2px 9px;border-radius:5px;font-size:12px;font-weight:700;color:#4ade80;">${esc(r.wh || '—')}</span></td>
+        <td style="text-align:center;"><span style="background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);padding:2px 9px;border-radius:5px;font-size:12px;font-weight:700;color:#7dd3fc;">${esc(r.zone || '—')}</span></td>
+        <td style="text-align:center;">${_numBadge(r.locs.size,   'rgba(167,139,250,.15)', 'rgba(167,139,250,.4)', '#c4b5fd')}</td>
+        <td style="text-align:center;">${_numBadge(r.locIds.size, 'rgba(253,169,45,.15)',  'rgba(253,169,45,.4)',  '#fda92d')}</td>
+        <td style="text-align:center;">${_numBadge(r.skus.size,   'rgba(0,184,217,.15)',   'rgba(0,184,217,.4)',   '#7dd3fc')}</td>
+        <td style="text-align:center;">${_numBadge(fmtN(Math.round(r.totalQty)), 'rgba(34,197,94,.12)', 'rgba(34,197,94,.35)', '#4ade80')}</td>
         <td style="text-align:center;">${_dayBadgeTd(r.maxDays)}</td>
       </tr>`;
     });
