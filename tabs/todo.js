@@ -52,6 +52,7 @@ function _getTodoFilters() {
 // ── Main render ──
 function renderTodo() {
   _renderTodoOverview();
+  _renderTodoDocsSection();
 }
 
 // ── ภาพรวมรายสาขา ──
@@ -241,6 +242,108 @@ function _renderTodoOverview() {
   document.getElementById('todo-ov-tbl').innerHTML = html;
 }
 
+// ── Inline: รายละเอียดเอกสารตกค้าง (IMPORTED + DOMESTIC) ──
+function _renderTodoDocsSection() {
+  const { fb, fd1, fd2, q } = _getTodoFilters();
+  const norm = s => String(s || '').trim().toLowerCase();
+
+  // ── IMPORTED ──
+  let impRows = Object.values(window._todoImpByDoc || {}).sort((a, b) => b.maxDays - a.maxDays);
+  if (fb) impRows = impRows.filter(r => norm(r.branch) === norm(fb));
+  if (fd1 > 0)        impRows = impRows.filter(r => r.maxDays >= fd1);
+  if (fd2 < Infinity) impRows = impRows.filter(r => r.maxDays <= fd2);
+  if (q)  impRows = impRows.filter(r =>
+    norm(r.docNo).includes(q) || norm(r.branch).includes(q));
+
+  let impHtml = `<div style="font-size:12px;font-weight:700;color:#0ea5e9;margin-bottom:8px;padding:5px 10px;background:rgba(14,165,233,.08);border:1px solid rgba(14,165,233,.2);border-radius:5px;display:flex;align-items:center;gap:6px;">
+    🌏 IMPORTED — ${impRows.length} เอกสาร
+  </div>`;
+
+  if (impRows.length) {
+    impHtml += `<div style="overflow:auto;max-height:400px;border-radius:6px;border:1px solid rgba(56,189,248,.1);">
+      <table class="mtbl" style="width:100%;font-size:13px;">
+        <thead><tr>
+          <th style="width:36px;text-align:center;">#</th>
+          <th>เลขที่เอกสาร</th>
+          <th>สาขา</th>
+          <th style="text-align:center;">คลัง</th>
+          <th style="text-align:center;">Zone</th>
+          <th style="text-align:center;">Location</th>
+          <th style="text-align:center;">SKU</th>
+          <th style="text-align:center;">จำนวน</th>
+          <th style="text-align:center;">วันค้างส่ง</th>
+        </tr></thead><tbody>`;
+    impRows.forEach((r, i) => {
+      impHtml += `<tr style="cursor:pointer;"
+        onclick="window._todoCurBranchKey=null; openTodoBranchImpDoc('${esc(r.docNo).replace(/'/g,"\\'")}'); document.getElementById('td-doc-modal').classList.add('show');"
+        onmouseover="this.style.background='rgba(56,189,248,.08)'" onmouseout="this.style.background=''">
+        <td style="text-align:center;color:var(--muted);font-size:12px;">${i + 1}</td>
+        <td style="color:#0284c7;font-weight:700;font-size:13px;">${esc(r.docNo)}</td>
+        <td style="font-size:13px;">${esc(r.branch)}</td>
+        <td style="text-align:center;"><span style="background:rgba(22,163,74,.12);border:1px solid rgba(22,163,74,.4);padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;color:#16a34a;">${esc(r.wh || '—')}</span></td>
+        <td style="text-align:center;font-size:12px;color:var(--muted);">${esc(r.zone || '—')}</td>
+        <td style="text-align:center;font-weight:700;color:#7c3aed;">${r.locs.size}</td>
+        <td style="text-align:center;font-weight:700;color:#0ea5e9;">${r.skus.size}</td>
+        <td style="text-align:center;font-weight:700;color:#16a34a;">${fmtN(Math.round(r.totalQty))}</td>
+        <td style="text-align:center;">${_dayBadgeTd(r.maxDays)}</td>
+      </tr>`;
+    });
+    impHtml += `</tbody></table></div>
+      <div style="font-size:10.5px;color:var(--muted);margin-top:4px;padding-left:2px;">💡 คลิกที่แถวเพื่อดูรายละเอียดสินค้าในเอกสารนั้น</div>`;
+  } else {
+    impHtml += `<div style="text-align:center;color:var(--muted);padding:16px;font-size:13px;">ไม่มีข้อมูล</div>`;
+  }
+  document.getElementById('todo-ds-imp').innerHTML = impHtml;
+
+  // ── DOMESTIC ──
+  let domRows = Object.values(window._todoDomByDoc || {}).sort((a, b) => b.maxDays - a.maxDays);
+  if (fb) domRows = domRows.filter(r => norm(r.branch) === norm(fb));
+  if (fd1 > 0)        domRows = domRows.filter(r => r.maxDays >= fd1);
+  if (fd2 < Infinity) domRows = domRows.filter(r => r.maxDays <= fd2);
+  if (q)  domRows = domRows.filter(r =>
+    norm(r.docNo).includes(q) || norm(r.branch).includes(q));
+
+  let domHtml = `<div style="font-size:12px;font-weight:700;color:#16a34a;margin-bottom:8px;padding:5px 10px;background:rgba(22,163,74,.08);border:1px solid rgba(22,163,74,.2);border-radius:5px;">
+    📦 DOMESTIC — ${domRows.length} เอกสาร
+  </div>`;
+
+  if (domRows.length) {
+    domHtml += `<div style="overflow:auto;max-height:400px;border-radius:6px;border:1px solid rgba(56,189,248,.1);">
+      <table class="mtbl" style="width:100%;font-size:13px;">
+        <thead><tr>
+          <th style="width:36px;text-align:center;">#</th>
+          <th>เลขที่เอกสาร POI</th>
+          <th>สาขา</th>
+          <th style="text-align:center;">คลัง</th>
+          <th style="text-align:center;">Zone</th>
+          <th style="text-align:center;">Onetime</th>
+          <th style="text-align:center;">วันคงค้าง</th>
+        </tr></thead><tbody>`;
+    domRows.forEach((r, i) => {
+      domHtml += `<tr style="cursor:pointer;"
+        onclick="window._todoCurBranchKey=null; openTodoBranchDomDoc('${esc(r.docNo).replace(/'/g,"\\'")}'); document.getElementById('td-doc-modal').classList.add('show');"
+        onmouseover="this.style.background='rgba(56,189,248,.08)'" onmouseout="this.style.background=''">
+        <td style="text-align:center;color:var(--muted);font-size:12px;">${i + 1}</td>
+        <td style="color:#0284c7;font-weight:700;font-size:13px;">${esc(r.docNo)}</td>
+        <td style="font-size:13px;">${esc(r.branch)}</td>
+        <td style="text-align:center;"><span style="background:rgba(22,163,74,.12);border:1px solid rgba(22,163,74,.4);padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;color:#16a34a;">${esc(r.wh || '—')}</span></td>
+        <td style="text-align:center;font-size:12px;color:var(--muted);">${esc(r.zone || '—')}</td>
+        <td style="text-align:center;font-weight:700;color:#d97706;">${r.onetimes.size}</td>
+        <td style="text-align:center;">${_dayBadgeTd(r.maxDays)}</td>
+      </tr>`;
+    });
+    domHtml += `</tbody></table></div>
+      <div style="font-size:10.5px;color:var(--muted);margin-top:4px;padding-left:2px;">💡 คลิกที่แถวเพื่อดูรายละเอียด Onetime ในเอกสารนั้น</div>`;
+  } else {
+    domHtml += `<div style="text-align:center;color:var(--muted);padding:16px;font-size:13px;">ไม่มีข้อมูล</div>`;
+  }
+  document.getElementById('todo-ds-dom').innerHTML = domHtml;
+
+  const total = impRows.length + domRows.length;
+  const cntEl = document.getElementById('todo-ds-cnt');
+  if (cntEl) cntEl.textContent = `${fmtN(total)} เอกสาร`;
+}
+
 // ── Popup: เอกสารตกค้างของสาขา ──
 function openTodoBranchDocs(bKey) {
   const b = (window._todoOvMap || {})[bKey];
@@ -333,8 +436,10 @@ function openTodoBranchDocs(bKey) {
 
 // ── Back button helper ──
 function _backBtn() {
+  const hasParent = !!window._todoCurBranchKey;
+  if (!hasParent) return '';
   return `<button onclick="openTodoBranchDocs(window._todoCurBranchKey)"
-    style="display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:6px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);color:#7dd3fc;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:12px;font-family:inherit;">
+    style="display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:6px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);color:#0ea5e9;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:12px;font-family:inherit;">
     ← กลับรายการเอกสาร
   </button>`;
 }
