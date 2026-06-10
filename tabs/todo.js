@@ -250,9 +250,9 @@ function _renderTodoOverview() {
         <th style="text-align:center;min-width:68px;">รหัส</th>
         <th style="text-align:center;min-width:70px;">ผู้โดยสาร</th>
         <th style="text-align:center;min-width:90px;">วันตกค้างสูงสุด</th>
-        <th style="text-align:center;width:75px;">IMP</th>
-        <th style="text-align:center;width:75px;">DOM</th>
-        ${allDocWhs.map(wh => `<th style="text-align:center;width:75px;">${esc(wh)}</th>`).join('')}
+        <th style="text-align:center;width:150px;">IMP</th>
+        <th style="text-align:center;width:150px;">DOM</th>
+        ${allDocWhs.map(wh => `<th style="text-align:center;width:150px;">${esc(wh)}</th>`).join('')}
         <th style="min-width:200px;">🚛 รถ OUTBOUND วันนี้</th>
         <th style="min-width:200px;">🚛 รถ OUTBOUND พรุ่งนี้</th>
       </tr></thead><tbody>`;
@@ -632,35 +632,40 @@ function openTodoBranchCars(bKey, day) {
   document.getElementById('td-doc-title').innerHTML = `🚛 รถ OUTBOUND ${dayLabel} — ${esc(b.fullName)}`;
   document.getElementById('td-doc-sub').textContent = `${cars.length} คัน`;
 
-  const T_STEPS = [
-    { key: 'T1', statusField: 'สถานะ T1', timeField: 'เวลาเข้า T1', label: 'เข้า DC' },
-    { key: 'T2', statusField: 'สถานะ T2', timeField: 'เวลา T2',     label: 'ขึ้นสินค้า' },
-    { key: 'T3', statusField: 'สถานะ T3', timeField: 'เวลา T3',     label: 'โหลดเสร็จ' },
-    { key: 'T4', statusField: 'สถานะ T4', timeField: 'เวลา T4',     label: 'ออก DC' },
+  const T_STATUS_MAP = [
+    { statusField: 'สถานะ T4', timeField: 'เวลา T4',     label: 'ออกแล้ว',          color: '#16a34a', bg: 'rgba(22,163,74,.12)',    border: 'rgba(22,163,74,.35)' },
+    { statusField: 'สถานะ T3', timeField: 'เวลา T3',     label: 'ออกจาก DC',         color: '#7c3aed', bg: 'rgba(124,58,237,.12)',  border: 'rgba(124,58,237,.35)' },
+    { statusField: 'สถานะ T2', timeField: 'เวลา T2',     label: 'กำลังขึ้นสินค้า',   color: '#0284c7', bg: 'rgba(2,132,199,.12)',   border: 'rgba(2,132,199,.35)' },
+    { statusField: 'สถานะ T1', timeField: 'เวลาเข้า T1', label: 'รอขึ้นสินค้า',      color: '#d97706', bg: 'rgba(245,158,11,.12)',  border: 'rgba(245,158,11,.35)' },
   ];
-  const tStatusHtml = r => T_STEPS.map((step, idx) => {
-    const checked = r[step.statusField] === 'Checked';
-    const raw     = (r[step.timeField] || '').trim();
-    const timeStr = raw.replace(/^\d{4}-\d{2}-\d{2}\s*/, '').replace(/:\d{2}$/, '');
-    const sep     = idx < T_STEPS.length - 1
-      ? `<span style="color:#9db5cc;font-size:9px;padding:0 1px;">→</span>` : '';
-    if (checked) {
-      return `<span style="display:inline-flex;flex-direction:column;align-items:center;padding:2px 7px;border-radius:6px;background:rgba(22,163,74,.12);border:1px solid rgba(22,163,74,.35);">
-        <span style="font-size:9px;font-weight:800;color:#16a34a;">✓ ${step.key}</span>
-        <span style="font-size:9px;color:#4ade80;white-space:nowrap;font-weight:600;">${timeStr || '—'}</span>
-      </span>${sep}`;
-    }
-    return `<span style="display:inline-flex;flex-direction:column;align-items:center;padding:2px 7px;border-radius:6px;background:rgba(145,158,171,.08);border:1px solid rgba(145,158,171,.18);">
-      <span style="font-size:9px;color:var(--muted);">${step.key}</span>
-      <span style="font-size:9px;color:var(--subtle);">—</span>
-    </span>${sep}`;
-  }).join('');
+  const QUEUE_STYLE = {
+    'มาก่อนเวลา':    { color:'#16a34a', bg:'rgba(22,163,74,.12)',   border:'rgba(22,163,74,.3)' },
+    'มาหลังเวลานัด': { color:'#dc2626', bg:'rgba(239,68,68,.12)',   border:'rgba(239,68,68,.3)' },
+    'ยกเลิกรับงาน':  { color:'#dc2626', bg:'rgba(239,68,68,.12)',   border:'rgba(239,68,68,.3)' },
+    'ยังไม่มาลงคิว': { color:'#d97706', bg:'rgba(245,158,11,.12)',  border:'rgba(245,158,11,.3)' },
+  };
+  const tStatusHtml = r => {
+    // T4 or status_shipping="ออกแล้ว" → ออกแล้ว
+    const shipOut = (r['status_shipping'] || '').trim().toLowerCase();
+    const forceOut = shipOut === 'ออกแล้ว' || shipOut === 'ออก';
+    const tMap = forceOut ? T_STATUS_MAP[0] : T_STATUS_MAP.find(t => r[t.statusField] === 'Checked');
 
-  const STATUS_STYLE = {
-    'มาก่อนเวลา':    'background:rgba(22,163,74,.12);color:#16a34a;border:1px solid rgba(22,163,74,.3);',
-    'มาหลังเวลานัด': 'background:rgba(239,68,68,.12);color:#dc2626;border:1px solid rgba(239,68,68,.3);',
-    'ยกเลิกรับงาน':  'background:rgba(239,68,68,.12);color:#dc2626;border:1px solid rgba(239,68,68,.3);',
-    'ยังไม่มาลงคิว': 'background:rgba(245,158,11,.12);color:#d97706;border:1px solid rgba(245,158,11,.3);',
+    if (tMap) {
+      const time = (r[tMap.timeField] || '').trim();
+      return `<div style="display:inline-flex;align-items:center;gap:8px;padding:4px 12px;border-radius:7px;background:${tMap.bg};border:1px solid ${tMap.border};white-space:nowrap;">
+        <span style="font-size:12px;font-weight:700;color:${tMap.color};">${tMap.label}</span>
+        ${time ? `<span style="color:var(--muted);font-size:11px;">|</span><span style="font-size:11px;font-weight:600;color:var(--text);">${esc(time)}</span>` : ''}
+      </div>`;
+    }
+    // fallback: queue status
+    const qs = r['สถานะลงคิว'] || '';
+    if (qs) {
+      const q = QUEUE_STYLE[qs] || { color:'#637381', bg:'rgba(145,158,171,.1)', border:'rgba(145,158,171,.25)' };
+      return `<div style="display:inline-flex;align-items:center;padding:4px 12px;border-radius:7px;background:${q.bg};border:1px solid ${q.border};white-space:nowrap;">
+        <span style="font-size:12px;font-weight:700;color:${q.color};">${esc(qs)}</span>
+      </div>`;
+    }
+    return `<span style="color:var(--muted);font-size:12px;">—</span>`;
   };
 
   let html = `<div style="overflow:auto;max-height:540px;border-radius:6px;border:1px solid rgba(56,189,248,.1);">
@@ -674,18 +679,13 @@ function openTodoBranchCars(bKey, day) {
         <th style="white-space:nowrap;">ทะเบียนรถ</th>
         <th style="white-space:nowrap;">ชื่อคนขับ</th>
         <th style="white-space:nowrap;">เบอร์ติดต่อ</th>
-        <th style="white-space:nowrap;min-width:240px;">สถานะ T1 → T4</th>
+        <th style="white-space:nowrap;min-width:200px;">สถานะ</th>
       </tr></thead><tbody>`;
 
   if (!cars.length) {
     html += `<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:28px;">ไม่มีรถเข้า${dayLabel}</td></tr>`;
   } else {
     cars.forEach((r, i) => {
-      const status  = r['สถานะลงคิว'] || '';
-      const sSt     = STATUS_STYLE[status] || 'background:rgba(0,184,217,.1);color:#0891b2;border:1px solid rgba(0,184,217,.25);';
-      const stBadge = status
-        ? `<span style="padding:1px 7px;border-radius:999px;font-size:10px;font-weight:700;white-space:nowrap;${sSt}">${esc(status)}</span>`
-        : '';
       html += `<tr>
         <td style="text-align:center;color:var(--muted);font-size:11px;">${i + 1}</td>
         <td style="font-weight:700;color:#0284c7;white-space:nowrap;">${esc(r['zone_time'] || '—')}</td>
@@ -695,10 +695,7 @@ function openTodoBranchCars(bKey, day) {
         <td style="font-family:monospace;font-size:12px;font-weight:800;color:var(--text);white-space:nowrap;">${esc(r['truck_registration'] || '—')}</td>
         <td style="font-size:12px;color:var(--text);">${esc(r['driver_name'] || '—')}</td>
         <td style="font-size:12px;color:#0891b2;font-family:monospace;white-space:nowrap;">${esc(r['driver_tel'] || '—')}</td>
-        <td><div style="display:flex;align-items:center;gap:2px;flex-wrap:wrap;">
-          ${tStatusHtml(r)}
-          ${stBadge ? `<div style="margin-top:2px;width:100%;">${stBadge}</div>` : ''}
-        </div></td>
+        <td>${tStatusHtml(r)}</td>
       </tr>`;
     });
   }
