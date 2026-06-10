@@ -30,6 +30,14 @@ function _dayBadgeTd(d) {
   return `<span class="db ${cls}">${n}</span>`;
 }
 
+function _urgencyBadge(d) {
+  const n = +d || 0;
+  if (n === 0) return `<span style="color:var(--muted);font-size:12px;">—</span>`;
+  if (n >= 3) return `<span style="display:inline-block;padding:3px 10px;border-radius:5px;font-size:12px;font-weight:700;background:rgba(255,86,48,.15);border:1px solid rgba(255,86,48,.4);color:#FF5630;">ด่วน</span>`;
+  if (n === 2) return `<span style="display:inline-block;padding:3px 10px;border-radius:5px;font-size:12px;font-weight:700;background:rgba(255,171,0,.15);border:1px solid rgba(255,171,0,.4);color:#FFAB00;">ระวัง</span>`;
+  return `<span style="display:inline-block;padding:3px 10px;border-radius:5px;font-size:12px;font-weight:700;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.4);color:#22C55E;">ปกติ</span>`;
+}
+
 function _todoKpiRow(chips) {
   return `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">${
     chips.map(c => `<div style="display:flex;flex-direction:column;align-items:center;padding:8px 16px;border-radius:8px;background:${c.bg};border:1px solid ${c.border};min-width:80px;">
@@ -246,7 +254,7 @@ function _renderTodoOverview() {
     </div>`;
   };
 
-  const totalCols = 7 + allDocWhs.length;
+  const totalCols = 8 + allDocWhs.length;
   let html = `<div style="overflow:auto;max-height:calc(100vh - 220px);border-radius:6px;border:1px solid rgba(56,189,248,.1);">
     <table class="mtbl mtbl-sm" style="width:100%;font-size:12px;">
       <thead><tr>
@@ -255,7 +263,8 @@ function _renderTodoOverview() {
         <th style="text-align:center;min-width:55px;">ชื่อย่อ</th>
         <th style="text-align:center;min-width:68px;">รหัส</th>
         <th style="text-align:center;min-width:70px;">ผู้โดยสาร</th>
-        <th style="text-align:center;min-width:90px;">วันตกค้างสูงสุด</th>
+        <th style="text-align:center;min-width:90px;">วันลาช้า</th>
+        <th style="text-align:center;min-width:68px;">สถานะ</th>
         <th style="text-align:center;width:105px;">IMP</th>
         <th style="text-align:center;width:105px;">DOM</th>
         ${allDocWhs.map(wh => `<th style="text-align:center;width:105px;">${esc(wh)}</th>`).join('')}
@@ -293,6 +302,7 @@ function _renderTodoOverview() {
         <td style="text-align:center;font-size:12px;color:#0ea5e9;font-weight:700;">${esc(r.abrCode || '—')}</td>
         <td style="text-align:center;">${totalBadge}</td>
         <td style="text-align:center;">${_dayBadgeTd(r.maxDays)}</td>
+        <td style="text-align:center;">${_urgencyBadge(r.maxDays)}</td>
         <td style="text-align:center;">${numCell(r.impDocs.size, '#7c3aed', r.impDocs.size > 0 ? `openTodoBranchFilter('${bk}','imp')` : '')}${r.impDocs.size > 0 ? `<br><span style="font-size:12px;color:var(--muted);">⏱${r.impMaxDays}วัน</span>` : ''}</td>
         <td style="text-align:center;">${numCell(r.domDocs.size, '#16a34a', r.domDocs.size > 0 ? `openTodoBranchFilter('${bk}','dom')` : '')}${r.domDocs.size > 0 ? `<br><span style="font-size:12px;color:var(--muted);">⏱${r.domMaxDays}วัน</span>` : ''}</td>
         ${whCells}
