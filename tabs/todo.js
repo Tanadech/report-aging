@@ -120,8 +120,8 @@ function _renderTodoOverview() {
       key, fullName: key, abrCode: abrCode || '',
       impDocs: new Set(), domDocs: new Set(),
       impMaxDays: 0, domMaxDays: 0,
-      whDocs: {},
-      todayCars: {}, tomorrowCars: {}
+      whDocs: {}, whMaxDays: {},
+      todayCarDetail: {}, tomorrowCarDetail: {}
     };
     if (abrCode && !bmap[key].abrCode) bmap[key].abrCode = abrCode;
     return bmap[key];
@@ -131,13 +131,19 @@ function _renderTodoOverview() {
     const b = getOrMake(doc.branch, fullToAbr[doc.branch] || '');
     b.impDocs.add(doc.docNo);
     if (doc.maxDays > b.impMaxDays) b.impMaxDays = doc.maxDays;
-    if (doc.wh) b.whDocs[doc.wh] = (b.whDocs[doc.wh] || 0) + 1;
+    if (doc.wh) {
+      b.whDocs[doc.wh] = (b.whDocs[doc.wh] || 0) + 1;
+      b.whMaxDays[doc.wh] = Math.max(b.whMaxDays[doc.wh] || 0, doc.maxDays);
+    }
   });
   Object.values(domByDoc).forEach(doc => {
     const b = getOrMake(doc.branch, fullToAbr[doc.branch] || '');
     b.domDocs.add(doc.docNo);
     if (doc.maxDays > b.domMaxDays) b.domMaxDays = doc.maxDays;
-    if (doc.wh) b.whDocs[doc.wh] = (b.whDocs[doc.wh] || 0) + 1;
+    if (doc.wh) {
+      b.whDocs[doc.wh] = (b.whDocs[doc.wh] || 0) + 1;
+      b.whMaxDays[doc.wh] = Math.max(b.whMaxDays[doc.wh] || 0, doc.maxDays);
+    }
   });
 
   Object.values(bmap).forEach(b => {
@@ -164,14 +170,26 @@ function _renderTodoOverview() {
     if (!isToday && !isTomorrow) return;
     const b  = normLookup[norm(r['source_name'])] || normLookup[norm(r['source_code'])];
     if (!b) return;
-    const wh = (r['port_id'] || '').trim();
-    if (isToday)    b.todayCars[wh]    = (b.todayCars[wh]    || 0) + 1;
-    if (isTomorrow) b.tomorrowCars[wh] = (b.tomorrowCars[wh] || 0) + 1;
+    const wh      = (r['port_id'] || '').trim();
+    const arrived  = r['สถานะ T1'] === 'Checked';
+    const departed = r['สถานะ T4'] === 'Checked';
+    if (isToday) {
+      if (!b.todayCarDetail[wh]) b.todayCarDetail[wh] = { total: 0, arrived: 0, departed: 0 };
+      b.todayCarDetail[wh].total++;
+      if (arrived)  b.todayCarDetail[wh].arrived++;
+      if (departed) b.todayCarDetail[wh].departed++;
+    }
+    if (isTomorrow) {
+      if (!b.tomorrowCarDetail[wh]) b.tomorrowCarDetail[wh] = { total: 0, arrived: 0, departed: 0 };
+      b.tomorrowCarDetail[wh].total++;
+      if (arrived)  b.tomorrowCarDetail[wh].arrived++;
+      if (departed) b.tomorrowCarDetail[wh].departed++;
+    }
   });
 
   Object.values(bmap).forEach(b => {
-    b.todayTotal    = Object.values(b.todayCars).reduce((s, n) => s + n, 0);
-    b.tomorrowTotal = Object.values(b.tomorrowCars).reduce((s, n) => s + n, 0);
+    b.todayTotal    = Object.values(b.todayCarDetail).reduce((s, d) => s + d.total, 0);
+    b.tomorrowTotal = Object.values(b.tomorrowCarDetail).reduce((s, d) => s + d.total, 0);
   });
 
   // unique doc warehouses (for dynamic columns)
@@ -193,39 +211,41 @@ function _renderTodoOverview() {
   if (cntEl) cntEl.textContent = `${rows.length} สาขา`;
 
   // ── 8. Render table ──
-  const whBadge = (n, wh) =>
-    `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:5px;background:rgba(14,165,233,.15);border:1px solid rgba(14,165,233,.5);font-size:12px;white-space:nowrap;">
-      <span style="color:#0ea5e9;font-weight:600;">${esc(wh)}</span>
-      <b style="color:var(--text);font-size:13px;">${n}</b>
-    </span>`;
-
-  const carCell = (bKey, day, carMap, total) => {
-    if (!dataCar.length) return `<span style="color:var(--muted);font-size:12px;">—</span>`;
-    const badges     = allWhs.filter(wh => (carMap[wh] || 0) > 0).map(wh => whBadge(carMap[wh], wh)).join(' ');
-    const totalBadge = total > 0
-      ? `<span style="padding:3px 10px;border-radius:5px;background:rgba(22,163,74,.15);border:1px solid rgba(22,163,74,.45);font-size:12px;font-weight:800;color:#16a34a;white-space:nowrap;">รวม ${total}</span>`
-      : `<span style="color:var(--muted);font-size:12px;">—</span>`;
-    const clickable = total > 0;
-    return `<div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;padding:4px 6px;border-radius:6px;${clickable ? 'cursor:pointer;' : ''}"
-      ${clickable ? `onclick="openTodoBranchCars('${esc(bKey).replace(/'/g,"\\'")}','${day}')"
-        onmouseover="this.style.background='rgba(56,189,248,.08)'" onmouseout="this.style.background=''"` : ''}>
-      ${allWhs.length ? badges + ' ' : ''}${totalBadge}
+  const carCell = (bKey, day, carDetail, total) => {
+    if (!dataCar.length || total === 0) return `<span style="color:var(--muted);font-size:12px;">—</span>`;
+    const bkE = esc(bKey).replace(/'/g, "\\'");
+    const whRows = allWhs.filter(wh => (carDetail[wh]?.total || 0) > 0).map(wh => {
+      const d = carDetail[wh];
+      return `<div style="display:flex;align-items:center;gap:6px;padding:3px 6px;border-radius:5px;background:rgba(14,165,233,.07);border:1px solid rgba(14,165,233,.2);margin-bottom:3px;">
+        <span style="color:#0ea5e9;font-weight:700;font-size:11px;min-width:28px;">${esc(wh)}</span>
+        <span style="color:var(--text);font-size:11px;font-weight:800;">รวม ${d.total}</span>
+        <span style="color:var(--muted);font-size:10px;">|</span>
+        <span style="font-size:10.5px;color:#16a34a;font-weight:600;">เข้า <b>${d.arrived}</b></span>
+        <span style="font-size:10.5px;color:#f59e0b;font-weight:600;">ออก <b>${d.departed}</b></span>
+      </div>`;
+    }).join('');
+    return `<div style="cursor:pointer;padding:2px 4px;border-radius:6px;"
+      onclick="openTodoBranchCars('${bkE}','${day}')"
+      onmouseover="this.style.background='rgba(56,189,248,.07)'" onmouseout="this.style.background=''">
+      ${whRows}
     </div>`;
   };
 
-  const totalCols = 5 + allDocWhs.length;
+  const totalCols = 7 + allDocWhs.length;
   let html = `<div style="overflow:auto;max-height:560px;border-radius:6px;border:1px solid rgba(56,189,248,.1);">
     <table class="mtbl" style="width:100%;font-size:13px;">
       <thead><tr>
         <th style="width:36px;text-align:center;">#</th>
         <th style="min-width:160px;">สาขา</th>
-        <th style="text-align:center;min-width:70px;">รวม</th>
+        <th style="text-align:center;min-width:60px;">ชื่อย่อ</th>
+        <th style="text-align:center;min-width:60px;">รหัส</th>
+        <th style="text-align:center;min-width:70px;">ผู้โดยสาร</th>
+        <th style="text-align:center;min-width:90px;">วันตกค้างสูงสุด</th>
         <th style="text-align:center;min-width:55px;">IMP</th>
         <th style="text-align:center;min-width:55px;">DOM</th>
-        ${allDocWhs.map(wh => `<th style="text-align:center;min-width:60px;">${esc(wh)}</th>`).join('')}
-        <th style="text-align:center;width:100px;">วันคงค้างสูงสุด</th>
-        <th style="min-width:180px;">🚛 รถ OUTBOUND วันนี้</th>
-        <th style="min-width:180px;">🚛 รถ OUTBOUND พรุ่งนี้</th>
+        ${allDocWhs.map(wh => `<th style="text-align:center;min-width:80px;">${esc(wh)}</th>`).join('')}
+        <th style="min-width:200px;">🚛 รถ OUTBOUND วันนี้</th>
+        <th style="min-width:200px;">🚛 รถ OUTBOUND พรุ่งนี้</th>
       </tr></thead><tbody>`;
 
   if (!rows.length) {
@@ -243,21 +263,26 @@ function _renderTodoOverview() {
 
       const bk = esc(r.key).replace(/'/g, "\\'");
       const whCells = allDocWhs.map(wh => {
-        const n = r.whDocs[wh] || 0;
+        const n   = r.whDocs[wh] || 0;
+        const md  = r.whMaxDays[wh] || 0;
         const whEsc = esc(wh).replace(/'/g, "\\'");
-        return `<td style="text-align:center;">${numCell(n, '#0284c7', n > 0 ? `openTodoBranchFilter('${bk}','wh','${whEsc}')` : '')}</td>`;
+        const cnt = numCell(n, '#0284c7', n > 0 ? `openTodoBranchFilter('${bk}','wh','${whEsc}')` : '');
+        const dayBadge = n > 0 ? `<br><span style="font-size:10px;color:var(--muted);">⏱${md}วัน</span>` : '';
+        return `<td style="text-align:center;">${cnt}${dayBadge}</td>`;
       }).join('');
 
       html += `<tr>
         <td style="text-align:center;color:var(--muted);font-size:12px;">${i + 1}</td>
         <td style="font-size:13px;font-weight:600;">${esc(r.fullName)}</td>
+        <td style="text-align:center;font-size:12px;color:#0ea5e9;font-weight:700;">${esc(r.abrCode || '—')}</td>
+        <td style="text-align:center;font-size:12px;color:var(--muted);">${esc(r.abrCode || '—')}</td>
         <td style="text-align:center;">${totalBadge}</td>
+        <td style="text-align:center;">${_dayBadgeTd(r.maxDays)}</td>
         <td style="text-align:center;">${numCell(r.impDocs.size, '#7c3aed', r.impDocs.size > 0 ? `openTodoBranchFilter('${bk}','imp')` : '')}</td>
         <td style="text-align:center;">${numCell(r.domDocs.size, '#16a34a', r.domDocs.size > 0 ? `openTodoBranchFilter('${bk}','dom')` : '')}</td>
         ${whCells}
-        <td style="text-align:center;">${_dayBadgeTd(r.maxDays)}</td>
-        <td>${carCell(r.key, 'today',    r.todayCars,    r.todayTotal)}</td>
-        <td>${carCell(r.key, 'tomorrow', r.tomorrowCars, r.tomorrowTotal)}</td>
+        <td>${carCell(r.key, 'today',    r.todayCarDetail,    r.todayTotal)}</td>
+        <td>${carCell(r.key, 'tomorrow', r.tomorrowCarDetail, r.tomorrowTotal)}</td>
       </tr>`;
     });
   }
@@ -598,15 +623,39 @@ function openTodoBranchCars(bKey, day) {
   document.getElementById('td-doc-title').innerHTML = `🚛 รถ OUTBOUND ${dayLabel} — ${esc(b.fullName)}`;
   document.getElementById('td-doc-sub').textContent = `${cars.length} คัน`;
 
+  const T_STEPS = [
+    { key: 'T1', statusField: 'สถานะ T1', timeField: 'เวลาเข้า T1', label: 'เข้า DC' },
+    { key: 'T2', statusField: 'สถานะ T2', timeField: 'เวลา T2',     label: 'ขึ้นสินค้า' },
+    { key: 'T3', statusField: 'สถานะ T3', timeField: 'เวลา T3',     label: 'โหลดเสร็จ' },
+    { key: 'T4', statusField: 'สถานะ T4', timeField: 'เวลา T4',     label: 'ออก DC' },
+  ];
+  const tStatusHtml = r => T_STEPS.map((step, idx) => {
+    const checked = r[step.statusField] === 'Checked';
+    const raw     = (r[step.timeField] || '').trim();
+    const timeStr = raw.replace(/^\d{4}-\d{2}-\d{2}\s*/, '').replace(/:\d{2}$/, '');
+    const sep     = idx < T_STEPS.length - 1
+      ? `<span style="color:#9db5cc;font-size:9px;padding:0 1px;">→</span>` : '';
+    if (checked) {
+      return `<span style="display:inline-flex;flex-direction:column;align-items:center;padding:2px 7px;border-radius:6px;background:rgba(22,163,74,.12);border:1px solid rgba(22,163,74,.35);">
+        <span style="font-size:9px;font-weight:800;color:#16a34a;">✓ ${step.key}</span>
+        <span style="font-size:9px;color:#4ade80;white-space:nowrap;font-weight:600;">${timeStr || '—'}</span>
+      </span>${sep}`;
+    }
+    return `<span style="display:inline-flex;flex-direction:column;align-items:center;padding:2px 7px;border-radius:6px;background:rgba(145,158,171,.08);border:1px solid rgba(145,158,171,.18);">
+      <span style="font-size:9px;color:var(--muted);">${step.key}</span>
+      <span style="font-size:9px;color:var(--subtle);">—</span>
+    </span>${sep}`;
+  }).join('');
+
   const STATUS_STYLE = {
-    'มาก่อนเวลา':    'background:rgba(16,185,129,.18);color:#34d399;',
-    'มาหลังเวลานัด': 'background:rgba(239,68,68,.18);color:#f87171;',
-    'ยกเลิกรับงาน':  'background:rgba(239,68,68,.18);color:#f87171;',
-    'ยังไม่มาลงคิว': 'background:rgba(245,158,11,.18);color:#fbbf24;',
+    'มาก่อนเวลา':    'background:rgba(22,163,74,.12);color:#16a34a;border:1px solid rgba(22,163,74,.3);',
+    'มาหลังเวลานัด': 'background:rgba(239,68,68,.12);color:#dc2626;border:1px solid rgba(239,68,68,.3);',
+    'ยกเลิกรับงาน':  'background:rgba(239,68,68,.12);color:#dc2626;border:1px solid rgba(239,68,68,.3);',
+    'ยังไม่มาลงคิว': 'background:rgba(245,158,11,.12);color:#d97706;border:1px solid rgba(245,158,11,.3);',
   };
 
   let html = `<div style="overflow:auto;max-height:540px;border-radius:6px;border:1px solid rgba(56,189,248,.1);">
-    <table class="mtbl" style="width:100%;min-width:760px;font-size:13px;">
+    <table class="mtbl" style="width:100%;min-width:800px;font-size:12px;">
       <thead><tr>
         <th style="width:30px;text-align:center;">#</th>
         <th style="white-space:nowrap;">เวลา</th>
@@ -616,7 +665,7 @@ function openTodoBranchCars(bKey, day) {
         <th style="white-space:nowrap;">ทะเบียนรถ</th>
         <th style="white-space:nowrap;">ชื่อคนขับ</th>
         <th style="white-space:nowrap;">เบอร์ติดต่อ</th>
-        <th style="white-space:nowrap;">สถานะ</th>
+        <th style="white-space:nowrap;min-width:240px;">สถานะ T1 → T4</th>
       </tr></thead><tbody>`;
 
   if (!cars.length) {
@@ -624,20 +673,23 @@ function openTodoBranchCars(bKey, day) {
   } else {
     cars.forEach((r, i) => {
       const status  = r['สถานะลงคิว'] || '';
-      const sSt     = STATUS_STYLE[status] || 'background:rgba(56,189,248,.12);color:#7dd3fc;';
+      const sSt     = STATUS_STYLE[status] || 'background:rgba(0,184,217,.1);color:#0891b2;border:1px solid rgba(0,184,217,.25);';
       const stBadge = status
-        ? `<span style="padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap;${sSt}">${esc(status)}</span>`
-        : '—';
+        ? `<span style="padding:1px 7px;border-radius:999px;font-size:10px;font-weight:700;white-space:nowrap;${sSt}">${esc(status)}</span>`
+        : '';
       html += `<tr>
         <td style="text-align:center;color:var(--muted);font-size:11px;">${i + 1}</td>
-        <td style="font-weight:700;color:#00B8D9;white-space:nowrap;">${esc(r['zone_time'] || '—')}</td>
-        <td><span style="background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);padding:2px 9px;border-radius:4px;font-size:11px;font-weight:700;color:#7dd3fc;">${esc(r['port_id'] || '—')}</span></td>
-        <td style="font-size:12px;">${esc(r['truck_info'] || '—')}</td>
-        <td>${r['rc_type_product'] ? `<span style="background:rgba(253,169,45,.15);border:1px solid rgba(253,169,45,.35);padding:2px 9px;border-radius:4px;font-size:11px;font-weight:700;color:#fda92d;">${esc(r['rc_type_product'])}</span>` : '—'}</td>
-        <td style="font-family:monospace;font-size:12px;font-weight:800;color:#f1f5f9;white-space:nowrap;">${esc(r['truck_registration'] || '—')}</td>
-        <td style="font-size:12px;">${esc(r['driver_name'] || '—')}</td>
-        <td style="font-size:12px;color:#4ade80;font-family:monospace;white-space:nowrap;">${esc(r['driver_tel'] || '—')}</td>
-        <td>${stBadge}</td>
+        <td style="font-weight:700;color:#0284c7;white-space:nowrap;">${esc(r['zone_time'] || '—')}</td>
+        <td><span style="background:rgba(2,132,199,.1);border:1px solid rgba(2,132,199,.25);padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;color:#0284c7;">${esc(r['port_id'] || '—')}</span></td>
+        <td style="font-size:12px;color:var(--text);">${esc(r['truck_info'] || '—')}</td>
+        <td>${r['rc_type_product'] ? `<span style="background:rgba(253,169,45,.12);border:1px solid rgba(253,169,45,.3);padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;color:#b45309;">${esc(r['rc_type_product'])}</span>` : '—'}</td>
+        <td style="font-family:monospace;font-size:12px;font-weight:800;color:var(--text);white-space:nowrap;">${esc(r['truck_registration'] || '—')}</td>
+        <td style="font-size:12px;color:var(--text);">${esc(r['driver_name'] || '—')}</td>
+        <td style="font-size:12px;color:#0891b2;font-family:monospace;white-space:nowrap;">${esc(r['driver_tel'] || '—')}</td>
+        <td><div style="display:flex;align-items:center;gap:2px;flex-wrap:wrap;">
+          ${tStatusHtml(r)}
+          ${stBadge ? `<div style="margin-top:2px;width:100%;">${stBadge}</div>` : ''}
+        </div></td>
       </tr>`;
     });
   }
