@@ -180,18 +180,6 @@ function _renderTodoOverview() {
   if (fd2 < Infinity) rows = rows.filter(r => r.maxDays <= fd2);
   if (q)  rows = rows.filter(r => norm(r.fullName).includes(q) || norm(r.abrCode).includes(q));
 
-  // ── 7. KPI ──
-  const totalDocs  = rows.reduce((s, r) => s + r.totalDocs, 0);
-  const overallMax = rows.length ? rows[0].maxDays : 0;
-  const over30     = rows.filter(r => r.maxDays > 30).length;
-
-  document.getElementById('todo-ov-kpi').innerHTML = _todoKpiRow([
-    { val: rows.length, unit: 'สาขาตกค้าง',          color: '#7dd3fc', bg: 'rgba(0,184,217,.1)',  border: 'rgba(0,184,217,.25)' },
-    { val: totalDocs,   unit: 'เอกสารตกค้างรวม',      color: '#c4b5fd', bg: 'rgba(124,58,237,.1)', border: 'rgba(124,58,237,.25)' },
-    { val: overallMax,  unit: 'วันคงค้างสูงสุด',       color: '#fbbf24', bg: 'rgba(245,158,11,.1)', border: 'rgba(245,158,11,.25)' },
-    { val: over30,      unit: 'สาขาค้างเกิน 30 วัน',  color: '#f87171', bg: 'rgba(239,68,68,.1)',  border: 'rgba(239,68,68,.25)' },
-  ]);
-
   const cntEl = document.getElementById('todo-ov-cnt');
   if (cntEl) cntEl.textContent = `${rows.length} สาขา`;
 
@@ -255,6 +243,7 @@ function _renderTodoOverview() {
 function openTodoBranchDocs(bKey) {
   const b = (window._todoOvMap || {})[bKey];
   if (!b) return;
+  window._todoCurBranchKey = bKey;
 
   document.getElementById('td-doc-title').innerHTML = `📋 เอกสารตกค้าง — ${esc(b.fullName)}`;
   document.getElementById('td-doc-sub').textContent =
@@ -271,7 +260,7 @@ function openTodoBranchDocs(bKey) {
       <div style="font-size:12px;font-weight:700;color:#7dd3fc;margin-bottom:8px;padding:5px 10px;background:rgba(0,184,217,.08);border:1px solid rgba(0,184,217,.15);border-radius:5px;">
         🌏 IMPORTED — ${impRows.length} เอกสาร
       </div>
-      <div style="overflow:auto;max-height:240px;border-radius:6px;border:1px solid rgba(56,189,248,.1);">
+      <div style="overflow:auto;max-height:260px;border-radius:6px;border:1px solid rgba(56,189,248,.1);">
         <table class="mtbl" style="width:100%;font-size:12px;">
           <thead><tr>
             <th style="width:30px;text-align:center;">#</th>
@@ -282,7 +271,8 @@ function openTodoBranchDocs(bKey) {
             <th style="text-align:center;">วันค้างส่ง</th>
           </tr></thead><tbody>`;
     impRows.forEach((d, i) => {
-      html += `<tr>
+      html += `<tr style="cursor:pointer;" onclick="openTodoBranchImpDoc('${esc(d.docNo).replace(/'/g,"\\'")}')""
+        onmouseover="this.style.background='rgba(56,189,248,.09)'" onmouseout="this.style.background=''">
         <td style="text-align:center;color:var(--muted);font-size:11px;">${i + 1}</td>
         <td style="color:#38bdf8;font-weight:700;">${esc(d.docNo)}</td>
         <td><span style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);padding:1px 7px;border-radius:4px;font-size:11px;font-weight:700;color:#4ade80;">${esc(d.wh || '—')}</span></td>
@@ -293,7 +283,9 @@ function openTodoBranchDocs(bKey) {
         <td style="text-align:center;">${_dayBadgeTd(d.maxDays)}</td>
       </tr>`;
     });
-    html += '</tbody></table></div></div>';
+    html += '</tbody></table></div>';
+    html += `<div style="font-size:10.5px;color:var(--muted);margin-top:4px;padding-left:2px;">💡 คลิกที่แถวเพื่อดูรายละเอียดสินค้า</div>`;
+    html += '</div>';
   }
 
   // DOMESTIC section
@@ -305,7 +297,7 @@ function openTodoBranchDocs(bKey) {
       <div style="font-size:12px;font-weight:700;color:#4ade80;margin-bottom:8px;padding:5px 10px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.15);border-radius:5px;">
         📦 DOMESTIC — ${domRows.length} เอกสาร
       </div>
-      <div style="overflow:auto;max-height:240px;border-radius:6px;border:1px solid rgba(56,189,248,.1);">
+      <div style="overflow:auto;max-height:260px;border-radius:6px;border:1px solid rgba(56,189,248,.1);">
         <table class="mtbl" style="width:100%;font-size:12px;">
           <thead><tr>
             <th style="width:30px;text-align:center;">#</th>
@@ -314,7 +306,8 @@ function openTodoBranchDocs(bKey) {
             <th style="text-align:center;">วันคงค้าง</th>
           </tr></thead><tbody>`;
     domRows.forEach((d, i) => {
-      html += `<tr>
+      html += `<tr style="cursor:pointer;" onclick="openTodoBranchDomDoc('${esc(d.docNo).replace(/'/g,"\\'")}')""
+        onmouseover="this.style.background='rgba(56,189,248,.09)'" onmouseout="this.style.background=''">
         <td style="text-align:center;color:var(--muted);font-size:11px;">${i + 1}</td>
         <td style="color:#38bdf8;font-weight:700;">${esc(d.docNo)}</td>
         <td><span style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);padding:1px 7px;border-radius:4px;font-size:11px;font-weight:700;color:#4ade80;">${esc(d.wh || '—')}</span></td>
@@ -323,7 +316,9 @@ function openTodoBranchDocs(bKey) {
         <td style="text-align:center;">${_dayBadgeTd(d.maxDays)}</td>
       </tr>`;
     });
-    html += '</tbody></table></div></div>';
+    html += '</tbody></table></div>';
+    html += `<div style="font-size:10.5px;color:var(--muted);margin-top:4px;padding-left:2px;">💡 คลิกที่แถวเพื่อดูรายละเอียด Onetime</div>`;
+    html += '</div>';
   }
 
   if (!impRows.length && !domRows.length) {
@@ -332,6 +327,112 @@ function openTodoBranchDocs(bKey) {
 
   document.getElementById('td-doc-content').innerHTML = html;
   document.getElementById('td-doc-modal').classList.add('show');
+}
+
+// ── Back button helper ──
+function _backBtn() {
+  return `<button onclick="openTodoBranchDocs(window._todoCurBranchKey)"
+    style="display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:6px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);color:#7dd3fc;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:12px;font-family:inherit;">
+    ← กลับรายการเอกสาร
+  </button>`;
+}
+
+// ── Drill-down: IMPORTED doc → product list ──
+function openTodoBranchImpDoc(docNo) {
+  const doc = (window._todoImpByDoc || {})[docNo];
+  if (!doc) return;
+
+  document.getElementById('td-doc-title').innerHTML = `🌏 ${esc(docNo)}`;
+  document.getElementById('td-doc-sub').textContent =
+    `${doc.branch}  ·  ${doc.wh}  ·  Zone ${doc.zone}  ·  วันค้างสูงสุด ${doc.maxDays} วัน`;
+
+  const rows = doc.rows.slice().sort((a, b) => {
+    const la = a['Location'] || '', lb = b['Location'] || '';
+    return la < lb ? -1 : la > lb ? 1 : 0;
+  });
+
+  let html = _backBtn();
+  html += `<div class="modal-sum">
+    <div class="modal-sum-item"><b>${fmtN(rows.length)}</b> รายการสินค้า</div>
+    <div class="modal-sum-item"><b>${fmtN(doc.skus.size)}</b> SKU</div>
+    <div class="modal-sum-item"><b>${fmtN(Math.round(doc.totalQty))}</b> จำนวนรวม</div>
+    <div class="modal-sum-item"><b>${fmtN(doc.locs.size)}</b> Location</div>
+  </div>`;
+
+  html += `<div style="overflow:auto;max-height:480px;border-radius:6px;border:1px solid rgba(56,189,248,.1);">
+    <table class="mtbl" style="width:100%;min-width:900px;font-size:13px;">
+      <thead><tr>
+        <th style="width:36px;text-align:center;white-space:nowrap;">#</th>
+        <th style="white-space:nowrap;min-width:140px;">รหัสสินค้า</th>
+        <th style="min-width:280px;">ชื่อสินค้า</th>
+        <th style="text-align:center;white-space:nowrap;min-width:90px;">Location</th>
+        <th style="white-space:nowrap;min-width:160px;">Location ID</th>
+        <th style="text-align:center;white-space:nowrap;min-width:70px;">จำนวน</th>
+        <th style="text-align:center;white-space:nowrap;min-width:55px;">หน่วย</th>
+        <th style="white-space:nowrap;min-width:130px;">สถานะ</th>
+        <th style="text-align:center;white-space:nowrap;min-width:90px;">วันค้างส่ง</th>
+      </tr></thead><tbody>`;
+
+  rows.forEach((r, i) => {
+    const locIds = (r['Location ID'] || '').split(',').map(s => s.trim()).filter(Boolean).join(', ');
+    html += `<tr>
+      <td style="text-align:center;color:var(--muted);font-size:12px;">${i + 1}</td>
+      <td style="font-family:monospace;font-size:12px;font-weight:700;color:#93c5fd;white-space:nowrap;">${esc(r['รหัสสินค้า'] || '—')}</td>
+      <td style="font-size:13px;">${esc(r['ชื้อสินค้า'] || r['ชื่อสินค้า'] || '—')}</td>
+      <td style="text-align:center;white-space:nowrap;"><span style="background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);padding:3px 10px;border-radius:5px;font-size:12px;font-weight:700;color:#7dd3fc;">${esc(r['Location'] || '—')}</span></td>
+      <td style="font-size:12px;color:var(--muted);white-space:nowrap;" title="${esc(locIds)}">${esc(locIds || '—')}</td>
+      <td style="text-align:center;font-size:14px;font-weight:800;color:var(--text);white-space:nowrap;">${fmtN(+(r['จำนวนขอโอน'] || 0))}</td>
+      <td style="text-align:center;color:var(--muted);font-size:12px;white-space:nowrap;">${esc(r['หน่วยนับ'] || '')}</td>
+      <td style="white-space:nowrap;"><span class="spill ${statusCls(r['สถานะประมวลผล'] || '')}">${esc(r['สถานะประมวลผล'] || '—')}</span></td>
+      <td style="text-align:center;white-space:nowrap;">${_dayBadgeTd(r['วันค้างส่ง'])}</td>
+    </tr>`;
+  });
+
+  html += '</tbody></table></div>';
+  document.getElementById('td-doc-content').innerHTML = html;
+}
+
+// ── Drill-down: DOMESTIC doc → onetime list ──
+function openTodoBranchDomDoc(docNo) {
+  const doc = (window._todoDomByDoc || {})[docNo];
+  if (!doc) return;
+
+  document.getElementById('td-doc-title').innerHTML = `📦 ${esc(docNo)}`;
+  document.getElementById('td-doc-sub').textContent =
+    `${doc.branch}  ·  ${doc.wh}  ·  Zone ${doc.zone}  ·  วันคงค้างสูงสุด ${doc.maxDays} วัน`;
+
+  const rows = doc.rows.slice().sort((a, b) => (+b['วันคงค้าง'] || 0) - (+a['วันคงค้าง'] || 0));
+
+  let html = _backBtn();
+  html += `<div class="modal-sum">
+    <div class="modal-sum-item"><b>${fmtN(rows.length)}</b> รายการ</div>
+    <div class="modal-sum-item"><b>${fmtN(doc.onetimes.size)}</b> Onetime</div>
+  </div>`;
+
+  html += `<div style="overflow:auto;max-height:480px;border-radius:6px;border:1px solid rgba(56,189,248,.1);">
+    <table class="mtbl" style="width:100%;min-width:600px;font-size:13px;">
+      <thead><tr>
+        <th style="width:36px;text-align:center;white-space:nowrap;">#</th>
+        <th style="white-space:nowrap;min-width:150px;">เลขที่ Onetime</th>
+        <th style="white-space:nowrap;min-width:190px;">บาร์โค้ดพาเลท</th>
+        <th style="white-space:nowrap;min-width:110px;">วันที่ Onetime</th>
+        <th style="white-space:nowrap;min-width:60px;">หน่วย</th>
+        <th style="text-align:center;white-space:nowrap;min-width:90px;">วันคงค้าง</th>
+      </tr></thead><tbody>`;
+
+  rows.forEach((r, i) => {
+    html += `<tr>
+      <td style="text-align:center;color:var(--muted);font-size:12px;">${i + 1}</td>
+      <td style="font-family:monospace;font-size:12px;font-weight:700;color:#93c5fd;white-space:nowrap;">${esc(r['เลขที่ onetime'] || '—')}</td>
+      <td style="font-size:12px;color:var(--muted);white-space:nowrap;">${esc(r['บาร์โค้ดพาเลท'] || '—')}</td>
+      <td style="font-size:12px;white-space:nowrap;">${esc(r['วันที่ onetime'] || '—')}</td>
+      <td style="text-align:center;color:var(--muted);font-size:12px;white-space:nowrap;">${esc(r['หน่วยนับ'] || '—')}</td>
+      <td style="text-align:center;white-space:nowrap;">${_dayBadgeTd(r['วันคงค้าง'])}</td>
+    </tr>`;
+  });
+
+  html += '</tbody></table></div>';
+  document.getElementById('td-doc-content').innerHTML = html;
 }
 
 // ── Popup: คิวรถ OUTBOUND ──
