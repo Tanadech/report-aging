@@ -287,8 +287,8 @@ function _renderTodoOverview() {
         <td style="text-align:center;font-size:12px;color:#0ea5e9;font-weight:700;">${esc(r.abrCode || '—')}</td>
         <td style="text-align:center;">${totalBadge}</td>
         <td style="text-align:center;">${_dayBadgeTd(r.maxDays)}</td>
-        <td style="text-align:center;">${numCell(r.impDocs.size, '#7c3aed', r.impDocs.size > 0 ? `openTodoBranchFilter('${bk}','imp')` : '')}</td>
-        <td style="text-align:center;">${numCell(r.domDocs.size, '#16a34a', r.domDocs.size > 0 ? `openTodoBranchFilter('${bk}','dom')` : '')}</td>
+        <td style="text-align:center;">${numCell(r.impDocs.size, '#7c3aed', r.impDocs.size > 0 ? `openTodoBranchFilter('${bk}','imp')` : '')}${r.impDocs.size > 0 ? `<br><span style="font-size:10px;color:var(--muted);">⏱${r.impMaxDays}วัน</span>` : ''}</td>
+        <td style="text-align:center;">${numCell(r.domDocs.size, '#16a34a', r.domDocs.size > 0 ? `openTodoBranchFilter('${bk}','dom')` : '')}${r.domDocs.size > 0 ? `<br><span style="font-size:10px;color:var(--muted);">⏱${r.domMaxDays}วัน</span>` : ''}</td>
         ${whCells}
         <td>${carCell(r.key, 'today',    r.todayCarDetail,    r.todayTotal)}</td>
         <td>${carCell(r.key, 'tomorrow', r.tomorrowCarDetail, r.tomorrowTotal)}</td>
