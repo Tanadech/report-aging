@@ -25,7 +25,7 @@
 
 /* Compact variant — overview tables */
 .mtbl-sm thead th { padding:5px 8px; font-size:11px; }
-.mtbl-sm tbody td { padding:4px 6px; vertical-align:top; }
+.mtbl-sm tbody td { padding:4px 6px; vertical-align:middle; }
 .mtbl tbody tr:hover td { background:rgba(56,189,248,.06); }
 .mtbl tbody tr:nth-child(even) td { background:rgba(255,255,255,.02); }
 .mtbl tbody tr:nth-child(even):hover td { background:rgba(56,189,248,.06); }

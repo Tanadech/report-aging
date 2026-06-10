@@ -241,7 +241,7 @@ function _renderTodoOverview() {
   };
 
   const totalCols = 7 + allDocWhs.length;
-  let html = `<div style="overflow:auto;max-height:560px;border-radius:6px;border:1px solid rgba(56,189,248,.1);">
+  let html = `<div style="overflow:auto;max-height:calc(100vh - 220px);border-radius:6px;border:1px solid rgba(56,189,248,.1);">
     <table class="mtbl mtbl-sm" style="width:100%;font-size:12px;">
       <thead><tr>
         <th style="width:30px;text-align:center;">#</th>
