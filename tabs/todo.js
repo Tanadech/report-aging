@@ -252,12 +252,16 @@ function _renderTodoDom() {
         wh:       getWH(r),
         vendor:   r['ชื่อผู้จำหน่าย'] || '',
         maxDays:  0,
-        onetimes: new Set()
+        onetimes: new Set(),
+        vendors:  new Set(),
+        rows:     []
       };
     }
     const d = +r['วันคงค้าง'] || 0;
     if (d > byDoc[key].maxDays) byDoc[key].maxDays = d;
-    if (r['เลขที่ onetime']) byDoc[key].onetimes.add(r['เลขที่ onetime']);
+    if (r['เลขที่ onetime'])    byDoc[key].onetimes.add(r['เลขที่ onetime']);
+    if (r['ชื่อผู้จำหน่าย'])   byDoc[key].vendors.add(r['ชื่อผู้จำหน่าย']);
+    byDoc[key].rows.push(r);
   });
 
   const allRows = Object.values(byDoc).sort((a, b) => b.maxDays - a.maxDays);
@@ -287,36 +291,94 @@ function _renderTodoDom() {
   const cntEl = document.getElementById('todo-dom-cnt');
   if (cntEl) cntEl.textContent = `${fmtN(filtered.length)} รายการ${isFiltered ? ' (กรอง)' : ''}`;
 
-  let html = `<div style="overflow:auto;max-height:440px;border-radius:6px;border:1px solid rgba(56,189,248,.1);">
-    <table class="mtbl" style="width:100%;">
+  const _numBadgeDom = (n, bg, border, color) =>
+    `<span style="display:inline-block;min-width:32px;padding:3px 10px;border-radius:6px;background:${bg};border:1px solid ${border};color:${color};font-size:13px;font-weight:800;text-align:center;">${n}</span>`;
+
+  let html = `<div style="overflow:auto;max-height:480px;border-radius:6px;border:1px solid rgba(56,189,248,.1);">
+    <table class="mtbl" style="width:100%;font-size:13px;">
       <thead><tr>
-        <th style="width:36px;text-align:center;">#</th>
-        <th>เลขที่เอกสาร POI</th>
-        <th>สาขา</th>
-        <th>Zone</th>
-        <th>คลัง</th>
-        <th>ผู้จำหน่าย</th>
-        <th style="text-align:center;width:70px;">Onetime</th>
-        <th style="text-align:center;width:85px;">วันคงค้าง</th>
+        <th style="width:36px;text-align:center;font-size:12px;">#</th>
+        <th style="font-size:13px;">เลขที่เอกสาร POI</th>
+        <th style="font-size:13px;">สาขา</th>
+        <th style="text-align:center;font-size:13px;">คลัง</th>
+        <th style="text-align:center;font-size:13px;">Zone</th>
+        <th style="font-size:13px;">ผู้จำหน่าย</th>
+        <th style="text-align:center;width:80px;font-size:13px;">Onetime</th>
+        <th style="text-align:center;width:90px;font-size:13px;">วันคงค้าง</th>
       </tr></thead><tbody>`;
 
   if (!filtered.length) {
     html += `<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:24px;">ไม่มีข้อมูล</td></tr>`;
   } else {
     filtered.forEach((r, i) => {
-      html += `<tr>
-        <td style="text-align:center;color:var(--muted);font-size:11px;">${i + 1}</td>
-        <td class="mdoc">${esc(r.docNo)}</td>
-        <td style="font-size:12px;">${esc(r.branch)}</td>
-        <td><span style="background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;color:#7dd3fc;">${esc(r.zone || '—')}</span></td>
-        <td><span style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;color:#4ade80;">${esc(r.wh || '—')}</span></td>
-        <td style="font-size:11px;color:var(--muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(r.vendor)}">${esc(r.vendor || '—')}</td>
-        <td style="text-align:center;font-weight:700;color:#7dd3fc;">${r.onetimes.size}</td>
+      html += `<tr style="cursor:pointer;" onclick="openTodoDomDetail('${esc(r.docNo).replace(/'/g,'\\\'')}')"
+        onmouseover="this.style.background='rgba(56,189,248,.09)'" onmouseout="this.style.background=''">
+        <td style="text-align:center;color:var(--muted);font-size:12px;">${i + 1}</td>
+        <td class="mdoc" style="color:#38bdf8;font-size:13px;">${esc(r.docNo)}</td>
+        <td style="font-size:13px;">${esc(r.branch)}</td>
+        <td style="text-align:center;"><span style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);padding:2px 9px;border-radius:5px;font-size:12px;font-weight:700;color:#4ade80;">${esc(r.wh || '—')}</span></td>
+        <td style="text-align:center;"><span style="background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);padding:2px 9px;border-radius:5px;font-size:12px;font-weight:700;color:#7dd3fc;">${esc(r.zone || '—')}</span></td>
+        <td style="font-size:12px;color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(r.vendor)}">${esc(r.vendor || '—')}</td>
+        <td style="text-align:center;">${_numBadgeDom(r.onetimes.size, 'rgba(253,169,45,.15)', 'rgba(253,169,45,.4)', '#fda92d')}</td>
         <td style="text-align:center;">${_dayBadgeTd(r.maxDays)}</td>
       </tr>`;
     });
   }
 
   html += '</tbody></table></div>';
+  html += `<div style="font-size:10.5px;color:var(--muted);margin-top:6px;padding-left:4px;">💡 คลิกที่แถวเพื่อดูรายละเอียด Onetime ทุกรายการในเอกสารนั้น</div>`;
   document.getElementById('todo-dom-tbl').innerHTML = html;
+
+  window._todoDomByDoc = byDoc;
+}
+
+// ── Popup: รายละเอียด DOMESTIC document ──
+function openTodoDomDetail(docNo) {
+  const doc = (window._todoDomByDoc || {})[docNo];
+  if (!doc) return;
+
+  document.getElementById('td-doc-title').textContent = '📦 ' + docNo;
+  document.getElementById('td-doc-sub').textContent =
+    `${doc.branch}  ·  ${doc.wh}  ·  Zone ${doc.zone}  ·  วันคงค้างสูงสุด ${doc.maxDays} วัน`;
+
+  const rows = doc.rows.slice().sort((a, b) => {
+    const da = +(a['วันคงค้าง'] || 0), db = +(b['วันคงค้าง'] || 0);
+    return db - da;
+  });
+
+  let html = `<div class="modal-sum">
+    <div class="modal-sum-item"><b>${fmtN(rows.length)}</b> รายการ</div>
+    <div class="modal-sum-item"><b>${fmtN(doc.onetimes.size)}</b> Onetime</div>
+    <div class="modal-sum-item"><b>${fmtN(doc.vendors.size)}</b> ผู้จำหน่าย</div>
+  </div>`;
+
+  html += `<div style="overflow:auto;max-height:520px;border-radius:6px;border:1px solid rgba(56,189,248,.1);">
+    <table class="mtbl" style="width:100%;min-width:860px;font-size:13px;">
+      <thead><tr>
+        <th style="width:36px;text-align:center;white-space:nowrap;">#</th>
+        <th style="white-space:nowrap;min-width:150px;">เลขที่ Onetime</th>
+        <th style="white-space:nowrap;min-width:190px;">บาร์โค้ดพาเลท</th>
+        <th style="white-space:nowrap;min-width:110px;">วันที่ Onetime</th>
+        <th style="min-width:200px;">ผู้จำหน่าย</th>
+        <th style="white-space:nowrap;min-width:110px;">ประตูลงสินค้า</th>
+        <th style="white-space:nowrap;min-width:60px;">หน่วย</th>
+        <th style="text-align:center;white-space:nowrap;min-width:90px;">วันคงค้าง</th>
+      </tr></thead><tbody>`;
+
+  rows.forEach((r, i) => {
+    html += `<tr>
+      <td style="text-align:center;color:var(--muted);font-size:12px;">${i + 1}</td>
+      <td style="font-family:monospace;font-size:12px;font-weight:700;color:#93c5fd;white-space:nowrap;">${esc(r['เลขที่ onetime'] || '—')}</td>
+      <td style="font-size:12px;color:var(--muted);white-space:nowrap;">${esc(r['บาร์โค้ดพาเลท'] || '—')}</td>
+      <td style="font-size:12px;white-space:nowrap;">${esc(r['วันที่ onetime'] || '—')}</td>
+      <td style="font-size:12px;">${esc(r['ชื่อผู้จำหน่าย'] || '—')}</td>
+      <td style="text-align:center;white-space:nowrap;"><span style="background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);padding:3px 10px;border-radius:5px;font-size:12px;font-weight:700;color:#7dd3fc;">${esc(r['ประตูลงสินค้า'] || '—')}</span></td>
+      <td style="text-align:center;color:var(--muted);font-size:12px;white-space:nowrap;">${esc(r['หน่วยนับ'] || '—')}</td>
+      <td style="text-align:center;white-space:nowrap;">${_dayBadgeTd(r['วันคงค้าง'])}</td>
+    </tr>`;
+  });
+
+  html += '</tbody></table></div>';
+  document.getElementById('td-doc-content').innerHTML = html;
+  document.getElementById('td-doc-modal').classList.add('show');
 }
