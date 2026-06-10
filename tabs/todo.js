@@ -181,15 +181,18 @@ function _renderTodoOverview() {
     const wh      = (r['port_id'] || '').trim();
     const departed = r['สถานะ T3'] === 'Checked' || r['สถานะ T4'] === 'Checked';
     const arrived  = !departed && (r['สถานะ T1'] === 'Checked' || r['สถานะ T2'] === 'Checked');
+    const planned  = !departed && !arrived;
     if (isToday) {
-      if (!b.todayCarDetail[wh]) b.todayCarDetail[wh] = { total: 0, arrived: 0, departed: 0 };
+      if (!b.todayCarDetail[wh]) b.todayCarDetail[wh] = { total: 0, planned: 0, arrived: 0, departed: 0 };
       b.todayCarDetail[wh].total++;
+      if (planned)  b.todayCarDetail[wh].planned++;
       if (arrived)  b.todayCarDetail[wh].arrived++;
       if (departed) b.todayCarDetail[wh].departed++;
     }
     if (isTomorrow) {
-      if (!b.tomorrowCarDetail[wh]) b.tomorrowCarDetail[wh] = { total: 0, arrived: 0, departed: 0 };
+      if (!b.tomorrowCarDetail[wh]) b.tomorrowCarDetail[wh] = { total: 0, planned: 0, arrived: 0, departed: 0 };
       b.tomorrowCarDetail[wh].total++;
+      if (planned)  b.tomorrowCarDetail[wh].planned++;
       if (arrived)  b.tomorrowCarDetail[wh].arrived++;
       if (departed) b.tomorrowCarDetail[wh].departed++;
     }
@@ -223,13 +226,16 @@ function _renderTodoOverview() {
     if (!dataCar.length) return `<span style="color:var(--muted);font-size:12px;">—</span>`;
     const bkE = esc(bKey).replace(/'/g, "\\'");
     const whRows = allWhs.map(wh => {
-      const d = carDetail[wh] || { total: 0, arrived: 0, departed: 0 };
+      const d = carDetail[wh] || { total: 0, planned: 0, arrived: 0, departed: 0 };
       const dimmed = d.total === 0 ? 'opacity:.45;' : '';
       return `<div style="display:flex;align-items:center;gap:4px;padding:1px 5px;border-radius:4px;background:rgba(14,165,233,.07);border:1px solid rgba(14,165,233,.2);margin-bottom:2px;${dimmed}">
         <span style="color:#0ea5e9;font-weight:700;font-size:10.5px;min-width:26px;">${esc(wh)}</span>
         <span style="color:var(--text);font-size:10.5px;font-weight:800;">รวม ${d.total}</span>
         <span style="color:var(--muted);font-size:9px;">|</span>
+        <span style="font-size:10px;color:#9333ea;font-weight:600;">แพลน <b>${d.planned}</b></span>
+        <span style="color:var(--muted);font-size:9px;">|</span>
         <span style="font-size:10px;color:#16a34a;font-weight:600;">เข้า <b>${d.arrived}</b></span>
+        <span style="color:var(--muted);font-size:9px;">|</span>
         <span style="font-size:10px;color:#f59e0b;font-weight:600;">ออก <b>${d.departed}</b></span>
       </div>`;
     }).join('');
