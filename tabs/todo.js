@@ -210,7 +210,7 @@ function openTodoDocDetail(docNo) {
       <td style="font-size:13px;">${esc(r['ชื้อสินค้า'] || r['ชื่อสินค้า'] || '—')}</td>
       <td style="text-align:center;white-space:nowrap;"><span style="background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);padding:3px 10px;border-radius:5px;font-size:12px;font-weight:700;color:#7dd3fc;">${esc(r['Location'] || '—')}</span></td>
       <td style="font-size:12px;color:var(--muted);white-space:nowrap;" title="${esc(locIds)}">${esc(locIds || '—')}</td>
-      <td style="text-align:center;font-size:14px;font-weight:800;color:#f1f5f9;white-space:nowrap;letter-spacing:.3px;">${fmtN(+(r['จำนวนขอโอน'] || 0))}</td>
+      <td style="text-align:center;font-size:14px;font-weight:800;color:var(--text);white-space:nowrap;letter-spacing:.3px;">${fmtN(+(r['จำนวนขอโอน'] || 0))}</td>
       <td style="text-align:center;color:var(--muted);font-size:12px;white-space:nowrap;">${esc(r['หน่วยนับ'] || '')}</td>
       <td style="white-space:nowrap;"><span class="spill ${statusCls(r['สถานะประมวลผล'] || '')}">${esc(r['สถานะประมวลผล'] || '—')}</span></td>
       <td style="text-align:center;white-space:nowrap;">${_dayBadgeTd(r['วันค้างส่ง'])}</td>
