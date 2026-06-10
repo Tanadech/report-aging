@@ -67,6 +67,7 @@ function _renderTodoOverview() {
     if (!impByDoc[key]) {
       impByDoc[key] = {
         docNo: key, branch: r['ชื่อสาขา'] || '',
+        branchCode: r['รหัสสาขา'] || '', branchAbr: r['ชื่อย่อสาขา'] || '',
         wh: r['คลังสินค้า'] || '', zone: r['Zone ID'] || '',
         locs: new Set(), locIds: new Set(), skus: new Set(),
         totalQty: 0, maxDays: 0, rows: []
@@ -90,6 +91,7 @@ function _renderTodoOverview() {
     if (!domByDoc[key]) {
       domByDoc[key] = {
         docNo: key, branch: BR_ABR_MAP[abr] || abr,
+        branchCode: r['รหัสสาขา'] || '', branchAbr: abr,
         zone: r['Zone Name'] || '', wh: getWH(r),
         maxDays: 0, onetimes: new Set(), vendors: new Set(), rows: []
       };
@@ -117,7 +119,7 @@ function _renderTodoOverview() {
   const getOrMake = (fullName, abrCode) => {
     const key = (fullName || abrCode || '(ไม่ระบุ)').trim();
     if (!bmap[key]) bmap[key] = {
-      key, fullName: key, abrCode: abrCode || '',
+      key, fullName: key, abrCode: abrCode || '', branchCode: '',
       impDocs: new Set(), domDocs: new Set(),
       impMaxDays: 0, domMaxDays: 0,
       whDocs: {}, whMaxDays: {},
@@ -128,18 +130,24 @@ function _renderTodoOverview() {
   };
 
   Object.values(impByDoc).forEach(doc => {
-    const b = getOrMake(doc.branch, fullToAbr[doc.branch] || '');
+    const abr = doc.branchAbr || fullToAbr[doc.branch] || '';
+    const b = getOrMake(doc.branch, abr);
     b.impDocs.add(doc.docNo);
     if (doc.maxDays > b.impMaxDays) b.impMaxDays = doc.maxDays;
+    if (doc.branchCode && !b.branchCode) b.branchCode = doc.branchCode;
+    if (abr && !b.abrCode) b.abrCode = abr;
     if (doc.wh) {
       b.whDocs[doc.wh] = (b.whDocs[doc.wh] || 0) + 1;
       b.whMaxDays[doc.wh] = Math.max(b.whMaxDays[doc.wh] || 0, doc.maxDays);
     }
   });
   Object.values(domByDoc).forEach(doc => {
-    const b = getOrMake(doc.branch, fullToAbr[doc.branch] || '');
+    const abr = doc.branchAbr || fullToAbr[doc.branch] || '';
+    const b = getOrMake(doc.branch, abr);
     b.domDocs.add(doc.docNo);
     if (doc.maxDays > b.domMaxDays) b.domMaxDays = doc.maxDays;
+    if (doc.branchCode && !b.branchCode) b.branchCode = doc.branchCode;
+    if (abr && !b.abrCode) b.abrCode = abr;
     if (doc.wh) {
       b.whDocs[doc.wh] = (b.whDocs[doc.wh] || 0) + 1;
       b.whMaxDays[doc.wh] = Math.max(b.whMaxDays[doc.wh] || 0, doc.maxDays);
@@ -274,8 +282,8 @@ function _renderTodoOverview() {
       html += `<tr>
         <td style="text-align:center;color:var(--muted);font-size:12px;">${i + 1}</td>
         <td style="font-size:13px;font-weight:600;">${esc(r.fullName)}</td>
+        <td style="text-align:center;font-size:12px;color:#0891b2;font-weight:700;">${esc(r.branchCode || '—')}</td>
         <td style="text-align:center;font-size:12px;color:#0ea5e9;font-weight:700;">${esc(r.abrCode || '—')}</td>
-        <td style="text-align:center;font-size:12px;color:var(--muted);">${esc(r.abrCode || '—')}</td>
         <td style="text-align:center;">${totalBadge}</td>
         <td style="text-align:center;">${_dayBadgeTd(r.maxDays)}</td>
         <td style="text-align:center;">${numCell(r.impDocs.size, '#7c3aed', r.impDocs.size > 0 ? `openTodoBranchFilter('${bk}','imp')` : '')}</td>
