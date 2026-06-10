@@ -188,32 +188,32 @@ function openTodoDocDetail(docNo) {
     <div class="modal-sum-item"><b>${fmtN(doc.locs.size)}</b> Location</div>
   </div>`;
 
-  html += `<div style="overflow:auto;max-height:480px;border-radius:6px;border:1px solid rgba(56,189,248,.1);">
-    <table class="mtbl" style="width:100%;">
+  html += `<div style="overflow:auto;max-height:520px;border-radius:6px;border:1px solid rgba(56,189,248,.1);">
+    <table class="mtbl" style="width:100%;min-width:900px;font-size:13px;">
       <thead><tr>
-        <th style="width:32px;text-align:center;">#</th>
-        <th>รหัสสินค้า</th>
-        <th>ชื่อสินค้า</th>
-        <th style="text-align:center;">Location</th>
-        <th>Location ID</th>
-        <th style="text-align:center;width:70px;">จำนวน</th>
-        <th style="text-align:center;width:55px;">หน่วย</th>
-        <th>สถานะ</th>
-        <th style="text-align:center;width:75px;">วันค้างส่ง</th>
+        <th style="width:36px;text-align:center;white-space:nowrap;">#</th>
+        <th style="white-space:nowrap;min-width:140px;">รหัสสินค้า</th>
+        <th style="min-width:280px;">ชื่อสินค้า</th>
+        <th style="text-align:center;white-space:nowrap;min-width:90px;">Location</th>
+        <th style="white-space:nowrap;min-width:160px;">Location ID</th>
+        <th style="text-align:center;white-space:nowrap;min-width:70px;">จำนวน</th>
+        <th style="text-align:center;white-space:nowrap;min-width:55px;">หน่วย</th>
+        <th style="white-space:nowrap;min-width:130px;">สถานะ</th>
+        <th style="text-align:center;white-space:nowrap;min-width:90px;">วันค้างส่ง</th>
       </tr></thead><tbody>`;
 
   rows.forEach((r, i) => {
     const locIds = (r['Location ID'] || '').split(',').map(s => s.trim()).filter(Boolean).join(', ');
     html += `<tr>
-      <td style="text-align:center;color:var(--muted);font-size:11px;">${i + 1}</td>
-      <td style="font-family:monospace;font-size:11px;font-weight:700;color:#93c5fd;">${esc(r['รหัสสินค้า'] || '—')}</td>
-      <td style="font-size:11.5px;">${esc(r['ชื้อสินค้า'] || r['ชื่อสินค้า'] || '—')}</td>
-      <td style="text-align:center;"><span style="background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;color:#7dd3fc;">${esc(r['Location'] || '—')}</span></td>
-      <td style="font-size:10px;color:var(--muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(locIds)}">${esc(locIds || '—')}</td>
-      <td style="text-align:center;font-weight:700;color:#e2e8f0;">${fmtN(+(r['จำนวนขอโอน'] || 0))}</td>
-      <td style="text-align:center;color:var(--muted);font-size:11px;">${esc(r['หน่วยนับ'] || '')}</td>
-      <td><span class="spill ${statusCls(r['สถานะประมวลผล'] || '')}">${esc(r['สถานะประมวลผล'] || '—')}</span></td>
-      <td style="text-align:center;">${_dayBadgeTd(r['วันค้างส่ง'])}</td>
+      <td style="text-align:center;color:var(--muted);font-size:12px;">${i + 1}</td>
+      <td style="font-family:monospace;font-size:12px;font-weight:700;color:#93c5fd;white-space:nowrap;">${esc(r['รหัสสินค้า'] || '—')}</td>
+      <td style="font-size:13px;">${esc(r['ชื้อสินค้า'] || r['ชื่อสินค้า'] || '—')}</td>
+      <td style="text-align:center;white-space:nowrap;"><span style="background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2);padding:3px 10px;border-radius:5px;font-size:12px;font-weight:700;color:#7dd3fc;">${esc(r['Location'] || '—')}</span></td>
+      <td style="font-size:12px;color:var(--muted);white-space:nowrap;" title="${esc(locIds)}">${esc(locIds || '—')}</td>
+      <td style="text-align:center;font-size:13px;font-weight:700;color:#e2e8f0;white-space:nowrap;">${fmtN(+(r['จำนวนขอโอน'] || 0))}</td>
+      <td style="text-align:center;color:var(--muted);font-size:12px;white-space:nowrap;">${esc(r['หน่วยนับ'] || '')}</td>
+      <td style="white-space:nowrap;"><span class="spill ${statusCls(r['สถานะประมวลผล'] || '')}">${esc(r['สถานะประมวลผล'] || '—')}</span></td>
+      <td style="text-align:center;white-space:nowrap;">${_dayBadgeTd(r['วันค้างส่ง'])}</td>
     </tr>`;
   });
 
