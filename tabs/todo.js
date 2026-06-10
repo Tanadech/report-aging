@@ -174,6 +174,11 @@ function _renderTodoOverview() {
     b.tomorrowTotal = Object.values(b.tomorrowCars).reduce((s, n) => s + n, 0);
   });
 
+  // unique doc warehouses (for dynamic columns)
+  const allDocWhs = [...new Set(
+    Object.values(bmap).flatMap(b => Object.keys(b.whDocs))
+  )].sort();
+
   window._todoOvMap = bmap;
   window._todoOvWhs = allWhs;
 
@@ -208,35 +213,45 @@ function _renderTodoOverview() {
     </div>`;
   };
 
+  const totalCols = 5 + allDocWhs.length;
   let html = `<div style="overflow:auto;max-height:560px;border-radius:6px;border:1px solid rgba(56,189,248,.1);">
     <table class="mtbl" style="width:100%;font-size:13px;">
       <thead><tr>
         <th style="width:36px;text-align:center;">#</th>
         <th style="min-width:160px;">สาขา</th>
-        <th style="text-align:center;min-width:120px;">จำนวนเอกสารตกค้าง</th>
+        <th style="text-align:center;min-width:70px;">รวม</th>
+        <th style="text-align:center;min-width:55px;">IMP</th>
+        <th style="text-align:center;min-width:55px;">DOM</th>
+        ${allDocWhs.map(wh => `<th style="text-align:center;min-width:60px;">${esc(wh)}</th>`).join('')}
         <th style="text-align:center;width:100px;">วันคงค้างสูงสุด</th>
         <th style="min-width:180px;">🚛 รถ OUTBOUND วันนี้</th>
         <th style="min-width:180px;">🚛 รถ OUTBOUND พรุ่งนี้</th>
       </tr></thead><tbody>`;
 
   if (!rows.length) {
-    html += `<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:28px;">ไม่มีข้อมูล</td></tr>`;
+    html += `<tr><td colspan="${totalCols + 4}" style="text-align:center;color:var(--muted);padding:28px;">ไม่มีข้อมูล</td></tr>`;
   } else {
     rows.forEach((r, i) => {
-      const whDocBadges = Object.entries(r.whDocs).sort((a,b) => a[0].localeCompare(b[0]))
-        .map(([wh, n]) => `<span style="display:inline-flex;align-items:center;gap:3px;padding:1px 6px;border-radius:4px;background:rgba(14,165,233,.12);border:1px solid rgba(14,165,233,.35);font-size:10px;font-weight:600;color:#0284c7;white-space:nowrap;">${esc(wh)}<b style="color:var(--text)">${n}</b></span>`).join(' ');
-      const docBadge = `<span style="display:inline-block;padding:5px 14px;border-radius:7px;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.45);color:#7c3aed;font-size:14px;font-weight:800;cursor:pointer;text-align:center;line-height:1.6;"
+      const totalBadge = `<span style="display:inline-block;padding:4px 12px;border-radius:7px;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.45);color:#7c3aed;font-size:14px;font-weight:800;cursor:pointer;"
         onclick="openTodoBranchDocs('${esc(r.key).replace(/'/g, "\\'")}')"
-        onmouseover="this.style.background='rgba(124,58,237,.25)'" onmouseout="this.style.background='rgba(124,58,237,.15)'">
-        ${r.totalDocs}
-        <div style="font-size:9.5px;font-weight:600;color:var(--muted);margin-top:1px;">IMP:${r.impDocs.size} · DOM:${r.domDocs.size}</div>
-        ${whDocBadges ? `<div style="display:flex;flex-wrap:wrap;gap:3px;justify-content:center;margin-top:4px;">${whDocBadges}</div>` : ''}
-      </span>`;
+        onmouseover="this.style.background='rgba(124,58,237,.25)'" onmouseout="this.style.background='rgba(124,58,237,.15)'">${r.totalDocs}</span>`;
+
+      const numCell = (n, color) => n > 0
+        ? `<span style="font-size:13px;font-weight:800;color:${color};">${n}</span>`
+        : `<span style="color:var(--muted);font-size:12px;">—</span>`;
+
+      const whCells = allDocWhs.map(wh => {
+        const n = r.whDocs[wh] || 0;
+        return `<td style="text-align:center;">${numCell(n, '#0284c7')}</td>`;
+      }).join('');
 
       html += `<tr>
         <td style="text-align:center;color:var(--muted);font-size:12px;">${i + 1}</td>
         <td style="font-size:13px;font-weight:600;">${esc(r.fullName)}</td>
-        <td style="text-align:center;">${docBadge}</td>
+        <td style="text-align:center;">${totalBadge}</td>
+        <td style="text-align:center;">${numCell(r.impDocs.size, '#7c3aed')}</td>
+        <td style="text-align:center;">${numCell(r.domDocs.size, '#16a34a')}</td>
+        ${whCells}
         <td style="text-align:center;">${_dayBadgeTd(r.maxDays)}</td>
         <td>${carCell(r.key, 'today',    r.todayCars,    r.todayTotal)}</td>
         <td>${carCell(r.key, 'tomorrow', r.tomorrowCars, r.tomorrowTotal)}</td>
