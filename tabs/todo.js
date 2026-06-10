@@ -5,6 +5,32 @@ function renderTodo() {
   _renderTodoDom();
 }
 
+// ── populate filter dropdowns จาก dataUot + dataIn ──
+function fillTodoFilters() {
+  const fwEl = document.getElementById('td-fw');
+  const fbEl = document.getElementById('td-fb');
+  if (!fwEl || !fbEl) return;
+
+  const curFw = fwEl.value;
+  const curFb = fbEl.value;
+
+  // คลังสินค้า: รวมจาก IMPORTED (คลังสินค้า) + DOMESTIC (getWH)
+  const whs = [...new Set([
+    ...dataUot.map(r => r['คลังสินค้า'] || '').filter(Boolean),
+    ...dataIn.map(r => getWH(r)).filter(v => v && v !== '(อื่นๆ)')
+  ])].sort();
+  fwEl.innerHTML = '<option value="">ทั้งหมด</option>' +
+    whs.map(w => `<option${w === curFw ? ' selected' : ''}>${esc(w)}</option>`).join('');
+
+  // สาขา: รวมจาก IMPORTED (ชื่อสาขา) + DOMESTIC (BR_ABR_MAP[ชื่อย่อสาขา])
+  const brs = [...new Set([
+    ...dataUot.map(r => r['ชื่อสาขา'] || '').filter(Boolean),
+    ...dataIn.map(r => BR_ABR_MAP[r['ชื่อย่อสาขา'] || ''] || r['ชื่อย่อสาขา'] || '').filter(Boolean)
+  ])].sort((a, b) => a.localeCompare(b, 'th'));
+  fbEl.innerHTML = '<option value="">ทั้งหมด</option>' +
+    brs.map(b => `<option${b === curFb ? ' selected' : ''}>${esc(b)}</option>`).join('');
+}
+
 function _dayBadgeTd(d) {
   const n = +d || 0;
   const cls = n > 30 ? 'hi' : n > 14 ? 'mi' : 'lo';
@@ -20,10 +46,20 @@ function _todoKpiRow(chips) {
   }</div>`;
 }
 
+function _getTodoFilters() {
+  return {
+    fw:  (document.getElementById('td-fw')?.value  || '').trim(),
+    fb:  (document.getElementById('td-fb')?.value  || '').trim(),
+    fd1: +(document.getElementById('td-fd1')?.value || 0),
+    fd2: +(document.getElementById('td-fd2')?.value || 0) || Infinity,
+    q:   (document.getElementById('todo-search')?.value || '').trim().toLowerCase()
+  };
+}
+
 // ── IMPORTED ──
 function _renderTodoImp() {
   if (typeof dataUot === 'undefined') return;
-  const search = (document.getElementById('todo-search')?.value || '').trim().toLowerCase();
+  const { fw, fb, fd1, fd2, q } = _getTodoFilters();
 
   const byDoc = {};
   dataUot.forEach(r => {
@@ -45,26 +81,32 @@ function _renderTodoImp() {
   });
 
   const allRows = Object.values(byDoc).sort((a, b) => b.maxDays - a.maxDays);
-  const filtered = search
-    ? allRows.filter(r =>
-        r.docNo.toLowerCase().includes(search) ||
-        r.branch.toLowerCase().includes(search) ||
-        r.zone.toLowerCase().includes(search))
-    : allRows;
 
-  const maxDays  = allRows.length ? allRows[0].maxDays : 0;
-  const over30   = allRows.filter(r => r.maxDays > 30).length;
-  const branches = new Set(allRows.map(r => r.branch).filter(Boolean)).size;
+  // apply filters
+  let filtered = allRows;
+  if (fw) filtered = filtered.filter(r => r.wh === fw);
+  if (fb) filtered = filtered.filter(r => r.branch === fb);
+  if (fd1 > 0)        filtered = filtered.filter(r => r.maxDays >= fd1);
+  if (fd2 < Infinity) filtered = filtered.filter(r => r.maxDays <= fd2);
+  if (q)  filtered = filtered.filter(r =>
+    r.docNo.toLowerCase().includes(q) ||
+    r.branch.toLowerCase().includes(q) ||
+    r.zone.toLowerCase().includes(q));
+
+  const maxDays  = filtered.length ? filtered[0].maxDays : 0;
+  const over30   = filtered.filter(r => r.maxDays > 30).length;
+  const branches = new Set(filtered.map(r => r.branch).filter(Boolean)).size;
 
   document.getElementById('todo-imp-kpi').innerHTML = _todoKpiRow([
-    { val: allRows.length, unit: 'เอกสารคงค้าง',    color: '#7dd3fc', bg: 'rgba(0,184,217,.1)',   border: 'rgba(0,184,217,.25)' },
-    { val: branches,       unit: 'สาขา',             color: '#4ade80', bg: 'rgba(34,197,94,.1)',   border: 'rgba(34,197,94,.25)' },
-    { val: maxDays,        unit: 'วันค้างสูงสุด',    color: '#fbbf24', bg: 'rgba(245,158,11,.1)',  border: 'rgba(245,158,11,.25)' },
-    { val: over30,         unit: 'ค้างเกิน 30 วัน',  color: '#f87171', bg: 'rgba(239,68,68,.1)',   border: 'rgba(239,68,68,.25)' },
+    { val: filtered.length, unit: 'เอกสารคงค้าง',   color: '#7dd3fc', bg: 'rgba(0,184,217,.1)',  border: 'rgba(0,184,217,.25)' },
+    { val: branches,        unit: 'สาขา',            color: '#4ade80', bg: 'rgba(34,197,94,.1)',  border: 'rgba(34,197,94,.25)' },
+    { val: maxDays,         unit: 'วันค้างสูงสุด',   color: '#fbbf24', bg: 'rgba(245,158,11,.1)', border: 'rgba(245,158,11,.25)' },
+    { val: over30,          unit: 'ค้างเกิน 30 วัน', color: '#f87171', bg: 'rgba(239,68,68,.1)',  border: 'rgba(239,68,68,.25)' },
   ]);
 
   const cntEl = document.getElementById('todo-imp-cnt');
-  if (cntEl) cntEl.textContent = `${fmtN(filtered.length)} รายการ${search ? ' (กรอง)' : ''}`;
+  const isFiltered = fw || fb || fd1 > 0 || fd2 < Infinity || q;
+  if (cntEl) cntEl.textContent = `${fmtN(filtered.length)} รายการ${isFiltered ? ' (กรอง)' : ''}`;
 
   let html = `<div style="overflow:auto;max-height:440px;border-radius:6px;border:1px solid rgba(56,189,248,.1);">
     <table class="mtbl" style="width:100%;">
@@ -103,7 +145,7 @@ function _renderTodoImp() {
 // ── DOMESTIC ──
 function _renderTodoDom() {
   if (typeof dataIn === 'undefined') return;
-  const search = (document.getElementById('todo-search')?.value || '').trim().toLowerCase();
+  const { fw, fb, fd1, fd2, q } = _getTodoFilters();
 
   const byDoc = {};
   dataIn.forEach(r => {
@@ -126,26 +168,32 @@ function _renderTodoDom() {
   });
 
   const allRows = Object.values(byDoc).sort((a, b) => b.maxDays - a.maxDays);
-  const filtered = search
-    ? allRows.filter(r =>
-        r.docNo.toLowerCase().includes(search) ||
-        r.branch.toLowerCase().includes(search) ||
-        r.vendor.toLowerCase().includes(search))
-    : allRows;
 
-  const maxDays  = allRows.length ? allRows[0].maxDays : 0;
-  const over30   = allRows.filter(r => r.maxDays > 30).length;
-  const branches = new Set(allRows.map(r => r.branch).filter(Boolean)).size;
+  // apply filters
+  let filtered = allRows;
+  if (fw) filtered = filtered.filter(r => r.wh === fw);
+  if (fb) filtered = filtered.filter(r => r.branch === fb);
+  if (fd1 > 0)        filtered = filtered.filter(r => r.maxDays >= fd1);
+  if (fd2 < Infinity) filtered = filtered.filter(r => r.maxDays <= fd2);
+  if (q)  filtered = filtered.filter(r =>
+    r.docNo.toLowerCase().includes(q) ||
+    r.branch.toLowerCase().includes(q) ||
+    r.vendor.toLowerCase().includes(q));
+
+  const maxDays  = filtered.length ? filtered[0].maxDays : 0;
+  const over30   = filtered.filter(r => r.maxDays > 30).length;
+  const branches = new Set(filtered.map(r => r.branch).filter(Boolean)).size;
 
   document.getElementById('todo-dom-kpi').innerHTML = _todoKpiRow([
-    { val: allRows.length, unit: 'เอกสารคงค้าง',    color: '#7dd3fc', bg: 'rgba(0,184,217,.1)',   border: 'rgba(0,184,217,.25)' },
-    { val: branches,       unit: 'สาขา',             color: '#4ade80', bg: 'rgba(34,197,94,.1)',   border: 'rgba(34,197,94,.25)' },
-    { val: maxDays,        unit: 'วันคงค้างสูงสุด',  color: '#fbbf24', bg: 'rgba(245,158,11,.1)',  border: 'rgba(245,158,11,.25)' },
-    { val: over30,         unit: 'ค้างเกิน 30 วัน',  color: '#f87171', bg: 'rgba(239,68,68,.1)',   border: 'rgba(239,68,68,.25)' },
+    { val: filtered.length, unit: 'เอกสารคงค้าง',    color: '#7dd3fc', bg: 'rgba(0,184,217,.1)',  border: 'rgba(0,184,217,.25)' },
+    { val: branches,        unit: 'สาขา',             color: '#4ade80', bg: 'rgba(34,197,94,.1)',  border: 'rgba(34,197,94,.25)' },
+    { val: maxDays,         unit: 'วันคงค้างสูงสุด',  color: '#fbbf24', bg: 'rgba(245,158,11,.1)', border: 'rgba(245,158,11,.25)' },
+    { val: over30,          unit: 'ค้างเกิน 30 วัน',  color: '#f87171', bg: 'rgba(239,68,68,.1)',  border: 'rgba(239,68,68,.25)' },
   ]);
 
   const cntEl = document.getElementById('todo-dom-cnt');
-  if (cntEl) cntEl.textContent = `${fmtN(filtered.length)} รายการ${search ? ' (กรอง)' : ''}`;
+  const isFiltered = fw || fb || fd1 > 0 || fd2 < Infinity || q;
+  if (cntEl) cntEl.textContent = `${fmtN(filtered.length)} รายการ${isFiltered ? ' (กรอง)' : ''}`;
 
   let html = `<div style="overflow:auto;max-height:440px;border-radius:6px;border:1px solid rgba(56,189,248,.1);">
     <table class="mtbl" style="width:100%;">

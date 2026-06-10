@@ -30,7 +30,7 @@ function rebuild() {
   if (dataCar.length)      renderCar();
   // refresh Pay car table เมื่อ aging data เปลี่ยน
   if (dataAgingOut.length) renderPayCarTable();
-  if (dataUot.length || dataIn.length) renderTodo();
+  if (dataUot.length || dataIn.length) { fillTodoFilters(); renderTodo(); }
 }
 
 // ============ Filter events — UOT ============
@@ -133,10 +133,16 @@ document.addEventListener('click', () => {
 document.getElementById('u-fsearch').addEventListener('input', () => { uotPage = 0; renderUotTable(); });
 // Search in DOMESTIC table
 document.getElementById('i-fsearch')?.addEventListener('input', () => { inPage = 0; renderInTable(); });
-// Search in Todo tab
+// Filters in Todo tab
 document.getElementById('todo-search')?.addEventListener('input', renderTodo);
+['td-fw', 'td-fb'].forEach(id => document.getElementById(id)?.addEventListener('change', renderTodo));
+['td-fd1', 'td-fd2'].forEach(id => document.getElementById(id)?.addEventListener('input', renderTodo));
 document.getElementById('todo-clr')?.addEventListener('click', () => {
   document.getElementById('todo-search').value = '';
+  document.getElementById('td-fw').value = '';
+  document.getElementById('td-fb').value = '';
+  document.getElementById('td-fd1').value = '';
+  document.getElementById('td-fd2').value = '';
   renderTodo();
 });
 
