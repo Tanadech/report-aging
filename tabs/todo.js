@@ -256,9 +256,9 @@ function _renderTodoOverview() {
         <th style="text-align:center;min-width:68px;">รหัส</th>
         <th style="text-align:center;min-width:70px;">ผู้โดยสาร</th>
         <th style="text-align:center;min-width:90px;">วันตกค้างสูงสุด</th>
-        <th style="text-align:center;width:150px;">IMP</th>
-        <th style="text-align:center;width:150px;">DOM</th>
-        ${allDocWhs.map(wh => `<th style="text-align:center;width:150px;">${esc(wh)}</th>`).join('')}
+        <th style="text-align:center;width:105px;">IMP</th>
+        <th style="text-align:center;width:105px;">DOM</th>
+        ${allDocWhs.map(wh => `<th style="text-align:center;width:105px;">${esc(wh)}</th>`).join('')}
         <th style="min-width:200px;">🚛 รถ OUTBOUND วันนี้</th>
         <th style="min-width:200px;">🚛 รถ OUTBOUND พรุ่งนี้</th>
       </tr></thead><tbody>`;
